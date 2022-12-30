@@ -1,0 +1,19 @@
+{
+  "name": "ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "watch": "vite build --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^4.8.4",
+    "vite": "^3.2.3"
+  },
+  "dependencies": {
+    "preact": "^10.11.2"
+  }
+}
