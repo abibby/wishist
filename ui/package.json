@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "watch": "vite build --watch"
+    "watch": "vite build --watch",
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +15,8 @@
     "vite": "^3.2.3"
   },
   "dependencies": {
-    "preact": "^10.11.2"
+    "@zwzn/spicy": "^1.0.1",
+    "preact": "^10.11.2",
+    "preact-router": "^4.1.0"
   }
 }
