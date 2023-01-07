@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/abibby/validate/handler"
@@ -9,17 +12,27 @@ import (
 )
 
 type ListItemsRequest struct {
-	UserID  int `query:"user_id"`
+	User    string `query:"user"`
 	Request http.Request
 }
 type ListItemsResponse []*db.Item
 
 var ListItems = handler.Handler(func(r *ListItemsRequest) (any, error) {
 	items := []*db.Item{}
+	errNoUsers := fmt.Errorf("Not Found")
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		return tx.Select(&items, "select * from items where user_id = ?", r.UserID)
+		u := &db.User{}
+		err := tx.Get(u, "select * from users where username=?", r.User)
+		if errors.Is(err, sql.ErrNoRows) {
+			return errNoUsers
+		} else if err != nil {
+			return err
+		}
+		return tx.Select(&items, "select * from items where user_id = ?", u.ID)
 	})
-	if err != nil {
+	if err == errNoUsers {
+		return handler.ErrorResponse(err, 404), nil
+	} else if err != nil {
 		return nil, err
 	}
 	return ListItemsResponse(items), nil

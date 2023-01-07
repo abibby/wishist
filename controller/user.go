@@ -22,7 +22,7 @@ type CreateUserRequest struct {
 }
 type CreateUserResponse *db.User
 
-var CreateUser = handler.Handler(func(r *CreateUserRequest) (any, error) {
+var UserCreate = handler.Handler(func(r *CreateUserRequest) (any, error) {
 	hash, err := bcrypt.GenerateFromPassword(r.Password, bcrypt.MinCost)
 	if err != nil {
 		return nil, err

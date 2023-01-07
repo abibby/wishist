@@ -32,6 +32,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.Handle("/login", controller.Login).Methods("POST")
+	r.Handle("/user", controller.UserCreate).Methods("PUT")
 
 	Group(r.NewRoute().Subrouter(), func(r *mux.Router) {
 		r.Use(auth.Middleware)

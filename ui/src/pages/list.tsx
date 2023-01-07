@@ -1,56 +1,61 @@
 import { bind, bindValue } from '@zwzn/spicy'
+import debounce from 'lodash.debounce'
 import { h } from 'preact'
-import { useCallback, useState } from 'preact/hooks'
-import { Item, useList } from '../hooks/use-list'
+import { useCallback, useEffect, useState } from 'preact/hooks'
+import { Item, list, listAdd, listEdit, listRemove } from '../api/list'
+import { userID, username } from '../auth'
 
 h
 
-export function List() {
-    const items = useList(1)
-    const [newItem, setNewItem] = useState('')
-    const [newItems, setNewItems] = useState<Item[]>([])
-    const [removedItemIDs, setRemovedItemIDs] = useState<number[]>([])
-    const addItem = useCallback(async () => {
-        const item = await fetch('/list/add', {
-            method: 'POST',
-            body: JSON.stringify({
-                user_id: 1,
-                name: newItem,
-                description: '',
-                url: '',
-            }),
-        })
+const debouncedListEdit: typeof listEdit = debounce(listEdit, 500) as any
 
-        const createdItem = await item.json()
-        setNewItems(i => [...i, createdItem])
+interface ListProps {
+    matches: {
+        name: string
+    }
+}
+
+export function List({ matches }: ListProps) {
+    const [newItem, setNewItem] = useState('')
+    const [items, setItems] = useState<Item[] | undefined>()
+    const [readonly, setReadonly] = useState(true)
+    const { name } = matches
+
+    useEffect(() => {
+        list({ user: name })
+            .then(setItems)
+            .catch(() => setItems(undefined))
+    }, [name])
+    useEffect(() => {
+        username().then(user => {
+            setReadonly(user !== name)
+        })
+    }, [name])
+    const addItem = useCallback(async () => {
+        const uid = await userID()
+        if (uid === undefined) {
+            console.warn('could not add item, not logged in')
+
+            return
+        }
+        const createdItem = await listAdd({
+            user_id: uid,
+            name: newItem,
+            description: '',
+            url: '',
+        })
+        setItems(i => i?.concat([createdItem]))
         setNewItem('')
-    }, [newItem, setNewItem])
+    }, [newItem, setNewItem, setItems])
 
     const removeItem = useCallback(
         async (id: number) => {
-            await fetch('/list/remove', {
-                method: 'POST',
-                body: JSON.stringify({
-                    item_id: id,
-                }),
+            await listRemove({
+                item_id: id,
             })
-            setRemovedItemIDs(ids => [...ids, id])
+            setItems(items => items?.filter(i => i.id !== id))
         },
-        [setRemovedItemIDs],
-    )
-    const editItem = useCallback(
-        async (id: number, name: string) => {
-            await fetch('/list/edit', {
-                method: 'POST',
-                body: JSON.stringify({
-                    id: id,
-                    name: name,
-                    description: '',
-                    url: '',
-                }),
-            })
-        },
-        [newItem, setNewItem],
+        [setItems],
     )
 
     const newItemKeyDown = useCallback(
@@ -69,28 +74,87 @@ export function List() {
     return (
         <div>
             <ul>
-                {[...items, ...newItems]
-                    .filter(i => !removedItemIDs.includes(i.id))
-                    .map(i => (
-                        <li>
-                            <input
-                                type='text'
-                                value={i.name}
-                                onChange={bindValue(bind(i.id, editItem))}
-                            />
-                            <button onClick={bind(i.id, removeItem)}>x</button>
-                        </li>
-                    ))}
-                <li>
-                    <input
-                        type='text'
-                        value={newItem}
-                        onInput={bindValue(setNewItem)}
-                        onKeyDown={newItemKeyDown}
+                {items.map(i => (
+                    <ListItem
+                        key={i.id}
+                        item={i}
+                        readonly={readonly}
+                        onEdit={debouncedListEdit}
+                        onRemove={removeItem}
                     />
-                    <button onClick={addItem}>Add</button>
-                </li>
+                ))}
+                {!readonly && (
+                    <li>
+                        <input
+                            type='text'
+                            value={newItem}
+                            onInput={bindValue(setNewItem)}
+                            onKeyDown={newItemKeyDown}
+                        />
+                        <button onClick={addItem}>Add</button>
+                    </li>
+                )}
             </ul>
         </div>
+    )
+}
+
+interface ListItemProps {
+    item: Item
+    readonly: boolean
+    onEdit: (item: Item) => void
+    onRemove: (id: number) => void
+}
+
+function ListItem({ item, readonly, onEdit, onRemove }: ListItemProps) {
+    const [open, setOpen] = useState(false)
+
+    const edit = useCallback(
+        (field: keyof Item, value: string) => {
+            onEdit({
+                ...item,
+                [field]: value,
+            })
+        },
+        [item],
+    )
+
+    return (
+        <li>
+            <input
+                type='text'
+                value={item.name}
+                onInput={bindValue(bind('name', edit))}
+                readOnly={readonly}
+            />
+            {!readonly && <button onClick={bind(item.id, onRemove)}>x</button>}
+            {open ? (
+                <button onClick={bind(false, setOpen)}>-</button>
+            ) : (
+                <button onClick={bind(true, setOpen)}>+</button>
+            )}
+            {open && (
+                <div>
+                    <label>
+                        URL:{' '}
+                        <input
+                            type='text'
+                            value={item.url}
+                            onInput={bindValue(bind('url', edit))}
+                            readOnly={readonly}
+                        />
+                    </label>
+                    <label>
+                        Description:{' '}
+                        <input
+                            type='text'
+                            value={item.description}
+                            onInput={bindValue(bind('description', edit))}
+                            readOnly={readonly}
+                        />
+                    </label>
+                </div>
+            )}
+        </li>
     )
 }

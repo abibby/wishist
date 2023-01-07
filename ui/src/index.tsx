@@ -1,15 +1,26 @@
 import { h, render } from 'preact'
-import Router, { Route } from 'preact-router'
+import Router, { route, Route, RouterOnChangeArgs } from 'preact-router'
+import { useCallback } from 'preact/hooks'
+import { getToken } from './auth'
 import { Error404 } from './pages/error-404'
 import { Home } from './pages/home'
 import { List } from './pages/list'
+import { Login } from './pages/login'
 
 h
 
 function Main() {
+    const routeChange = useCallback(async ({ path }: RouterOnChangeArgs) => {
+        const token = await getToken()
+        if (token === null && path !== '/login') {
+            route('/login')
+        }
+    }, [])
+
     return (
-        <Router>
+        <Router onChange={routeChange}>
             <Route component={Home} path='/' />
+            <Route component={Login} path='/login' />
             <Route component={List} path='/list/:name' />
             <Route component={Error404} default />
         </Router>
@@ -18,9 +29,16 @@ function Main() {
 
 render(<Main />, document.getElementById('app')!)
 
-fetch('/login', {
-    method: 'POST',
-    body: JSON.stringify({ username: 'adam', password: 'test' }),
-})
-    .then(r => r.json())
-    .then(console.log)
+async function main() {
+    // await fetch('/user', {
+    //     method: 'PUT',
+    //     body: JSON.stringify({ username: 'adam', password: 'test' }),
+    // })
+
+    await fetch('/login', {
+        method: 'POST',
+        body: JSON.stringify({ username: 'adam', password: 'test' }),
+    })
+}
+
+main()

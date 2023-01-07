@@ -24,23 +24,49 @@ const (
 type TokenOptions func(claims jwt.MapClaims) jwt.MapClaims
 
 func UserID(ctx context.Context) (int, bool) {
-	iUserID := ctx.Value("user-id")
-	userID, ok := iUserID.(int)
-	return userID, ok
+	claims, ok := jwtClaims(ctx)
+	if !ok {
+		return 0, false
+	}
+
+	uid, ok := claims["sub"]
+	if !ok {
+		return 0, false
+	}
+	return int(uid.(float64)), true
+}
+func jwtPurpose(ctx context.Context) (Purpose, bool) {
+	claims, ok := jwtClaims(ctx)
+	if !ok {
+		return "", false
+	}
+
+	uid, ok := claims["purpose"]
+	if !ok {
+		return "", false
+	}
+	return uid.(Purpose), true
 }
 
-func setUserID(r *http.Request, uid int) {
-	newRequest := r.WithContext(context.WithValue(r.Context(), "user-id", uid))
+func jwtClaims(ctx context.Context) (jwt.MapClaims, bool) {
+	iClaims := ctx.Value("jwt-claims")
+	claims, ok := iClaims.(jwt.MapClaims)
+	return claims, ok
+}
+
+func setClaims(r *http.Request, claims jwt.MapClaims) {
+	newRequest := r.WithContext(context.WithValue(r.Context(), "jwt-claims", claims))
 	*r = *newRequest
 }
 
 func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ok, _ := authenticate(r)
+		claims, ok := authenticate(r)
 		if !ok {
 			handler.ErrorResponse(fmt.Errorf("unauthorized"), http.StatusUnauthorized).Respond(w)
 			return
 		}
+		setClaims(r, claims)
 
 		next.ServeHTTP(w, r)
 	})
@@ -54,6 +80,7 @@ func GenerateToken(u *db.User, modifyClaims ...TokenOptions) (string, error) {
 	}
 	if u != nil {
 		claims["sub"] = u.ID
+		claims["username"] = u.Username
 	}
 	for _, m := range modifyClaims {
 		claims = m(claims)
@@ -74,10 +101,10 @@ func WithPurpose(purpose Purpose) TokenOptions {
 	return WithClaim("purpose", purpose)
 }
 
-func authenticate(r *http.Request) (bool, jwt.MapClaims) {
+func authenticate(r *http.Request) (jwt.MapClaims, bool) {
 	authHeader := r.Header.Get("Authorization")
 	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return false, nil
+		return nil, false
 	}
 	tokenStr := authHeader[7:]
 
@@ -91,16 +118,13 @@ func authenticate(r *http.Request) (bool, jwt.MapClaims) {
 	})
 	if err != nil {
 		log.Printf("failed to parse JWT: %v", err)
-		return false, nil
+		return nil, false
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return false, nil
+		return nil, false
 	}
 
-	if uid, ok := claims["sub"]; ok {
-		setUserID(r, uid.(int))
-	}
-	return true, claims
+	return claims, true
 }
