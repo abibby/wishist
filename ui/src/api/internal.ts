@@ -7,7 +7,8 @@ export class FetchError<T> extends Error {
 }
 
 export async function apiFetch<T>(
-    input: RequestInfo,
+    path: string,
+    query: Record<string, string> | null = null,
     init?: RequestInit,
 ): Promise<T> {
     const token = await getToken()
@@ -18,6 +19,11 @@ export async function apiFetch<T>(
                 Authorization: 'Bearer ' + token,
             },
         }
+    }
+
+    let input = path
+    if (query !== null) {
+        input += '?' + new URLSearchParams(query).toString()
     }
     const response = await fetch(input, init)
     const body = await response.json()

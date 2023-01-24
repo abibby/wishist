@@ -10,19 +10,39 @@ import (
 	"github.com/abibby/validate/handler"
 	"github.com/abibby/wishlist/auth"
 	"github.com/abibby/wishlist/db"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 )
 
+type Purpose string
+
+const (
+	PurposeAuthorize = Purpose("authorize")
+	PurposeRefresh   = Purpose("refresh")
+)
+
+func WithPurpose(purpose Purpose) auth.TokenOptions {
+	return auth.WithClaim("purpose", string(purpose))
+}
+
+func WithUser(u *db.User) auth.TokenOptions {
+	return func(claims jwt.MapClaims) jwt.MapClaims {
+		claims = auth.WithSubject(u.ID)(claims)
+		claims = auth.WithClaim("username", u.Username)(claims)
+		return claims
+	}
+}
+
 type CreateUserRequest struct {
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Password []byte `json:"password"`
+	Username string `json:"username" validate:"required"`
+	Name     string `json:"name"     validate:"required"`
+	Password []byte `json:"password" validate:"required"`
 	Request  *http.Request
 }
 type CreateUserResponse *db.User
 
-var UserCreate = handler.Handler(func(r *CreateUserRequest) (any, error) {
+var CreateUser = handler.Handler(func(r *CreateUserRequest) (any, error) {
 	hash, err := bcrypt.GenerateFromPassword(r.Password, bcrypt.MinCost)
 	if err != nil {
 		return nil, err
@@ -47,8 +67,8 @@ var UserCreate = handler.Handler(func(r *CreateUserRequest) (any, error) {
 })
 
 type LoginRequest struct {
-	Username string `json:"username"`
-	Password []byte `json:"password"`
+	Username string `json:"username" validate:"required"`
+	Password []byte `json:"password" validate:"required"`
 	Request  *http.Request
 }
 type LoginResponse struct {
@@ -74,17 +94,52 @@ var Login = handler.Handler(func(r *LoginRequest) (any, error) {
 	}
 
 	token, err := auth.GenerateToken(
-		u,
+		WithUser(u),
 		auth.WithLifetime(24*time.Hour),
-		auth.WithPurpose(auth.PurposeLogin),
+		WithPurpose(PurposeAuthorize),
 	)
 	if err != nil {
 		return nil, err
 	}
 	refresh, err := auth.GenerateToken(
-		u,
+		WithUser(u),
 		auth.WithLifetime(30*24*time.Hour),
-		auth.WithPurpose(auth.PurposeRefresh),
+		WithPurpose(PurposeRefresh),
+	)
+	return &LoginResponse{
+		Token:   token,
+		Refresh: refresh,
+	}, nil
+})
+
+type RefreshRequest struct {
+	Request *http.Request
+}
+
+var Refresh = handler.Handler(func(r *RefreshRequest) (any, error) {
+	u := &db.User{}
+	uid := userID(r.Request.Context())
+	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+		return tx.Get(u, "select * from users where id=?", uid)
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		return handler.ErrorResponse(fmt.Errorf("unauthorized"), http.StatusUnauthorized), nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	token, err := auth.GenerateToken(
+		WithUser(u),
+		auth.WithLifetime(24*time.Hour),
+		WithPurpose(PurposeAuthorize),
+	)
+	if err != nil {
+		return nil, err
+	}
+	refresh, err := auth.GenerateToken(
+		WithUser(u),
+		auth.WithLifetime(30*24*time.Hour),
+		WithPurpose(PurposeRefresh),
 	)
 	return &LoginResponse{
 		Token:   token,

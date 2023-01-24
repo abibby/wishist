@@ -20,3 +20,10 @@ type UserItem struct {
 	ItemID int    `db:"item_id" json:"item_id"`
 	Type   string `db:"type"    json:"type"`
 }
+
+type Friend struct {
+	UserID         int    `db:"user_id"         json:"user_id"`
+	FriendID       int    `db:"friend_id"       json:"friend_id"`
+	FriendName     string `db:"friend_name"     json:"friend_name"`
+	FriendUsername string `db:"friend_username" json:"friend_username"`
+}

@@ -1,8 +1,9 @@
-import { bindValue } from '@zwzn/spicy'
 import { h } from 'preact'
-import { route } from 'preact-router'
+import { Link, route } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
 import { login } from '../auth'
+import { Input } from '../components/form/input'
+import { Default } from '../layouts/default'
 
 h
 
@@ -14,15 +15,23 @@ export function Login() {
         route('/')
     }, [user, password])
     return (
-        <div>
+        <Default>
             <h1>Login</h1>
-            <input type='text' value={user} onInput={bindValue(setUser)} />
-            <input
+            <Input
+                title='Username'
+                type='text'
+                value={user}
+                onInput={setUser}
+            />
+            <Input
+                title='Password'
                 type='password'
                 value={password}
-                onInput={bindValue(setPassword)}
+                onInput={setPassword}
             />
             <button onClick={clickLogin}>Login</button>
-        </div>
+
+            <Link href='/create-user'>Create User</Link>
+        </Default>
     )
 }

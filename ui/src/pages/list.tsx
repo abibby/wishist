@@ -1,13 +1,17 @@
 import { bind, bindValue } from '@zwzn/spicy'
 import debounce from 'lodash.debounce'
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { Item, list, listAdd, listEdit, listRemove } from '../api/list'
-import { userID, username } from '../auth'
+import { item, Item } from '../api'
+import { username } from '../auth'
+import { Default } from '../layouts/default'
 
 h
 
-const debouncedListEdit: typeof listEdit = debounce(listEdit, 500) as any
+const debouncedItemUpdate: typeof item.update = debounce(
+    item.update,
+    500,
+) as any
 
 interface ListProps {
     matches: {
@@ -22,7 +26,7 @@ export function List({ matches }: ListProps) {
     const { name } = matches
 
     useEffect(() => {
-        list({ user: name })
+        item.list({ user: name })
             .then(setItems)
             .catch(() => setItems(undefined))
     }, [name])
@@ -32,14 +36,7 @@ export function List({ matches }: ListProps) {
         })
     }, [name])
     const addItem = useCallback(async () => {
-        const uid = await userID()
-        if (uid === undefined) {
-            console.warn('could not add item, not logged in')
-
-            return
-        }
-        const createdItem = await listAdd({
-            user_id: uid,
+        const createdItem = await item.create({
             name: newItem,
             description: '',
             url: '',
@@ -50,8 +47,8 @@ export function List({ matches }: ListProps) {
 
     const removeItem = useCallback(
         async (id: number) => {
-            await listRemove({
-                item_id: id,
+            await item.delete({
+                id: id,
             })
             setItems(items => items?.filter(i => i.id !== id))
         },
@@ -67,19 +64,34 @@ export function List({ matches }: ListProps) {
         [addItem],
     )
 
+    const listChange = useCallback(
+        (item: Item) => {
+            setItems(items =>
+                items?.map(i => {
+                    if (i.id === item.id) {
+                        return item
+                    }
+                    return i
+                }),
+            )
+            debouncedItemUpdate(item)
+        },
+        [setItems],
+    )
+
     if (items === undefined) {
         return <div>loading...</div>
     }
 
     return (
-        <div>
+        <Default>
             <ul>
                 {items.map(i => (
                     <ListItem
                         key={i.id}
                         item={i}
                         readonly={readonly}
-                        onEdit={debouncedListEdit}
+                        onChange={listChange}
                         onRemove={removeItem}
                     />
                 ))}
@@ -95,28 +107,28 @@ export function List({ matches }: ListProps) {
                     </li>
                 )}
             </ul>
-        </div>
+        </Default>
     )
 }
 
 interface ListItemProps {
     item: Item
     readonly: boolean
-    onEdit: (item: Item) => void
+    onChange: (item: Item) => void
     onRemove: (id: number) => void
 }
 
-function ListItem({ item, readonly, onEdit, onRemove }: ListItemProps) {
+function ListItem({ item, readonly, onChange, onRemove }: ListItemProps) {
     const [open, setOpen] = useState(false)
 
     const edit = useCallback(
         (field: keyof Item, value: string) => {
-            onEdit({
+            onChange({
                 ...item,
                 [field]: value,
             })
         },
-        [item],
+        [item, onChange],
     )
 
     return (
@@ -128,32 +140,36 @@ function ListItem({ item, readonly, onEdit, onRemove }: ListItemProps) {
                 readOnly={readonly}
             />
             {!readonly && <button onClick={bind(item.id, onRemove)}>x</button>}
-            {open ? (
-                <button onClick={bind(false, setOpen)}>-</button>
-            ) : (
-                <button onClick={bind(true, setOpen)}>+</button>
-            )}
-            {open && (
-                <div>
-                    <label>
-                        URL:{' '}
-                        <input
-                            type='text'
-                            value={item.url}
-                            onInput={bindValue(bind('url', edit))}
-                            readOnly={readonly}
-                        />
-                    </label>
-                    <label>
-                        Description:{' '}
-                        <input
-                            type='text'
-                            value={item.description}
-                            onInput={bindValue(bind('description', edit))}
-                            readOnly={readonly}
-                        />
-                    </label>
-                </div>
+            {(!readonly || item.url !== '' || item.description !== '') && (
+                <Fragment>
+                    <button onClick={bind(!open, setOpen)}>
+                        {open ? '-' : '+'}
+                    </button>
+                    {open && (
+                        <div>
+                            <label>
+                                URL:{' '}
+                                <input
+                                    type='text'
+                                    value={item.url}
+                                    onInput={bindValue(bind('url', edit))}
+                                    readOnly={readonly}
+                                />
+                            </label>
+                            <label>
+                                Description:{' '}
+                                <input
+                                    type='text'
+                                    value={item.description}
+                                    onInput={bindValue(
+                                        bind('description', edit),
+                                    )}
+                                    readOnly={readonly}
+                                />
+                            </label>
+                        </div>
+                    )}
+                </Fragment>
             )}
         </li>
     )

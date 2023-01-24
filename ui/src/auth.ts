@@ -1,4 +1,4 @@
-import { createStore, get, set } from 'idb-keyval'
+import { createStore, delMany, get, set, setMany } from 'idb-keyval'
 import jwt from './jwt'
 
 const tokenStore = createStore('auth-tokens', 'auth-tokens')
@@ -15,7 +15,7 @@ export async function getToken(): Promise<string | null> {
         if (refresh === undefined || jwtExpired(refresh)) {
             return null
         }
-        const response = await fetch('/login', {
+        const response = await fetch('/refresh', {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${refresh}`,
@@ -51,10 +51,17 @@ export async function login(username: string, password: string): Promise<void> {
         }),
     }).then(r => r.json())
 
-    await Promise.all([
-        set(tokenKey, response.token, tokenStore),
-        set(refreshKey, response.refresh, tokenStore),
-    ])
+    await setMany(
+        [
+            [tokenKey, response.token],
+            [refreshKey, response.refresh],
+        ],
+        tokenStore,
+    )
+}
+
+export async function logout() {
+    await delMany([tokenKey, refreshKey], tokenStore)
 }
 
 export async function userID(): Promise<number | undefined> {

@@ -32,14 +32,27 @@ func main() {
 	r := mux.NewRouter()
 
 	r.Handle("/login", controller.Login).Methods("POST")
-	r.Handle("/user", controller.UserCreate).Methods("PUT")
+	r.Handle("/user", controller.CreateUser).Methods("PUT")
 
-	Group(r.NewRoute().Subrouter(), func(r *mux.Router) {
-		r.Use(auth.Middleware)
-		r.Handle("/list", controller.ListItems).Methods("GET")
-		r.Handle("/list/edit", controller.EditItem).Methods("POST")
-		r.Handle("/list/add", controller.AddItem).Methods("POST")
-		r.Handle("/list/remove", controller.RemoveItem).Methods("POST")
+	Group(r.NewRoute(), func(r *mux.Router) {
+		r.Use(auth.Middleware, HasPurpose(controller.PurposeRefresh))
+		r.Handle("/refresh", controller.Refresh).Methods("POST")
+	})
+	Group(r.NewRoute(), func(r *mux.Router) {
+		r.Use(auth.Middleware, HasPurpose(controller.PurposeAuthorize))
+
+		Group(r.PathPrefix("/item"), func(r *mux.Router) {
+			r.Handle("", controller.ItemList).Methods("GET")
+			r.Handle("", controller.ItemCreate).Methods("POST")
+			r.Handle("", controller.ItemUpdate).Methods("PUT")
+			r.Handle("", controller.ItemDelete).Methods("DELETE")
+		})
+
+		Group(r.PathPrefix("/friend"), func(r *mux.Router) {
+			r.Handle("", controller.FriendList).Methods("GET")
+			r.Handle("", controller.FriendCreate).Methods("POST")
+			r.Handle("", controller.FriendDelete).Methods("DELETE")
+		})
 	})
 
 	r.PathPrefix("/").
@@ -50,6 +63,10 @@ func main() {
 	http.ListenAndServe(":32148", r)
 }
 
-func Group(r *mux.Router, cb func(r *mux.Router)) {
-	cb(r)
+func Group(r *mux.Route, cb func(r *mux.Router)) {
+	cb(r.Subrouter())
+}
+
+func HasPurpose(p controller.Purpose) mux.MiddlewareFunc {
+	return auth.HasClaim("purpose", string(p))
 }
