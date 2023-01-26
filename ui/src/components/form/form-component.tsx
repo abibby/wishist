@@ -1,4 +1,5 @@
 import { h, RenderableProps } from 'preact'
+import styles from './form-component.module.css'
 
 h
 
@@ -11,9 +12,9 @@ export function FormComponent({
     children,
 }: RenderableProps<FormComponentProps>) {
     return (
-        <label>
-            <div>{title}</div>
-            <div>{children}</div>
+        <label class={styles.wrapper}>
+            <div class={styles.title}>{title}</div>
+            {children}
         </label>
     )
 }

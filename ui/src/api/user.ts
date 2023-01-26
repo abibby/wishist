@@ -11,7 +11,7 @@ export async function userCreate(request: CreateUserRequest): Promise<unknown> {
         '/user',
         {},
         {
-            method: 'PUT',
+            method: 'POST',
             body: JSON.stringify(request),
         },
     )

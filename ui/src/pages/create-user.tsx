@@ -22,22 +22,27 @@ export function CreateUser() {
     }, [name, user, password1, password2])
     return (
         <Default>
-            <h1>Login</h1>
-            <Input title='user' type='text' value={user} onInput={setUser} />
-            <Input title='name' type='text' value={name} onInput={setName} />
+            <h1>Create User</h1>
             <Input
-                title='password1'
+                title='username'
+                type='text'
+                value={user}
+                onInput={setUser}
+            />
+            <Input title='Name' type='text' value={name} onInput={setName} />
+            <Input
+                title='Password'
                 type='password'
                 value={password1}
                 onInput={setPassword1}
             />
             <Input
-                title='password2'
+                title='Reenter Password'
                 type='password'
                 value={password2}
                 onInput={setPassword2}
             />
-            <button onClick={clickLogin}>Login</button>
+            <button onClick={clickLogin}>Create User</button>
         </Default>
     )
 }

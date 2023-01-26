@@ -26,19 +26,26 @@ export async function getToken(): Promise<string | null> {
                 headers: {
                     Authorization: `Bearer ${refresh}`,
                 },
-            }).then(r => r.json())
+            })
 
-            token = response.token
-            _token = response.token
+            if (!response.ok) {
+                return null
+            }
+
+            const result = await response.json()
+
+            token = result.token
+            _token = result.token
 
             await setMany(
                 [
-                    [tokenKey, response.token],
-                    [refreshKey, response.refresh],
+                    [tokenKey, result.token],
+                    [refreshKey, result.refresh],
                 ],
                 tokenStore,
             )
         }
+
         return token ?? null
     } catch (e) {
         console.error(e)
@@ -101,4 +108,43 @@ export async function username(): Promise<string | undefined> {
         return undefined
     }
     return jwt.parse(token).claims.username
+}
+
+export interface UserCreatePasswordlessRequest {
+    name: string
+    username: string
+}
+interface UserCreatePasswordlessResponse {
+    user: unknown
+    token: string
+    refresh: string
+}
+export async function userCreatePasswordless(
+    token: string,
+    request: UserCreatePasswordlessRequest,
+): Promise<void> {
+    const response: UserCreatePasswordlessResponse = await fetch(
+        '/user/passwordless',
+        {
+            headers: {
+                Authorization: 'Bearer ' + token,
+            },
+            method: 'POST',
+            body: JSON.stringify(request),
+        },
+    ).then(r => r.json())
+
+    _token = response.token
+
+    try {
+        await setMany(
+            [
+                [tokenKey, response.token],
+                [refreshKey, response.refresh],
+            ],
+            tokenStore,
+        )
+    } catch (e) {
+        console.error('failed to save token', e)
+    }
 }

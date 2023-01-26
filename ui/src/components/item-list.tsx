@@ -5,6 +5,7 @@ import { h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 import { item, Item, UserItem, userItem } from '../api'
 import { userID } from '../auth'
+import { Input } from './form/input'
 import styles from './item-list.module.css'
 
 h
@@ -192,30 +193,21 @@ function Row({ item, onChange, onRemove }: RowProps) {
                 />
             </label>
             <div class={classNames(styles.popup, { [styles.open]: open })}>
-                <label>
-                    Name:{' '}
-                    <input
-                        type='text'
-                        value={item.name}
-                        onInput={bindValue(bind('name', edit))}
-                    />
-                </label>
-                <label>
-                    URL:{' '}
-                    <input
-                        type='text'
-                        value={item.url}
-                        onInput={bindValue(bind('url', edit))}
-                    />
-                </label>
-                <label>
-                    Description:{' '}
-                    <input
-                        type='text'
-                        value={item.description}
-                        onInput={bindValue(bind('description', edit))}
-                    />
-                </label>
+                <Input
+                    title='Name'
+                    value={item.name}
+                    onInput={bind('name', edit)}
+                />
+                <Input
+                    title='URL'
+                    value={item.url}
+                    onInput={bind('url', edit)}
+                />
+                <Input
+                    title='Description'
+                    value={item.description}
+                    onInput={bind('description', edit)}
+                />
                 <div>
                     <button onClick={bind(false, setOpen)}>Save</button>
                 </div>

@@ -1,0 +1,23 @@
+.wrapper {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+}
+.title {
+
+}
+.element {
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: solid 1px rgba(var(--background-contrast), 20%);
+    padding: 10px;
+    transition: background-color, border 0.25s;
+    font: inherit;
+    color: inherit;
+}
+.element:focus-visible {
+    outline: none;
+    background-color: rgba(var(--background-contrast), 5%);
+    border-bottom: solid 1px rgba(var(--background-contrast), 70%);
+}

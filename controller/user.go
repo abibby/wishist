@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -20,6 +21,7 @@ type Purpose string
 const (
 	PurposeAuthorize = Purpose("authorize")
 	PurposeRefresh   = Purpose("refresh")
+	PurposeInvite    = Purpose("invite")
 )
 
 func WithPurpose(purpose Purpose) auth.TokenOptions {
@@ -32,6 +34,26 @@ func WithUser(u *db.User) auth.TokenOptions {
 		claims = auth.WithClaim("username", u.Username)(claims)
 		return claims
 	}
+}
+
+func createUser(ctx context.Context, username string, passwordHash []byte, name string) (*db.User, error) {
+	u := &db.User{}
+	err := db.Tx(ctx, func(tx *sqlx.Tx) error {
+		_, err := tx.Exec(
+			"INSERT INTO users (username,name,password) VALUES (?, ?, ?);",
+			username,
+			name,
+			passwordHash,
+		)
+		if err != nil {
+			return err
+		}
+		return tx.Get(u, "SELECT * FROM users ORDER BY id DESC LIMIT 1")
+	})
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
 type CreateUserRequest struct {
@@ -48,22 +70,37 @@ var CreateUser = handler.Handler(func(r *CreateUserRequest) (any, error) {
 		return nil, err
 	}
 
-	err = db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		_, err := tx.Exec(
-			"INSERT INTO users (username,name,password) VALUES (?, ?, ?);",
-			r.Username,
-			r.Name,
-			hash,
-		)
-		return err
-	})
+	u, err := createUser(r.Request.Context(), r.Username, hash, r.Name)
+	return CreateUserResponse(u), err
+})
+
+type CreateUserPasswordlessRequest struct {
+	Username string `json:"username" validate:"required"`
+	Name     string `json:"name"     validate:"required"`
+	Request  *http.Request
+}
+type CreateUserPasswordlessResponse struct {
+	User    *db.User `json:"user"`
+	Token   string   `json:"token"`
+	Refresh string   `json:"refresh"`
+}
+
+var CreateUserPasswordless = handler.Handler(func(r *CreateUserPasswordlessRequest) (any, error) {
+	u, err := createUser(r.Request.Context(), r.Username, []byte{}, r.Name)
 	if err != nil {
 		return nil, err
 	}
-	return CreateUserResponse(&db.User{
-		Name:     r.Name,
-		Username: r.Username,
-	}), nil
+
+	token, refresh, err := generateTokens(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreateUserPasswordlessResponse{
+		User:    u,
+		Token:   token,
+		Refresh: refresh,
+	}, nil
 })
 
 type LoginRequest struct {
@@ -93,19 +130,10 @@ var Login = handler.Handler(func(r *LoginRequest) (any, error) {
 		return nil, err
 	}
 
-	token, err := auth.GenerateToken(
-		WithUser(u),
-		auth.WithLifetime(24*time.Hour),
-		WithPurpose(PurposeAuthorize),
-	)
+	token, refresh, err := generateTokens(u)
 	if err != nil {
 		return nil, err
 	}
-	refresh, err := auth.GenerateToken(
-		WithUser(u),
-		auth.WithLifetime(30*24*time.Hour),
-		WithPurpose(PurposeRefresh),
-	)
 	return &LoginResponse{
 		Token:   token,
 		Refresh: refresh,
@@ -117,6 +145,10 @@ type RefreshRequest struct {
 }
 
 var Refresh = handler.Handler(func(r *RefreshRequest) (any, error) {
+	claims, _ := auth.Claims(r.Request.Context())
+	iPasswordless, _ := claims["passwordless"]
+	passwordless, _ := iPasswordless.(bool)
+
 	u := &db.User{}
 	uid := userID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
@@ -128,21 +160,51 @@ var Refresh = handler.Handler(func(r *RefreshRequest) (any, error) {
 		return nil, err
 	}
 
+	if passwordless && len(u.Password) > 0 {
+		return handler.ErrorResponse(fmt.Errorf("unauthorized"), http.StatusUnauthorized), nil
+	}
+
+	token, refresh, err := generateTokens(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginResponse{
+		Token:   token,
+		Refresh: refresh,
+	}, nil
+})
+
+func generateTokens(u *db.User) (string, string, error) {
+	passwordless := len(u.Password) == 0
+
 	token, err := auth.GenerateToken(
 		WithUser(u),
 		auth.WithLifetime(24*time.Hour),
 		WithPurpose(PurposeAuthorize),
 	)
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
+
 	refresh, err := auth.GenerateToken(
 		WithUser(u),
-		auth.WithLifetime(30*24*time.Hour),
+		claimsIf(!passwordless, auth.WithLifetime(30*24*time.Hour)),
+		auth.WithClaim("passwordless", passwordless),
 		WithPurpose(PurposeRefresh),
 	)
-	return &LoginResponse{
-		Token:   token,
-		Refresh: refresh,
-	}, nil
-})
+	if err != nil {
+		return "", "", err
+	}
+	return token, refresh, nil
+}
+func claimsIf(condition bool, modifyClaims ...auth.TokenOptions) auth.TokenOptions {
+	return func(claims jwt.MapClaims) jwt.MapClaims {
+		if condition {
+			for _, m := range modifyClaims {
+				claims = m(claims)
+			}
+		}
+		return claims
+	}
+}

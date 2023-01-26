@@ -35,9 +35,14 @@ func main() {
 	r.Handle("/user", controller.CreateUser).Methods("PUT")
 
 	Group(r.NewRoute(), func(r *mux.Router) {
+		r.Use(auth.Middleware, HasPurpose(controller.PurposeInvite))
+		r.Handle("/user/passwordless", controller.CreateUserPasswordless).Methods("POST")
+	})
+	Group(r.NewRoute(), func(r *mux.Router) {
 		r.Use(auth.Middleware, HasPurpose(controller.PurposeRefresh))
 		r.Handle("/refresh", controller.Refresh).Methods("POST")
 	})
+
 	Group(r.NewRoute(), func(r *mux.Router) {
 		r.Use(auth.Middleware, HasPurpose(controller.PurposeAuthorize))
 
@@ -60,6 +65,8 @@ func main() {
 			r.Handle("", controller.UserItemUpdate).Methods("PUT")
 			r.Handle("", controller.UserItemDelete).Methods("DELETE")
 		})
+
+		r.Handle("/invite", controller.Invite).Methods("GET")
 	})
 
 	r.PathPrefix("/").
