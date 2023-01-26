@@ -1,5 +1,7 @@
 package db
 
+import "github.com/abibby/nulls"
+
 type User struct {
 	ID       int    `db:"id"       json:"id"`
 	Name     string `db:"name"     json:"name"`
@@ -8,11 +10,13 @@ type User struct {
 }
 
 type Item struct {
-	ID          int    `db:"id"          json:"id"`
-	UserID      int    `db:"user_id"     json:"user_id"`
-	Name        string `db:"name"        json:"name"`
-	Description string `db:"description" json:"description"`
-	URL         string `db:"url"         json:"url"`
+	ID             int        `db:"id"              json:"id"`
+	UserID         int        `db:"user_id"         json:"user_id"`
+	Name           string     `db:"name"            json:"name"`
+	Description    string     `db:"description"     json:"description"`
+	URL            string     `db:"url"             json:"url"`
+	ThinkingCount  *nulls.Int `db:"thinking_count"  json:"thinking_count,omitempty"`
+	PurchasedCount *nulls.Int `db:"purchased_count" json:"purchased_count,omitempty"`
 }
 
 type UserItem struct {

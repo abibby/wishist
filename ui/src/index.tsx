@@ -1,6 +1,7 @@
 import { h, render } from 'preact'
 import Router, { route, Route, RouterOnChangeArgs } from 'preact-router'
 import { getToken } from './auth'
+import './main.css'
 import { CreateUser } from './pages/create-user'
 import { Error404 } from './pages/error-404'
 import { Home } from './pages/home'
@@ -12,6 +13,7 @@ h
 async function routeChange({ path }: RouterOnChangeArgs) {
     const unauthenticatedRoutes = ['/login', '/create-user']
     const token = await getToken()
+
     if (
         token === null &&
         path !== null &&
@@ -32,5 +34,4 @@ function Main() {
         </Router>
     )
 }
-
 render(<Main />, document.getElementById('app')!)

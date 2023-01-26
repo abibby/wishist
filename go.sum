@@ -107,6 +107,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdko
 github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d/go.mod h1:HI8ITrYtUY+O+ZhtlqUnD8+KwNPOyugEhfP9fdUIaEQ=
 github.com/abibby/fileserver v0.0.0-20221208191705-087686654550 h1:UsWK0321m+VxaYzoRMbpCXO4RBgM8lwkX9V1tTojN1w=
 github.com/abibby/fileserver v0.0.0-20221208191705-087686654550/go.mod h1:xHBGw2P5B6OigP/ehSFN0L0SVNJSuGnllCrkfZBEX4s=
+github.com/abibby/nulls v1.1.0 h1:uGxt4HRs6XHqO0mnqfUZcDNiiVzN8sH66daUd5g0EIE=
+github.com/abibby/nulls v1.1.0/go.mod h1:Nm6/cK/PYDg+RwGRv5/nAXGJZfu4nGHFp201Dg1HKWQ=
 github.com/abibby/validate v0.4.0 h1:giOFkT40nUZwNNJxOCGwU5fiMekA3qDxN19tlf/j6xY=
 github.com/abibby/validate v0.4.0/go.mod h1:eR5MtB8W4n3nVWkUkacGq7qro+6A/IxqKFXfK2zpYcs=
 github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af/go.mod h1:K08gAheRH3/J6wwsYMMT4xOr94bZjxIelGM0+d/wbFw=

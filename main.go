@@ -53,6 +53,13 @@ func main() {
 			r.Handle("", controller.FriendCreate).Methods("POST")
 			r.Handle("", controller.FriendDelete).Methods("DELETE")
 		})
+
+		Group(r.PathPrefix("/user-item"), func(r *mux.Router) {
+			r.Handle("", controller.UserItemList).Methods("GET")
+			r.Handle("", controller.UserItemCreate).Methods("POST")
+			r.Handle("", controller.UserItemUpdate).Methods("PUT")
+			r.Handle("", controller.UserItemDelete).Methods("DELETE")
+		})
 	})
 
 	r.PathPrefix("/").

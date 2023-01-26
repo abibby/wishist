@@ -1,36 +1,49 @@
-import { createStore, delMany, get, set, setMany } from 'idb-keyval'
+import { createStore, delMany, get, setMany } from 'idb-keyval'
 import jwt from './jwt'
 
 const tokenStore = createStore('auth-tokens', 'auth-tokens')
 const tokenKey = 'token'
 const refreshKey = 'refresh'
 
+let _token: string | undefined
+
 export async function getToken(): Promise<string | null> {
-    let token = await get<string | undefined>(tokenKey, tokenStore)
-    if (token !== undefined && jwtExpired(token)) {
-        token = undefined
+    if (_token !== undefined) {
+        return _token
     }
-    if (token === undefined) {
-        let refresh = await get<string | undefined>(refreshKey, tokenStore)
-        if (refresh === undefined || jwtExpired(refresh)) {
-            return null
+    try {
+        let token = await get<string | undefined>(tokenKey, tokenStore)
+        if (token !== undefined && jwtExpired(token)) {
+            token = undefined
         }
-        const response = await fetch('/refresh', {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${refresh}`,
-            },
-        }).then(r => r.json())
+        if (token === undefined) {
+            let refresh = await get<string | undefined>(refreshKey, tokenStore)
+            if (refresh === undefined || jwtExpired(refresh)) {
+                return null
+            }
+            const response = await fetch('/refresh', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${refresh}`,
+                },
+            }).then(r => r.json())
 
-        token = response.token
+            token = response.token
+            _token = response.token
 
-        await Promise.all([
-            set(tokenKey, response.token, tokenStore),
-            set(refreshKey, response.refresh, tokenStore),
-        ])
+            await setMany(
+                [
+                    [tokenKey, response.token],
+                    [refreshKey, response.refresh],
+                ],
+                tokenStore,
+            )
+        }
+        return token ?? null
+    } catch (e) {
+        console.error(e)
+        return null
     }
-
-    return token ?? null
 }
 
 function jwtExpired(token: string): boolean {
@@ -51,17 +64,27 @@ export async function login(username: string, password: string): Promise<void> {
         }),
     }).then(r => r.json())
 
-    await setMany(
-        [
-            [tokenKey, response.token],
-            [refreshKey, response.refresh],
-        ],
-        tokenStore,
-    )
+    _token = response.token
+
+    try {
+        await setMany(
+            [
+                [tokenKey, response.token],
+                [refreshKey, response.refresh],
+            ],
+            tokenStore,
+        )
+    } catch (e) {
+        console.error('failed to save token', e)
+    }
 }
 
 export async function logout() {
-    await delMany([tokenKey, refreshKey], tokenStore)
+    try {
+        await delMany([tokenKey, refreshKey], tokenStore)
+    } catch (e) {
+        console.error(e)
+    }
 }
 
 export async function userID(): Promise<number | undefined> {

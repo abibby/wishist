@@ -1,0 +1,55 @@
+:root {
+    --darkest: 25,28,64;
+    --dark: 64,68,114;
+    --light: 92,95,124;
+    --gold: 178,151,88;
+    --grey: 195,192,192;
+
+    --primary: var(--gold);
+    --primary-contrast: 0, 0, 0;
+
+    --surface: var(--dark);
+    --surface-contrast: 255, 255, 255;
+
+    --background: var(--darkest);
+    --background-contrast: 255, 255, 255;
+
+    --text-opacity: 90%;
+
+    --content-width: 500px;
+    --max-content-width: calc(100vw - 20px);
+}
+
+body {
+    background-color: rgb(var(--background));
+    background-image: url(../assets/stars.svg);
+    background-repeat: repeat-x;
+    background-size: 1000px;
+    color: rgba(var(--background-contrast), var(--text-opacity));
+    margin: 0;
+    margin-top: 41px;
+    padding: 10px;
+
+    font-family: sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+a {
+    color: rgb(var(--primary))
+}
+
+button {
+    border: none;
+    background-color: rgb(var(--light));
+    color: rgba(var(--light-contrast), var(--text-opacity));
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+button.primary {
+    background-color: rgb(var(--primary));
+    color: rgba(var(--primary-contrast), var(--text-opacity));
+}

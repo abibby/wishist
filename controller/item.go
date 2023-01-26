@@ -19,6 +19,8 @@ type ListItemsResponse []*db.Item
 
 var ItemList = handler.Handler(func(r *ListItemsRequest) (any, error) {
 	items := []*db.Item{}
+	uid := userID(r.Request.Context())
+
 	errNoUsers := fmt.Errorf("Not Found")
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		u := &db.User{}
@@ -28,7 +30,19 @@ var ItemList = handler.Handler(func(r *ListItemsRequest) (any, error) {
 		} else if err != nil {
 			return err
 		}
-		return tx.Select(&items, "select * from items where user_id = ?", u.ID)
+		query := "select * from items where user_id = ?"
+		args := []any{u.ID}
+		if uid != u.ID {
+			query = `select 
+				items.*,
+				(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='thinking') as thinking_count,
+				(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='purchased') as purchased_count
+			from items
+			where user_id = ?`
+			args = []any{uid, uid, u.ID}
+		}
+
+		return tx.Select(&items, query, args...)
 	})
 	if err == errNoUsers {
 		return handler.ErrorResponse(err, 404), nil
@@ -67,7 +81,7 @@ type EditItemRequest struct {
 	Name        string `json:"name"        validate:"required"`
 	Description string `json:"description" validate:"required"`
 	URL         string `json:"url"         validate:"required|url"`
-	Request     http.Request
+	Request     *http.Request
 }
 type EditItemResponse *db.Item
 

@@ -1,0 +1,84 @@
+.list {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.item {
+    display: flex;
+    position: relative;
+    border-bottom: solid 1px rgba(var(--background-contrast), 20%);
+    padding: 10px;
+    transition: background-color, border 0.25s;
+}
+.item.new {
+    background-color: rgba(var(--background-contrast), 5%);
+}
+.item:focus-within {
+    background-color: rgba(var(--background-contrast), 5%);
+    border-bottom: solid 1px rgba(var(--background-contrast), 70%);
+}
+
+.name {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+}
+.name:focus-visible {
+    outline: none;
+}
+
+.thinking .name {
+    color: rgba(var(--background-contrast), 50%);
+}
+.purchased .name {
+    text-decoration: line-through;
+    color: rgba(var(--background-contrast), 50%);
+}
+
+.actions {
+    display: flex;
+    gap: 5px
+
+}
+.action {
+    background: none;
+    border: none;
+    opacity: 0.5;
+}
+.action.active{
+    opacity: 1;
+}
+
+.popup {
+    display: none;
+}
+.popup.open {
+    display: block;
+    position: absolute;
+    background-color: rgb(var(--surface));
+    color: rgba(var(--surface-contrast), var(--text-opacity));
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    width: var(--content-width);
+    max-width: var(--max-content-width);
+    z-index: 20;
+}
+.popup label {
+    display: block;
+}
+
+.screen.open {
+    position: fixed;
+    display: block;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    backdrop-filter: blur(5px);
+    z-index: 10;
+}

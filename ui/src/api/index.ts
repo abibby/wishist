@@ -6,6 +6,8 @@ export interface Item {
     name: string
     description: string
     url: string
+    thinking_count?: number
+    purchased_count?: number
 }
 
 export const item = buildRestModel<
@@ -22,10 +24,31 @@ export interface Friend {
     friend_username: string
 }
 
-export const friends = buildRestModel<
+export interface FriendCreateRequest {
+    username: string
+}
+export interface FriendDeleteRequest {
+    username: string
+}
+
+export const friend = buildRestModel<
     Friend,
     never,
-    Omit<Friend, 'user_id'>,
+    FriendCreateRequest,
     never,
-    Omit<Friend, 'user_id'>
+    FriendDeleteRequest
 >('/friend')
+
+export interface UserItem {
+    user_id: number
+    item_id: number
+    type: 'thinking' | 'purchased'
+}
+
+export const userItem = buildRestModel<
+    UserItem,
+    { user: string },
+    Omit<UserItem, 'user_id'>,
+    Omit<UserItem, 'user_id'>,
+    Pick<UserItem, 'item_id'>
+>('/user-item')
