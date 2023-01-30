@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	"github.com/abibby/wishlist/auth"
+	"github.com/abibby/wishist/auth"
 )
 
 func userID(ctx context.Context) int {

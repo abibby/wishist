@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/abibby/validate/handler"
-	"github.com/abibby/wishlist/auth"
+	"github.com/abibby/wishist/auth"
 )
 
 type InviteRequest struct{}

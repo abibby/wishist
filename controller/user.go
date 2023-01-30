@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/abibby/validate/handler"
-	"github.com/abibby/wishlist/auth"
-	"github.com/abibby/wishlist/db"
+	"github.com/abibby/wishist/auth"
+	"github.com/abibby/wishist/db"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"

@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/abibby/fileserver"
-	"github.com/abibby/wishlist/auth"
-	"github.com/abibby/wishlist/config"
-	"github.com/abibby/wishlist/controller"
-	"github.com/abibby/wishlist/db"
-	"github.com/abibby/wishlist/ui"
+	"github.com/abibby/wishist/auth"
+	"github.com/abibby/wishist/config"
+	"github.com/abibby/wishist/controller"
+	"github.com/abibby/wishist/db"
+	"github.com/abibby/wishist/ui"
 	"github.com/gorilla/mux"
 )
 

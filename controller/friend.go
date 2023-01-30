@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/abibby/validate/handler"
-	"github.com/abibby/wishlist/db"
+	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
 )
 

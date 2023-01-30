@@ -1,4 +1,4 @@
-module github.com/abibby/wishlist
+module github.com/abibby/wishist
 
 go 1.19
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/abibby/wishlist/config"
+	"github.com/abibby/wishist/config"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 )

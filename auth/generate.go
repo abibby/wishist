@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"github.com/abibby/wishlist/config"
+	"github.com/abibby/wishist/config"
 	"github.com/golang-jwt/jwt/v4"
 )
 
