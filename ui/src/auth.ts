@@ -1,9 +1,16 @@
+import { Event, EventTarget } from 'event-target-shim'
 import { createStore, delMany, get, setMany } from 'idb-keyval'
+import { useEffect, useState } from 'preact/hooks'
 import jwt from './jwt'
 
 const tokenStore = createStore('auth-tokens', 'auth-tokens')
 const tokenKey = 'token'
 const refreshKey = 'refresh'
+
+type ChangeEventMap = {
+    change: Event<'change'>
+}
+const changes = new EventTarget<ChangeEventMap, 'strict'>()
 
 let _token: string | undefined
 
@@ -44,6 +51,7 @@ export async function getToken(): Promise<string | null> {
                 ],
                 tokenStore,
             )
+            changes.dispatchEvent(new Event('change'))
         }
 
         return token ?? null
@@ -81,6 +89,7 @@ export async function login(username: string, password: string): Promise<void> {
             ],
             tokenStore,
         )
+        changes.dispatchEvent(new Event('change'))
     } catch (e) {
         console.error('failed to save token', e)
     }
@@ -89,6 +98,7 @@ export async function login(username: string, password: string): Promise<void> {
 export async function logout() {
     try {
         await delMany([tokenKey, refreshKey], tokenStore)
+        changes.dispatchEvent(new Event('change'))
     } catch (e) {
         console.error(e)
     }
@@ -144,7 +154,38 @@ export async function userCreatePasswordless(
             ],
             tokenStore,
         )
+        changes.dispatchEvent(new Event('change'))
     } catch (e) {
         console.error('failed to save token', e)
     }
+}
+
+export interface User {
+    id: number
+    username: string
+}
+
+export function useUser(): User | null {
+    const [user, setUser] = useState<User | null>(null)
+    useEffect(() => {
+        const change = async () => {
+            const token = await getToken()
+            if (token !== null) {
+                const claims = jwt.parse(token).claims
+                setUser({
+                    id: claims.sub,
+                    username: claims.username,
+                })
+            } else {
+                setUser(null)
+            }
+        }
+        changes.addEventListener('change', change)
+        change()
+
+        return () => {
+            changes.removeEventListener('change', change)
+        }
+    }, [setUser])
+    return user
 }

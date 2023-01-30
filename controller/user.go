@@ -21,7 +21,6 @@ type Purpose string
 const (
 	PurposeAuthorize = Purpose("authorize")
 	PurposeRefresh   = Purpose("refresh")
-	PurposeInvite    = Purpose("invite")
 )
 
 func WithPurpose(purpose Purpose) auth.TokenOptions {
@@ -150,7 +149,10 @@ var Refresh = handler.Handler(func(r *RefreshRequest) (any, error) {
 	passwordless, _ := iPasswordless.(bool)
 
 	u := &db.User{}
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		return tx.Get(u, "select * from users where id=?", uid)
 	})

@@ -1,8 +1,8 @@
 import debounce from 'lodash.debounce'
 import { h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { useUsername } from '../../hooks/use-username'
 import { friend, Friend, item } from '../api'
+import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
 import { Default } from '../layouts/default'
 
@@ -21,8 +21,8 @@ interface ListProps {
 
 export function List({ matches }: ListProps) {
     const { name } = matches
-    const user = useUsername()
-    const myList = user === name
+    const user = useUser()
+    const myList = user?.username === name
 
     const [friendsList, setFriendsList] = useState<Friend[]>()
     useEffect(() => {

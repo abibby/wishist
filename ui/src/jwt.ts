@@ -6,7 +6,7 @@ export interface Headers {
 export interface Claims {
     username: string
     iss?: string | number // Issuer Claim
-    sub?: number // Subject Claim
+    sub: number // Subject Claim
     aud?: string | number // Audience Claim
     exp?: number // Expiration Time Claim
     nbf?: number // Not Before Claim

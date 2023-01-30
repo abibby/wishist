@@ -19,7 +19,7 @@ type ListItemsResponse []*db.Item
 
 var ItemList = handler.Handler(func(r *ListItemsRequest) (any, error) {
 	items := []*db.Item{}
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
 
 	errNoUsers := fmt.Errorf("Not Found")
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
@@ -32,7 +32,7 @@ var ItemList = handler.Handler(func(r *ListItemsRequest) (any, error) {
 		}
 		query := "select * from items where user_id = ?"
 		args := []any{u.ID}
-		if uid != u.ID {
+		if uid != u.ID && ok {
 			query = `select 
 				items.*,
 				(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='thinking') as thinking_count,
@@ -62,7 +62,10 @@ type AddItemResponse *db.Item
 
 var ItemCreate = handler.Handler(func(r *AddItemRequest) (any, error) {
 	item := &db.Item{}
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("INSERT INTO items (user_id,name,description,url) VALUES (?, ?, ?, ?)", uid, r.Name, r.Description, r.URL)
 		if err != nil {

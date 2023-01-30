@@ -20,7 +20,10 @@ type ListUserItemsResponse []*db.UserItem
 var UserItemList = handler.Handler(func(r *ListUserItemsRequest) (any, error) {
 	items := []*db.UserItem{}
 	errNoUsers := fmt.Errorf("Not Found")
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		u := &db.User{}
 		err := tx.Get(u, "select * from users where username=?", r.User)
@@ -57,7 +60,10 @@ type UserItemCreateRequest struct {
 type UserItemCreateResponse *db.UserItem
 
 var UserItemCreate = handler.Handler(func(r *UserItemCreateRequest) (any, error) {
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("INSERT INTO user_items (user_id,item_id,type) VALUES (?, ?, ?)", uid, r.ItemID, r.Type)
 		return err
@@ -80,7 +86,10 @@ type EditUserItemRequest struct {
 type EditUserItemResponse *db.UserItem
 
 var UserItemUpdate = handler.Handler(func(r *EditUserItemRequest) (any, error) {
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("UPDATE user_items SET type=? WHERE user_id=? and item_id=?", r.Type, uid, r.ItemID)
 		return err
@@ -104,7 +113,10 @@ type RemoveUserItemResponse struct {
 }
 
 var UserItemDelete = handler.Handler(func(r *RemoveUserItemRequest) (any, error) {
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM user_items WHERE user_id=? AND item_id=?", uid, r.ItemID)
 		return err

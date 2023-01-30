@@ -1,6 +1,5 @@
 import { h, render } from 'preact'
-import Router, { route, Route, RouterOnChangeArgs } from 'preact-router'
-import { getToken } from './auth'
+import Router, { Route } from 'preact-router'
 import './main.css'
 import { CreatePasswordlessUser } from './pages/create-passwordless-user'
 import { CreateUser } from './pages/create-user'
@@ -11,26 +10,9 @@ import { Login } from './pages/login'
 
 h
 
-async function routeChange({ path }: RouterOnChangeArgs) {
-    const unauthenticatedRoutes = [
-        '/login',
-        '/create-user',
-        '/create-user/passwordless',
-    ]
-    const token = await getToken()
-
-    if (
-        token === null &&
-        path !== null &&
-        !unauthenticatedRoutes.includes(path)
-    ) {
-        route('/login')
-    }
-}
-
 function Main() {
     return (
-        <Router onChange={routeChange}>
+        <Router>
             <Route component={Home} path='/' />
             <Route component={Login} path='/login' />
             <Route component={CreateUser} path='/create-user' />

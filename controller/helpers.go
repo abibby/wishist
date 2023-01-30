@@ -6,14 +6,14 @@ import (
 	"github.com/abibby/wishist/auth"
 )
 
-func userID(ctx context.Context) int {
+func userID(ctx context.Context) (int, bool) {
 	claims, ok := auth.Claims(ctx)
 	if !ok {
-		panic("could not find claims")
+		return 0, false
 	}
 	uid, ok := claims["sub"]
 	if !ok {
-		panic("sub not set on claims")
+		return 0, false
 	}
-	return int(uid.(float64))
+	return int(uid.(float64)), true
 }

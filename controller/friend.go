@@ -17,7 +17,10 @@ type ListFriendsResponse []*db.Friend
 
 var FriendList = handler.Handler(func(r *ListFriendsRequest) (any, error) {
 	friends := []*db.Friend{}
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		return tx.Select(
 			&friends,
@@ -44,7 +47,10 @@ type AddFriendRequest struct {
 type AddFriendResponse *db.Friend
 
 var FriendCreate = handler.Handler(func(r *AddFriendRequest) (any, error) {
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	errFriendNotFound := fmt.Errorf("friend not found")
 	friend := &db.User{}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
@@ -79,7 +85,10 @@ type RemoveFriendResponse struct {
 }
 
 var FriendDelete = handler.Handler(func(r *RemoveFriendRequest) (any, error) {
-	uid := userID(r.Request.Context())
+	uid, ok := userID(r.Request.Context())
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM friends WHERE user_id=? AND friend_id=(select id from users where username=?)", uid, r.FriendUsername)
 		return err
