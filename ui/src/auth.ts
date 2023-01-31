@@ -98,6 +98,7 @@ export async function login(username: string, password: string): Promise<void> {
 export async function logout() {
     try {
         await delMany([tokenKey, refreshKey], tokenStore)
+        _token = undefined
         changes.dispatchEvent(new Event('change'))
     } catch (e) {
         console.error(e)

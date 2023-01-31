@@ -1,0 +1,35 @@
+.screen {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    backdrop-filter: blur(5px);
+    z-index: 100;
+}
+
+.modal {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    --padding: 15px;
+    background-color: rgb(var(--surface));
+    color: rgba(var(--surface-contrast), var(--text-opacity));
+    width: var(--content-width);
+    max-width: var(--max-content-width);
+    padding: var(--padding);
+
+    z-index: 101;
+}
+
+.title {
+    margin: 0;
+}
+
+.close {
+    position: absolute;
+    top: var(--padding);
+    right: var(--padding);
+}

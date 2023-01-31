@@ -1,22 +1,24 @@
 import { h } from 'preact'
-import { Link, route } from 'preact-router'
+import { Link } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
-import { login } from '../auth'
-import { Input } from '../components/form/input'
-import { Default } from '../layouts/default'
+import { login } from '../../auth'
+import { Input } from '../form/input'
+import { Modal, ModalProps } from '../modal'
 
 h
 
-export function Login() {
+interface LoginModalProps extends ModalProps {}
+
+export function LoginModal({ close }: LoginModalProps) {
     const [user, setUser] = useState('')
     const [password, setPassword] = useState('')
     const clickLogin = useCallback(async () => {
         await login(user, password)
-        route('/')
+        close()
     }, [user, password])
+
     return (
-        <Default>
-            <h1>Login</h1>
+        <Modal title='Login' close={close}>
             <Input
                 title='Username'
                 type='text'
@@ -32,6 +34,6 @@ export function Login() {
             <button onClick={clickLogin}>Login</button>
 
             <Link href='/create-user'>Create User</Link>
-        </Default>
+        </Modal>
     )
 }

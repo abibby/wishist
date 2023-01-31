@@ -22,9 +22,13 @@
     color: rgb(var(--primary));
     text-decoration: none;
 }
+.login,
 .logout {
     color: inherit;
     border: none;
     background: none;
     font-size: inherit;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
 }
