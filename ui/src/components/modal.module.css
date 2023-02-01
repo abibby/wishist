@@ -6,6 +6,11 @@
     right: 0;
     backdrop-filter: blur(5px);
     z-index: 100;
+    animation: blur-in 0.2s;
+}
+@keyframes blur-in {
+    0%   { backdrop-filter: blur(0); }
+    100% { backdrop-filter: blur(5px); }
 }
 
 .modal {
@@ -22,6 +27,16 @@
     padding: var(--padding);
 
     z-index: 101;
+
+    animation: slide-in 0.2s;
+}
+@keyframes face-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+}
+@keyframes slide-in {
+    0%   { transform: translateX(-50%) translateY(calc(-100% - 100px)); }
+    100% { transform: translateX(-50%) translateY(0); }
 }
 
 .title {
@@ -32,4 +47,10 @@
     position: absolute;
     top: var(--padding);
     right: var(--padding);
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+    justify-content: flex-end;
 }

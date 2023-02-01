@@ -1,9 +1,10 @@
 import { h } from 'preact'
-import { Link } from 'preact-router'
+import { route } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
 import { login } from '../../auth'
 import { Input } from '../form/input'
-import { Modal, ModalProps } from '../modal'
+import { Modal, ModalActions, ModalProps } from '../modal'
+import styles from './login.module.css'
 
 h
 
@@ -12,28 +13,46 @@ interface LoginModalProps extends ModalProps {}
 export function LoginModal({ close }: LoginModalProps) {
     const [user, setUser] = useState('')
     const [password, setPassword] = useState('')
-    const clickLogin = useCallback(async () => {
-        await login(user, password)
+    const [error, setError] = useState<string>()
+    const loginSubmit = useCallback(
+        async (e: Event) => {
+            e.preventDefault()
+            const success = await login(user, password)
+            if (!success) {
+                setError('Invalid username or password')
+                return
+            }
+            close()
+        },
+        [user, password, setError],
+    )
+
+    const createUser = useCallback(() => {
+        route('/create-user')
         close()
-    }, [user, password])
+    }, [])
 
     return (
         <Modal title='Login' close={close}>
-            <Input
-                title='Username'
-                type='text'
-                value={user}
-                onInput={setUser}
-            />
-            <Input
-                title='Password'
-                type='password'
-                value={password}
-                onInput={setPassword}
-            />
-            <button onClick={clickLogin}>Login</button>
-
-            <Link href='/create-user'>Create User</Link>
+            <form onSubmit={loginSubmit}>
+                {error && <div class={styles.error}>{error}</div>}
+                <Input
+                    title='Username'
+                    type='text'
+                    value={user}
+                    onInput={setUser}
+                />
+                <Input
+                    title='Password'
+                    type='password'
+                    value={password}
+                    onInput={setPassword}
+                />
+                <ModalActions>
+                    <button type='submit'>Login</button>
+                    <button onClick={createUser}>Create User</button>
+                </ModalActions>
+            </form>
         </Modal>
     )
 }

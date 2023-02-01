@@ -8,6 +8,9 @@
     --primary: var(--gold);
     --primary-contrast: 0, 0, 0;
 
+    --alert: 255, 160, 71;
+    --alert-contrast: 0, 0, 0;
+
     --surface: var(--dark);
     --surface-contrast: 255, 255, 255;
 

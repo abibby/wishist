@@ -1,9 +1,8 @@
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { route } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
 import { userCreate } from '../api/user'
 import { Input } from '../components/form/input'
-import { Default } from '../layouts/default'
 
 h
 
@@ -21,7 +20,7 @@ export function CreateUser() {
         route('/login')
     }, [name, user, password1, password2])
     return (
-        <Default>
+        <Fragment>
             <h1>Create User</h1>
             <Input
                 title='username'
@@ -43,6 +42,6 @@ export function CreateUser() {
                 onInput={setPassword2}
             />
             <button onClick={clickLogin}>Create User</button>
-        </Default>
+        </Fragment>
     )
 }

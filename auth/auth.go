@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/abibby/validate/handler"
-	"github.com/abibby/wishist/config"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 )
@@ -33,18 +32,27 @@ func setClaims(r *http.Request, claims jwt.MapClaims) *http.Request {
 	return r.WithContext(context.WithValue(r.Context(), "jwt-claims", claims))
 }
 
-func Middleware(next http.Handler) http.Handler {
+func AttachUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims, err := authenticate(r)
-		if err != nil {
-			if !config.Verbose {
-				err = fmt.Errorf("unauthorized")
-			}
-			handler.ErrorResponse(err, http.StatusUnauthorized).Respond(w)
+		if err == nil {
+			next.ServeHTTP(w, setClaims(r, claims))
 			return
 		}
 
-		next.ServeHTTP(w, setClaims(r, claims))
+		next.ServeHTTP(w, r)
+	})
+}
+
+func LoggedIn(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, ok := Claims(r.Context())
+		if !ok {
+			handler.ErrorResponse(fmt.Errorf("unauthorized"), http.StatusUnauthorized).Respond(w)
+			return
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }
 

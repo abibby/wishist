@@ -1,13 +1,14 @@
 import { h } from 'preact'
-import { route } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
-import { userCreatePasswordless } from '../auth'
-import { Input } from '../components/form/input'
-import { Default } from '../layouts/default'
+import { userCreatePasswordless } from '../../auth'
+import { Input } from '../form/input'
+import { Modal, ModalActions, ModalProps } from '../modal'
 
 h
 
-export function CreatePasswordlessUser() {
+interface CreatePasswordlessUserProps extends ModalProps {}
+
+export function CreatePasswordlessUser({ close }: CreatePasswordlessUserProps) {
     const [name, setName] = useState('')
     const [user, setUser] = useState('')
     const createUser = useCallback(async () => {
@@ -20,11 +21,10 @@ export function CreatePasswordlessUser() {
             username: user,
         })
 
-        route('/')
+        close()
     }, [name, user])
     return (
-        <Default>
-            <h1>Create User</h1>
+        <Modal title='Create User' close={close}>
             <Input
                 title='Username'
                 type='text'
@@ -33,7 +33,9 @@ export function CreatePasswordlessUser() {
             />
             <Input title='Name' type='text' value={name} onInput={setName} />
 
-            <button onClick={createUser}>Create User</button>
-        </Default>
+            <ModalActions>
+                <button onClick={createUser}>Create User</button>
+            </ModalActions>
+        </Modal>
     )
 }

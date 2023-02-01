@@ -70,39 +70,49 @@ function jwtExpired(token: string): boolean {
     return exp * 1000 < Date.now()
 }
 
-export async function login(username: string, password: string): Promise<void> {
+export async function login(
+    username: string,
+    password: string,
+): Promise<boolean> {
     const response = await fetch('/login', {
         method: 'POST',
         body: JSON.stringify({
             username: username,
             password: password,
         }),
-    }).then(r => r.json())
+    })
 
-    _token = response.token
+    if (!response.ok) {
+        return false
+    }
+
+    const data = await response.json()
+
+    _token = data.token
 
     try {
         await setMany(
             [
-                [tokenKey, response.token],
-                [refreshKey, response.refresh],
+                [tokenKey, data.token],
+                [refreshKey, data.refresh],
             ],
             tokenStore,
         )
-        changes.dispatchEvent(new Event('change'))
     } catch (e) {
         console.error('failed to save token', e)
     }
+    changes.dispatchEvent(new Event('change'))
+    return true
 }
 
 export async function logout() {
+    _token = undefined
     try {
         await delMany([tokenKey, refreshKey], tokenStore)
-        _token = undefined
-        changes.dispatchEvent(new Event('change'))
     } catch (e) {
         console.error(e)
     }
+    changes.dispatchEvent(new Event('change'))
 }
 
 export async function userID(): Promise<number | undefined> {
@@ -155,10 +165,10 @@ export async function userCreatePasswordless(
             ],
             tokenStore,
         )
-        changes.dispatchEvent(new Event('change'))
     } catch (e) {
         console.error('failed to save token', e)
     }
+    changes.dispatchEvent(new Event('change'))
 }
 
 export interface User {

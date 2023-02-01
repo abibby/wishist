@@ -91,3 +91,7 @@ export async function openModal<T extends ModalProps>(
 ) {
     modalEventTarget.dispatchEvent(new ModalOpenEvent(modal, props))
 }
+
+export function ModalActions({ children }: RenderableProps<{}>) {
+    return <div class={styles.actions}>{children}</div>
+}

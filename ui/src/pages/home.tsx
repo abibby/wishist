@@ -1,4 +1,4 @@
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { Link } from 'preact-router'
 import { useEffect, useState } from 'preact/hooks'
 import { Friend, friend } from '../api'
@@ -24,7 +24,7 @@ export function Home() {
     }
 
     return (
-        <Default>
+        <Fragment>
             <h1>Wishist</h1>
             <Link href={`/list/${user?.username}`}>My List</Link>
             <h2>Friends</h2>
@@ -37,6 +37,6 @@ export function Home() {
                     </li>
                 ))}
             </ul>
-        </Default>
+        </Fragment>
     )
 }

@@ -1,10 +1,9 @@
 import debounce from 'lodash.debounce'
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 import { friend, Friend, item } from '../api'
 import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
-import { Default } from '../layouts/default'
 
 h
 
@@ -50,7 +49,7 @@ export function List({ matches }: ListProps) {
         friendsList?.find(f => f.friend_username === name) !== undefined
 
     return (
-        <Default>
+        <Fragment>
             <h1>{myList ? 'My Wishlist' : `${name}'s Wishlist`}</h1>
             {!myList &&
                 (isFriend ? (
@@ -61,6 +60,6 @@ export function List({ matches }: ListProps) {
                     </button>
                 ))}
             <ItemList username={name} readonly={!myList} />
-        </Default>
+        </Fragment>
     )
 }

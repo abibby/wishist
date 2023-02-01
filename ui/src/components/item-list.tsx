@@ -4,7 +4,7 @@ import debounce from 'lodash.debounce'
 import { h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 import { item, Item, UserItem, userItem } from '../api'
-import { userID } from '../auth'
+import { userID, useUser } from '../auth'
 import { Input } from './form/input'
 import styles from './item-list.module.css'
 
@@ -24,6 +24,7 @@ export function ItemList({ username: name, readonly }: ListProps) {
     const [newItem, setNewItem] = useState('')
     const [items, setItems] = useState<Item[] | undefined>()
     const [userItems, setUserItems] = useState<UserItem[] | undefined>()
+    const { id: userID } = useUser() ?? {}
 
     useEffect(() => {
         item.list({ user: name })
@@ -33,7 +34,7 @@ export function ItemList({ username: name, readonly }: ListProps) {
             .list({ user: name })
             .then(setUserItems)
             .catch(() => setUserItems(undefined))
-    }, [name])
+    }, [name, userID])
 
     const addItem = useCallback(async () => {
         const createdItem = await item.create({
@@ -112,7 +113,7 @@ export function ItemList({ username: name, readonly }: ListProps) {
     }
 
     return (
-        <ul class={styles.list}>
+        <ul class={classNames(styles.list, { [styles.edit]: !readonly })}>
             {items.map(i => {
                 if (readonly) {
                     return (
@@ -232,6 +233,7 @@ function ReadonlyRow({
     onUserItemRemove,
 }: ReadonlyRowProps) {
     const [open, setOpen] = useState(false)
+    const user = useUser()
 
     const itemID = item.id
     const userItemType = ui?.type
@@ -282,31 +284,30 @@ function ReadonlyRow({
                 [styles.purchased]: (item.purchased_count ?? 0) > 0,
             })}
         >
-            <span
-                class={styles.name}
-                onClick={hasExtraInfo ? bind(true, setOpen) : undefined}
-            >
+            <span class={styles.name} onClick={bind(true, setOpen)}>
                 {item.name}
                 {hasExtraInfo && ' *'}
             </span>
-            <div class={styles.actions}>
-                <button
-                    class={classNames(styles.action, {
-                        [styles.active]: isThinking,
-                    })}
-                    onClick={setThinking}
-                >
-                    👁️
-                </button>
-                <button
-                    class={classNames(styles.action, {
-                        [styles.active]: isPurchased,
-                    })}
-                    onClick={setPurchased}
-                >
-                    🛍️
-                </button>
-            </div>
+            {user && (
+                <div class={styles.actions}>
+                    <button
+                        class={classNames(styles.action, {
+                            [styles.active]: isThinking,
+                        })}
+                        onClick={setThinking}
+                    >
+                        👁️
+                    </button>
+                    <button
+                        class={classNames(styles.action, {
+                            [styles.active]: isPurchased,
+                        })}
+                        onClick={setPurchased}
+                    >
+                        🛍️
+                    </button>
+                </div>
+            )}
             <div
                 class={classNames(styles.screen, { [styles.open]: open })}
                 onClick={bind(false, setOpen)}
@@ -324,6 +325,8 @@ function ReadonlyRow({
                     )}
                 </div>
                 <div>Description: {item.description}</div>
+                <div>Watching: {item.thinking_count}</div>
+                <div>Purchased: {item.purchased_count}</div>
             </div>
         </li>
     )
