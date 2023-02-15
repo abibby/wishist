@@ -141,15 +141,11 @@ interface UserCreatePasswordlessResponse {
     refresh: string
 }
 export async function userCreatePasswordless(
-    token: string,
     request: UserCreatePasswordlessRequest,
 ): Promise<void> {
     const response: UserCreatePasswordlessResponse = await fetch(
         '/user/passwordless',
         {
-            headers: {
-                Authorization: 'Bearer ' + token,
-            },
             method: 'POST',
             body: JSON.stringify(request),
         },
@@ -174,6 +170,7 @@ export async function userCreatePasswordless(
 export interface User {
     id: number
     username: string
+    passwordless: boolean
 }
 
 export function useUser(): User | null {
@@ -183,9 +180,11 @@ export function useUser(): User | null {
             const token = await getToken()
             if (token !== null) {
                 const claims = jwt.parse(token).claims
+
                 setUser({
                     id: claims.sub,
                     username: claims.username,
+                    passwordless: claims.passwordless,
                 })
             } else {
                 setUser(null)

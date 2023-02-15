@@ -8,7 +8,7 @@ import styles from './login.module.css'
 
 h
 
-interface LoginModalProps extends ModalProps {}
+interface LoginModalProps extends ModalProps<void> {}
 
 export function LoginModal({ close }: LoginModalProps) {
     const [user, setUser] = useState('')
