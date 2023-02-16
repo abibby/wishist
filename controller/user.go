@@ -11,7 +11,6 @@ import (
 	"github.com/abibby/validate/handler"
 	"github.com/abibby/wishist/auth"
 	"github.com/abibby/wishist/db"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
@@ -200,7 +199,6 @@ func generateTokens(u *db.User) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	spew.Dump(passwordless)
 	return token, refresh, nil
 }
 func claimsIf(condition bool, modifyClaims ...auth.TokenOptions) auth.TokenOptions {
