@@ -1,9 +1,11 @@
 import debounce from 'lodash.debounce'
 import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { friend, Friend, item } from '../api'
+import { friend, item } from '../api'
 import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
+import { openModal } from '../components/modal'
+import { CreatePasswordlessUser } from '../components/modals/create-passwordless-user'
 
 h
 
@@ -21,32 +23,46 @@ interface ListProps {
 export function List({ matches }: ListProps) {
     const { name } = matches
     const user = useUser()
+    const myID = user?.id
     const myList = user?.username === name
 
-    const [friendsList, setFriendsList] = useState<Friend[]>()
+    const [isFriend, setIsFriend] = useState(false)
     useEffect(() => {
-        friend.list().then(f => setFriendsList(f))
-    }, [setFriendsList])
+        if (myID === undefined) {
+            setIsFriend(false)
+        } else {
+            friend
+                .list()
+                .then(friends =>
+                    setIsFriend(
+                        friends.find(f => f.friend_username === name) !==
+                            undefined,
+                    ),
+                )
+        }
+    }, [setIsFriend, myID])
+
     const addFriend = useCallback(() => {
-        friend.create({ username: name })
-        setFriendsList(f =>
-            f?.concat([
-                {
-                    user_id: 0,
-                    friend_id: 0,
-                    friend_name: name,
-                    friend_username: name,
-                },
-            ]),
-        )
-    }, [name, setFriendsList])
+        if (myID !== undefined) {
+            friend.create({ username: name })
+            setIsFriend(true)
+        } else {
+            openModal(CreatePasswordlessUser, {
+                message:
+                    'You can create an instant user to add friends and see what other people have purchased',
+            }).then(userCreated => {
+                if (userCreated) {
+                    friend.create({ username: name })
+                    setIsFriend(true)
+                }
+            })
+        }
+    }, [name, myID, setIsFriend])
+
     const removeFriend = useCallback(() => {
         friend.delete({ username: name })
-        setFriendsList(f => f?.filter(f => f.friend_username !== name))
-    }, [name, setFriendsList])
-
-    const isFriend =
-        friendsList?.find(f => f.friend_username === name) !== undefined
+        setIsFriend(false)
+    }, [name, setIsFriend])
 
     return (
         <Fragment>

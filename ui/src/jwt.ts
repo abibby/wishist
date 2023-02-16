@@ -5,6 +5,7 @@ export interface Headers {
 
 export interface Claims {
     username: string
+    passwordless: boolean
     iss?: string | number // Issuer Claim
     sub: number // Subject Claim
     aud?: string | number // Audience Claim

@@ -18,15 +18,15 @@ class ModalOpenEvent extends Event<'open'> {
         this.id = id++
     }
 }
-class ModalCloseEvent extends Event<'close'> {
-    constructor(public readonly id: number) {
+class ModalCloseEvent<T> extends Event<'close'> {
+    constructor(public readonly id: number, public readonly value: T) {
         super('close')
     }
 }
 
 type ModalEventMap = {
     open: ModalOpenEvent
-    close: ModalCloseEvent
+    close: ModalCloseEvent<any>
 }
 
 const modalEventTarget = new EventTarget<ModalEventMap>()
@@ -38,7 +38,7 @@ export function ModalController() {
         const open = (event: ModalOpenEvent) => {
             setOpenModals(m => m.concat([event]))
         }
-        const close = (event: ModalCloseEvent) => {
+        const close = (event: ModalCloseEvent<any>) => {
             setOpenModals(m => m.filter(e => e.id !== event.id))
         }
 
@@ -51,8 +51,8 @@ export function ModalController() {
         }
     }, [setOpenModals])
 
-    const close = useCallback((id: number) => {
-        modalEventTarget.dispatchEvent(new ModalCloseEvent(id))
+    const close = useCallback((id: number, value: any) => {
+        modalEventTarget.dispatchEvent(new ModalCloseEvent(id, value))
     }, [])
 
     return (
@@ -65,18 +65,22 @@ export function ModalController() {
     )
 }
 
-export interface ModalProps {
+export interface ModalProps<TReturn> {
     title: string
-    close: () => void
+    close: (value: TReturn | undefined) => void
 }
 
-export function Modal({ title, close, children }: RenderableProps<ModalProps>) {
+export function Modal<TReturn>({
+    title,
+    close,
+    children,
+}: RenderableProps<ModalProps<TReturn>>) {
     return (
         <Fragment>
-            <div class={styles.screen} onClick={close} />
+            <div class={styles.screen} onClick={bind(undefined, close)} />
             <div class={styles.modal}>
                 <h2 class={styles.title}>{title}</h2>
-                <button class={styles.close} onClick={close}>
+                <button class={styles.close} onClick={bind(undefined, close)}>
                     x
                 </button>
                 <div class={styles.body}>{children}</div>
@@ -85,11 +89,23 @@ export function Modal({ title, close, children }: RenderableProps<ModalProps>) {
     )
 }
 
-export async function openModal<T extends ModalProps>(
+export async function openModal<T extends ModalProps<TReturn>, TReturn>(
     modal: FunctionalComponent<T>,
-    props: Omit<T, keyof ModalProps>,
-) {
-    modalEventTarget.dispatchEvent(new ModalOpenEvent(modal, props))
+    props: Omit<T, keyof ModalProps<TReturn>>,
+): Promise<TReturn | undefined> {
+    return new Promise((resolve, reject) => {
+        const openEvent = new ModalOpenEvent(modal, props)
+        modalEventTarget.dispatchEvent(openEvent)
+
+        function close(e: ModalCloseEvent<TReturn>) {
+            if (e.id !== openEvent.id) {
+                return
+            }
+            modalEventTarget.removeEventListener('close', close)
+            resolve(e.value)
+        }
+        modalEventTarget.addEventListener('close', close)
+    })
 }
 
 export function ModalActions({ children }: RenderableProps<{}>) {

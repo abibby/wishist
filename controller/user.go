@@ -183,6 +183,7 @@ func generateTokens(u *db.User) (string, string, error) {
 	token, err := auth.GenerateToken(
 		WithUser(u),
 		auth.WithLifetime(24*time.Hour),
+		auth.WithClaim("passwordless", passwordless),
 		WithPurpose(PurposeAuthorize),
 	)
 	if err != nil {

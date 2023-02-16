@@ -3,28 +3,32 @@ import { useCallback, useState } from 'preact/hooks'
 import { userCreatePasswordless } from '../../auth'
 import { Input } from '../form/input'
 import { Modal, ModalActions, ModalProps } from '../modal'
+import styles from './create-passwordless-user.module.css'
 
 h
 
-interface CreatePasswordlessUserProps extends ModalProps {}
+interface CreatePasswordlessUserProps extends ModalProps<boolean> {
+    message?: string
+}
 
-export function CreatePasswordlessUser({ close }: CreatePasswordlessUserProps) {
+export function CreatePasswordlessUser({
+    message,
+    close,
+}: CreatePasswordlessUserProps) {
     const [name, setName] = useState('')
     const [user, setUser] = useState('')
     const createUser = useCallback(async () => {
-        const token = location.hash.slice(1)
-        if (token.length === 0) {
-            return
-        }
-        await userCreatePasswordless(token, {
+        await userCreatePasswordless({
             name: name,
             username: user,
         })
 
-        close()
+        close(true)
     }, [name, user])
+
     return (
-        <Modal title='Create User' close={close}>
+        <Modal title='Create Instant Account' close={close}>
+            {message && <p class={styles.subtitle}>{message}</p>}
             <Input
                 title='Username'
                 type='text'
