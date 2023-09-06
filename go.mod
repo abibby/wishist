@@ -1,6 +1,6 @@
 module github.com/abibby/wishist
 
-go 1.21
+go 1.21.0
 
 require (
 	github.com/abibby/fileserver v0.0.0-20221208191705-087686654550
