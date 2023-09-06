@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/abibby/validate/handler"
-	"github.com/abibby/wishist/auth"
+	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
@@ -63,7 +63,7 @@ type CreateUserRequest struct {
 }
 type CreateUserResponse *db.User
 
-var CreateUser = handler.Handler(func(r *CreateUserRequest) (any, error) {
+var CreateUser = request.Handler(func(r *CreateUserRequest) (any, error) {
 	hash, err := bcrypt.GenerateFromPassword(r.Password, bcrypt.MinCost)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ type CreateUserPasswordlessResponse struct {
 	Refresh string   `json:"refresh"`
 }
 
-var CreateUserPasswordless = handler.Handler(func(r *CreateUserPasswordlessRequest) (any, error) {
+var CreateUserPasswordless = request.Handler(func(r *CreateUserPasswordlessRequest) (any, error) {
 	u, err := createUser(r.Request.Context(), r.Username, []byte{}, r.Name)
 	if err != nil {
 		return nil, err
@@ -112,14 +112,14 @@ type LoginResponse struct {
 	Refresh string `json:"refresh"`
 }
 
-var Login = handler.Handler(func(r *LoginRequest) (any, error) {
+var Login = request.Handler(func(r *LoginRequest) (any, error) {
 	u := &db.User{}
 
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		return tx.Get(u, "select * from users where username=?", r.Username)
 	})
 	if errors.Is(err, sql.ErrNoRows) {
-		return handler.ErrorResponse(fmt.Errorf("unauthorized"), http.StatusUnauthorized), nil
+		return nil, request.NewHTTPError(fmt.Errorf("unauthorized"), http.StatusUnauthorized)
 	} else if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ type RefreshRequest struct {
 	Request *http.Request
 }
 
-var Refresh = handler.Handler(func(r *RefreshRequest) (any, error) {
+var Refresh = request.Handler(func(r *RefreshRequest) (any, error) {
 	claims, _ := auth.Claims(r.Request.Context())
 	iPasswordless, _ := claims["passwordless"]
 	passwordless, _ := iPasswordless.(bool)
@@ -157,13 +157,13 @@ var Refresh = handler.Handler(func(r *RefreshRequest) (any, error) {
 		return tx.Get(u, "select * from users where id=?", uid)
 	})
 	if errors.Is(err, sql.ErrNoRows) {
-		return handler.ErrorResponse(fmt.Errorf("unauthorized"), http.StatusUnauthorized), nil
+		return nil, request.NewHTTPError(fmt.Errorf("unauthorized"), http.StatusUnauthorized)
 	} else if err != nil {
 		return nil, err
 	}
 
 	if passwordless && len(u.Password) > 0 {
-		return handler.ErrorResponse(fmt.Errorf("unauthorized"), http.StatusUnauthorized), nil
+		return nil, request.NewHTTPError(fmt.Errorf("unauthorized"), http.StatusUnauthorized)
 	}
 
 	token, refresh, err := generateTokens(u)

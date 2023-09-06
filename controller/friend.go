@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/abibby/validate/handler"
+	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
 )
@@ -15,7 +15,7 @@ type ListFriendsRequest struct {
 }
 type ListFriendsResponse []*db.Friend
 
-var FriendList = handler.Handler(func(r *ListFriendsRequest) (any, error) {
+var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 	friends := []*db.Friend{}
 	uid, ok := userID(r.Request.Context())
 	if !ok {
@@ -46,7 +46,7 @@ type AddFriendRequest struct {
 }
 type AddFriendResponse *db.Friend
 
-var FriendCreate = handler.Handler(func(r *AddFriendRequest) (any, error) {
+var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 	uid, ok := userID(r.Request.Context())
 	if !ok {
 		return nil, fmt.Errorf("user not logged in")
@@ -64,7 +64,7 @@ var FriendCreate = handler.Handler(func(r *AddFriendRequest) (any, error) {
 		return err
 	})
 	if err == errFriendNotFound {
-		return handler.ErrorResponse(err, 422), nil
+		return nil, request.NewHTTPError(err, 422)
 	} else if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ type RemoveFriendResponse struct {
 	Success bool `json:"success"`
 }
 
-var FriendDelete = handler.Handler(func(r *RemoveFriendRequest) (any, error) {
+var FriendDelete = request.Handler(func(r *RemoveFriendRequest) (any, error) {
 	uid, ok := userID(r.Request.Context())
 	if !ok {
 		return nil, fmt.Errorf("user not logged in")

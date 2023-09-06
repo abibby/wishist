@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/abibby/validate/handler"
+	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
 )
@@ -17,7 +17,7 @@ type ListItemsRequest struct {
 }
 type ListItemsResponse []*db.Item
 
-var ItemList = handler.Handler(func(r *ListItemsRequest) (any, error) {
+var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 	items := []*db.Item{}
 	uid, ok := userID(r.Request.Context())
 
@@ -45,7 +45,7 @@ var ItemList = handler.Handler(func(r *ListItemsRequest) (any, error) {
 		return tx.Select(&items, query, args...)
 	})
 	if err == errNoUsers {
-		return handler.ErrorResponse(err, 404), nil
+		return nil, request.NewHTTPError(err, 404)
 	} else if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ type AddItemRequest struct {
 }
 type AddItemResponse *db.Item
 
-var ItemCreate = handler.Handler(func(r *AddItemRequest) (any, error) {
+var ItemCreate = request.Handler(func(r *AddItemRequest) (any, error) {
 	item := &db.Item{}
 	uid, ok := userID(r.Request.Context())
 	if !ok {
@@ -88,7 +88,7 @@ type EditItemRequest struct {
 }
 type EditItemResponse *db.Item
 
-var ItemUpdate = handler.Handler(func(r *EditItemRequest) (any, error) {
+var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
 	item := &db.Item{}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("UPDATE items SET name=?, description=?, url=? WHERE id=?", r.Name, r.Description, r.URL, r.ID)
@@ -111,7 +111,7 @@ type RemoveItemResponse struct {
 	Success bool `json:"success"`
 }
 
-var ItemDelete = handler.Handler(func(r *RemoveItemRequest) (any, error) {
+var ItemDelete = request.Handler(func(r *RemoveItemRequest) (any, error) {
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM items WHERE id=?", r.ID)
 		return err
