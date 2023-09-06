@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/abibby/fileserver"
-	"github.com/abibby/wishist/auth"
+	"github.com/abibby/salusa/auth"
 	"github.com/abibby/wishist/config"
 	"github.com/abibby/wishist/controller"
 	"github.com/abibby/wishist/db"
@@ -23,6 +23,8 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to migrate database ", err)
 	}
+
+	auth.SetAppKey(config.AppKey)
 
 	err = db.Open()
 	if err != nil {

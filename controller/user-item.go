@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/abibby/validate/handler"
+	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
 )
@@ -17,7 +17,7 @@ type ListUserItemsRequest struct {
 }
 type ListUserItemsResponse []*db.UserItem
 
-var UserItemList = handler.Handler(func(r *ListUserItemsRequest) (any, error) {
+var UserItemList = request.Handler(func(r *ListUserItemsRequest) (any, error) {
 	items := []*db.UserItem{}
 	errNoUsers := fmt.Errorf("Not Found")
 	uid, ok := userID(r.Request.Context())
@@ -45,7 +45,7 @@ var UserItemList = handler.Handler(func(r *ListUserItemsRequest) (any, error) {
 		)
 	})
 	if err == errNoUsers {
-		return handler.ErrorResponse(err, 404), nil
+		return nil, request.NewHTTPError(err, 404)
 	} else if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ type UserItemCreateRequest struct {
 }
 type UserItemCreateResponse *db.UserItem
 
-var UserItemCreate = handler.Handler(func(r *UserItemCreateRequest) (any, error) {
+var UserItemCreate = request.Handler(func(r *UserItemCreateRequest) (any, error) {
 	uid, ok := userID(r.Request.Context())
 	if !ok {
 		return nil, fmt.Errorf("user not logged in")
@@ -85,7 +85,7 @@ type EditUserItemRequest struct {
 }
 type EditUserItemResponse *db.UserItem
 
-var UserItemUpdate = handler.Handler(func(r *EditUserItemRequest) (any, error) {
+var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (any, error) {
 	uid, ok := userID(r.Request.Context())
 	if !ok {
 		return nil, fmt.Errorf("user not logged in")
@@ -112,7 +112,7 @@ type RemoveUserItemResponse struct {
 	Success bool `json:"success"`
 }
 
-var UserItemDelete = handler.Handler(func(r *RemoveUserItemRequest) (any, error) {
+var UserItemDelete = request.Handler(func(r *RemoveUserItemRequest) (any, error) {
 	uid, ok := userID(r.Request.Context())
 	if !ok {
 		return nil, fmt.Errorf("user not logged in")
