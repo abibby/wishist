@@ -31,8 +31,8 @@ export function Home() {
             <ul>
                 {friends?.map(f => (
                     <li key={f.friend_id}>
-                        <Link href={`/list/${f.friend_name}`}>
-                            {f.friend_username}
+                        <Link href={`/list/${f.friend_username}`}>
+                            {f.friend_name}
                         </Link>
                     </li>
                 ))}
