@@ -55,7 +55,7 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 type AddItemRequest struct {
 	Name        string `json:"name"        validate:"required"`
 	Description string `json:"description" validate:"required"`
-	URL         string `json:"url"         validate:"required|url"`
+	URL         string `json:"url"         validate:"required"`
 	Request     *http.Request
 }
 type AddItemResponse *db.Item
