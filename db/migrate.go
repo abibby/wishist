@@ -7,7 +7,7 @@ import (
 
 	"github.com/abibby/wishist/config"
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
+	_ "github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
@@ -20,7 +20,7 @@ func Migrate() error {
 		return err
 	}
 
-	m, err := migrate.NewWithSourceInstance("iofs", d, fmt.Sprintf("sqlite3://%s", config.DBPath))
+	m, err := migrate.NewWithSourceInstance("iofs", d, fmt.Sprintf("sqlite://%s", config.DBPath))
 	if err != nil {
 		return err
 	}
