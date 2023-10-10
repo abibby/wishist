@@ -7,7 +7,7 @@ import (
 
 	"github.com/abibby/wishist/config"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 var db *sqlx.DB
@@ -15,7 +15,7 @@ var dbMtx = &sync.Mutex{}
 
 func Open() error {
 	var err error
-	db, err = sqlx.Open("sqlite3", config.DBPath)
+	db, err = sqlx.Open("sqlite", config.DBPath)
 	if err != nil {
 		return err
 	}
