@@ -71,9 +71,16 @@ export function List({ matches }: ListProps) {
                 (isFriend ? (
                     <button onClick={removeFriend}>Remove Friend</button>
                 ) : (
-                    <button class='primary' onClick={addFriend}>
-                        Add Friend
-                    </button>
+                    <Fragment>
+                        <p>
+                            Adding a friend will let you keep track of who else
+                            is thinking about getting items or has already
+                            purchased them.
+                        </p>
+                        <button class='primary' onClick={addFriend}>
+                            Add Friend
+                        </button>
+                    </Fragment>
                 ))}
             <ItemList username={name} readonly={!myList} />
         </Fragment>
