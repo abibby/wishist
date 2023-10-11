@@ -58,13 +58,13 @@ func createUser(ctx context.Context, username string, passwordHash []byte, name 
 type CreateUserRequest struct {
 	Username string `json:"username" validate:"required"`
 	Name     string `json:"name"     validate:"required"`
-	Password []byte `json:"password" validate:"required"`
+	Password string `json:"password" validate:"required"`
 	Request  *http.Request
 }
 type CreateUserResponse *db.User
 
 var CreateUser = request.Handler(func(r *CreateUserRequest) (any, error) {
-	hash, err := bcrypt.GenerateFromPassword(r.Password, bcrypt.MinCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.MinCost)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ var CreateUserPasswordless = request.Handler(func(r *CreateUserPasswordlessReque
 
 type LoginRequest struct {
 	Username string `json:"username" validate:"required"`
-	Password []byte `json:"password" validate:"required"`
+	Password string `json:"password" validate:"required"`
 	Request  *http.Request
 }
 type LoginResponse struct {
@@ -124,7 +124,7 @@ var Login = request.Handler(func(r *LoginRequest) (any, error) {
 		return nil, err
 	}
 
-	err = bcrypt.CompareHashAndPassword(u.Password, r.Password)
+	err = bcrypt.CompareHashAndPassword(u.Password, []byte(r.Password))
 	if err != nil {
 		return nil, err
 	}

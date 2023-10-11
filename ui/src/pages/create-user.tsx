@@ -17,7 +17,7 @@ export function CreateUser() {
             username: user,
             password: password1,
         })
-        route('/login')
+        route('/')
     }, [name, user, password1, password2])
     return (
         <Fragment>
