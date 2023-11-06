@@ -11,25 +11,10 @@ h
 
 export function Default({ children }: RenderableProps<{}>) {
     const user = useUser()
-    const passwordless = user?.passwordless
 
     const login = useCallback(async () => {
         await openModal(LoginModal, {})
     }, [])
-
-    const tryLogout = useCallback(async () => {
-        if (passwordless) {
-            const continueLogout = await openModal(Ask, {
-                title: 'Logout?',
-                question:
-                    "You are on an instant account, you won't be able to login once you have logged out. Are you sure you want to continue",
-            })
-            if (!continueLogout) {
-                return
-            }
-        }
-        await logout()
-    }, [passwordless])
 
     return (
         <div class={styles.default}>
@@ -38,7 +23,7 @@ export function Default({ children }: RenderableProps<{}>) {
                     Wishist
                 </Link>
                 {user ? (
-                    <button class={styles.logout} onClick={tryLogout}>
+                    <button class={styles.logout} onClick={logout}>
                         logout
                     </button>
                 ) : (

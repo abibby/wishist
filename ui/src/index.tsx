@@ -17,7 +17,7 @@ function Main() {
             <Router>
                 <Route component={Home} path='/' />
                 <Route component={CreateUser} path='/create-user' />
-                <Route component={List} path='/list/:name' />
+                <Route component={List} path='/list/:username' />
                 <Route component={Error404} default />
             </Router>
         </Default>
