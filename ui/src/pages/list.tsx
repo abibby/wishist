@@ -5,84 +5,94 @@ import { friend, item } from '../api'
 import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
 import { openModal } from '../components/modal'
-import { CreatePasswordlessUser } from '../components/modals/create-passwordless-user'
+import { LoginModal } from '../components/modals/login'
 
 h
 
-const debouncedItemUpdate: typeof item.update = debounce(
-    item.update,
-    500,
-) as any
-
 interface ListProps {
     matches: {
-        name: string
+        username: string
     }
 }
 
 export function List({ matches }: ListProps) {
-    const { name } = matches
-    const user = useUser()
-    const myID = user?.id
-    const myList = user?.username === name
+    const { username } = matches
+    const myUser = useUser()
+    const myList = myUser?.username === username
+    const loggedIn = myUser?.id !== undefined
 
     const [isFriend, setIsFriend] = useState(false)
     useEffect(() => {
-        if (myID === undefined) {
+        if (loggedIn) {
             setIsFriend(false)
         } else {
             friend
                 .list()
                 .then(friends =>
                     setIsFriend(
-                        friends.find(f => f.friend_username === name) !==
+                        friends.find(f => f.friend_username === username) !==
                             undefined,
                     ),
                 )
         }
-    }, [setIsFriend, myID])
+    }, [setIsFriend, loggedIn])
 
     const addFriend = useCallback(() => {
-        if (myID !== undefined) {
-            friend.create({ username: name })
+        if (loggedIn) {
+            friend.create({ username: username })
             setIsFriend(true)
         } else {
-            openModal(CreatePasswordlessUser, {
-                message:
-                    'You can create an instant user to add friends and see what other people have purchased',
+            openModal(LoginModal, {
+                message: 'You must log in to add a friend.',
             }).then(userCreated => {
                 if (userCreated) {
-                    friend.create({ username: name })
+                    friend.create({ username: username })
                     setIsFriend(true)
                 }
             })
         }
-    }, [name, myID, setIsFriend])
+    }, [username, loggedIn, setIsFriend])
 
     const removeFriend = useCallback(() => {
-        friend.delete({ username: name })
+        friend.delete({ username: username })
         setIsFriend(false)
-    }, [name, setIsFriend])
+    }, [username, setIsFriend])
 
     return (
         <Fragment>
-            <h1>{myList ? 'My Wishlist' : `${name}'s Wishlist`}</h1>
-            {!myList &&
-                (isFriend ? (
-                    <button onClick={removeFriend}>Remove Friend</button>
-                ) : (
-                    <Fragment>
-                        <p>
-                            Adding a friend will let you keep track of who else
-                            is thinking about getting items or has already
-                            purchased them.
-                        </p>
-                        <button class='primary' onClick={addFriend}>
-                            Add Friend
-                        </button>
-                    </Fragment>
-                ))}
-            <ItemList username={name} readonly={!myList} />
+            <h1>{myList ? 'My Wishlist' : `${username}'s Wishlist`}</h1>
+            {!myList && (
+                <Fragment>
+                    {isFriend ? (
+                        <button onClick={removeFriend}>Remove Friend</button>
+                    ) : (
+                        <Fragment>
+                            <p>
+                                Adding a friend will let you keep track of who
+                                else is thinking about getting items.
+                            </p>
+                            <button class='primary' onClick={addFriend}>
+                                Add Friend
+                            </button>
+                        </Fragment>
+                    )}
+                    {loggedIn && (
+                        <Fragment>
+                            <p>
+                                Click the 👁️ if you are thinking of buying the
+                                item and the 🛍️ if you have already purchased
+                                it.
+                            </p>
+                            <p>
+                                Clicking on the item will show more how many
+                                people are thinking of buying the item as well
+                                as any related links or descriptions.
+                            </p>
+                        </Fragment>
+                    )}
+                </Fragment>
+            )}
+            <ItemList username={username} readonly={!myList} />
         </Fragment>
     )
 }

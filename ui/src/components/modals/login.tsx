@@ -8,9 +8,11 @@ import styles from './login.module.css'
 
 h
 
-interface LoginModalProps extends ModalProps<void> {}
+interface LoginModalProps extends ModalProps<void> {
+    message?: string
+}
 
-export function LoginModal({ close }: LoginModalProps) {
+export function LoginModal({ message, close }: LoginModalProps) {
     const [user, setUser] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string>()
@@ -28,12 +30,18 @@ export function LoginModal({ close }: LoginModalProps) {
     )
 
     const createUser = useCallback(() => {
-        route('/create-user')
+        route(
+            '/create-user?redirect=' +
+                encodeURIComponent(
+                    location.pathname + location.search + location.hash,
+                ),
+        )
         close()
     }, [])
 
     return (
         <Modal title='Login' close={close}>
+            {message && <p class={styles.subtitle}>{message}</p>}
             <form onSubmit={loginSubmit}>
                 {error && <div class={styles.error}>{error}</div>}
                 <Input

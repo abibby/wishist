@@ -37,6 +37,9 @@ func WithUser(u *db.User) auth.TokenOptions {
 
 func createUser(ctx context.Context, username string, passwordHash []byte, name string) (*db.User, error) {
 	u := &db.User{}
+	if username == "" {
+		return nil, fmt.Errorf("username must not be empty")
+	}
 	err := db.Tx(ctx, func(tx *sqlx.Tx) error {
 		_, err := tx.Exec(
 			"INSERT INTO users (username,name,password) VALUES (?, ?, ?);",
@@ -50,6 +53,9 @@ func createUser(ctx context.Context, username string, passwordHash []byte, name 
 		return tx.Get(u, "SELECT * FROM users ORDER BY id DESC LIMIT 1")
 	})
 	if err != nil {
+		if err.Error() == "constraint failed: UNIQUE constraint failed: users.username (2067)" {
+			return nil, fmt.Errorf("username is already taken")
+		}
 		return nil, err
 	}
 	return u, nil
@@ -64,6 +70,9 @@ type CreateUserRequest struct {
 type CreateUserResponse *db.User
 
 var CreateUser = request.Handler(func(r *CreateUserRequest) (any, error) {
+	if r.Password == "" {
+		return nil, fmt.Errorf("password must not be empty")
+	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.MinCost)
 	if err != nil {
 		return nil, err

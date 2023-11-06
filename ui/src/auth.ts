@@ -131,41 +131,41 @@ export async function username(): Promise<string | undefined> {
     return jwt.parse(token).claims.username
 }
 
-export interface UserCreatePasswordlessRequest {
-    name: string
-    username: string
-}
-interface UserCreatePasswordlessResponse {
-    user: unknown
-    token: string
-    refresh: string
-}
-export async function userCreatePasswordless(
-    request: UserCreatePasswordlessRequest,
-): Promise<void> {
-    const response: UserCreatePasswordlessResponse = await fetch(
-        '/user/passwordless',
-        {
-            method: 'POST',
-            body: JSON.stringify(request),
-        },
-    ).then(r => r.json())
+// export interface UserCreatePasswordlessRequest {
+//     name: string
+//     username: string
+// }
+// interface UserCreatePasswordlessResponse {
+//     user: unknown
+//     token: string
+//     refresh: string
+// }
+// export async function userCreatePasswordless(
+//     request: UserCreatePasswordlessRequest,
+// ): Promise<void> {
+//     const response: UserCreatePasswordlessResponse = await fetch(
+//         '/user/passwordless',
+//         {
+//             method: 'POST',
+//             body: JSON.stringify(request),
+//         },
+//     ).then(r => r.json())
 
-    _token = response.token
+//     _token = response.token
 
-    try {
-        await setMany(
-            [
-                [tokenKey, response.token],
-                [refreshKey, response.refresh],
-            ],
-            tokenStore,
-        )
-    } catch (e) {
-        console.error('failed to save token', e)
-    }
-    changes.dispatchEvent(new Event('change'))
-}
+//     try {
+//         await setMany(
+//             [
+//                 [tokenKey, response.token],
+//                 [refreshKey, response.refresh],
+//             ],
+//             tokenStore,
+//         )
+//     } catch (e) {
+//         console.error('failed to save token', e)
+//     }
+//     changes.dispatchEvent(new Event('change'))
+// }
 
 export interface User {
     id: number

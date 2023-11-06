@@ -66,7 +66,7 @@ func main() {
 
 	r.Handle("/login", controller.Login).Methods("POST")
 	r.Handle("/user", controller.CreateUser).Methods("POST")
-	r.Handle("/user/passwordless", controller.CreateUserPasswordless).Methods("POST")
+	// r.Handle("/user/passwordless", controller.CreateUserPasswordless).Methods("POST")
 
 	Group(r.NewRoute(), func(r *mux.Router) {
 		r.Use(auth.AttachUser)
