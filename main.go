@@ -8,6 +8,8 @@ import (
 
 	"github.com/abibby/fileserver"
 	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/request"
+	"github.com/abibby/salusa/router"
 	"github.com/abibby/wishist/config"
 	"github.com/abibby/wishist/controller"
 	"github.com/abibby/wishist/db"
@@ -46,7 +48,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	r := mux.NewRouter()
+	r := router.New()
+	r.Use(request.HandleErrors())
 	r.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := time.Now()
@@ -63,59 +66,54 @@ func main() {
 			)
 		})
 	})
+	r.Use(controller.ErrorMiddleware())
 
-	r.Handle("/login", controller.Login).Methods("POST")
-	r.Handle("/user", controller.CreateUser).Methods("POST")
-	// r.Handle("/user/passwordless", controller.CreateUserPasswordless).Methods("POST")
+	r.Post("/login", controller.Login)
+	r.Post("/user", controller.CreateUser)
+	// Post.Handle("/user/passwordless", controller.CreateUserPasswordless)
 
-	Group(r.NewRoute(), func(r *mux.Router) {
+	r.Group("", func(r *router.Router) {
+
 		r.Use(auth.AttachUser)
 
-		r.Handle("/item", controller.ItemList).Methods("GET")
+		r.Get("/item", controller.ItemList)
 
-		Group(r.NewRoute(), func(r *mux.Router) {
+		r.Group("", func(r *router.Router) {
 			r.Use(auth.LoggedIn)
 
-			Group(r.NewRoute(), func(r *mux.Router) {
+			r.Group("", func(r *router.Router) {
 				r.Use(HasPurpose(controller.PurposeRefresh))
-				r.Handle("/refresh", controller.Refresh).Methods("POST")
+				r.Post("/refresh", controller.Refresh)
 			})
 
-			Group(r.NewRoute(), func(r *mux.Router) {
+			r.Group("", func(r *router.Router) {
 				r.Use(HasPurpose(controller.PurposeAuthorize))
 
-				Group(r.PathPrefix("/item"), func(r *mux.Router) {
-					r.Handle("", controller.ItemCreate).Methods("POST")
-					r.Handle("", controller.ItemUpdate).Methods("PUT")
-					r.Handle("", controller.ItemDelete).Methods("DELETE")
+				r.Group("/item", func(r *router.Router) {
+					r.Post("", controller.ItemCreate)
+					r.Put("", controller.ItemUpdate)
+					r.Delete("", controller.ItemDelete)
 				})
 
-				Group(r.PathPrefix("/friend"), func(r *mux.Router) {
-					r.Handle("", controller.FriendList).Methods("GET")
-					r.Handle("", controller.FriendCreate).Methods("POST")
-					r.Handle("", controller.FriendDelete).Methods("DELETE")
+				r.Group("/friend", func(r *router.Router) {
+					r.Get("", controller.FriendList)
+					r.Post("", controller.FriendCreate)
+					r.Delete("", controller.FriendDelete)
 				})
 
-				Group(r.PathPrefix("/user-item"), func(r *mux.Router) {
-					r.Handle("", controller.UserItemList).Methods("GET")
-					r.Handle("", controller.UserItemCreate).Methods("POST")
-					r.Handle("", controller.UserItemUpdate).Methods("PUT")
-					r.Handle("", controller.UserItemDelete).Methods("DELETE")
-				})
+				// r.Group("/user-temp", func(r *router.Router) {
+				// 	r.Get("", controller.UserItemList)
+				// 	r.Post("", controller.UserItemCreate)
+				// 	r.Put("", controller.UserItemUpdate)
+				// 	r.Delete("", controller.UserItemDelete)
+				// })
 			})
 		})
 	})
-
-	r.PathPrefix("/").
-		Handler(fileserver.WithFallback(ui.Content, "dist", "index.html", nil)).
-		Methods("GET")
+	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
 
 	slog.Info("Listening on http://localhost:32148")
 	http.ListenAndServe(":32148", r)
-}
-
-func Group(r *mux.Route, cb func(r *mux.Router)) {
-	cb(r.Subrouter())
 }
 
 func HasPurpose(p controller.Purpose) mux.MiddlewareFunc {
