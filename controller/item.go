@@ -83,7 +83,7 @@ type EditItemRequest struct {
 	ID          int    `json:"id"          validate:"required"`
 	Name        string `json:"name"        validate:"required"`
 	Description string `json:"description" validate:"required"`
-	URL         string `json:"url"         validate:"required|url"`
+	URL         string `json:"url"         validate:"required"`
 	Request     *http.Request
 }
 type EditItemResponse *db.Item
