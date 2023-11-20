@@ -66,7 +66,8 @@ func main() {
 			)
 		})
 	})
-	r.Use(controller.ErrorMiddleware())
+	// broken
+	// r.Use(controller.ErrorMiddleware())
 
 	r.Post("/login", controller.Login)
 	r.Post("/user", controller.CreateUser)
