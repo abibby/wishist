@@ -102,12 +102,12 @@ func main() {
 					r.Delete("", controller.FriendDelete)
 				})
 
-				// r.Group("/user-temp", func(r *router.Router) {
-				// 	r.Get("", controller.UserItemList)
-				// 	r.Post("", controller.UserItemCreate)
-				// 	r.Put("", controller.UserItemUpdate)
-				// 	r.Delete("", controller.UserItemDelete)
-				// })
+				r.Group("/user-item", func(r *router.Router) {
+					r.Get("", controller.UserItemList)
+					r.Post("", controller.UserItemCreate)
+					r.Put("", controller.UserItemUpdate)
+					r.Delete("", controller.UserItemDelete)
+				})
 			})
 		})
 	})
