@@ -5,16 +5,19 @@ h
 
 export interface FormComponentProps {
     title: string
+    error?: string[]
 }
 
 export function FormComponent({
     title,
+    error,
     children,
 }: RenderableProps<FormComponentProps>) {
     return (
         <label class={styles.wrapper}>
             <div class={styles.title}>{title}</div>
             {children}
+            {error && <div class={styles.error}>{error}</div>}
         </label>
     )
 }

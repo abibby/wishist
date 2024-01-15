@@ -4,7 +4,6 @@
     margin: 10px 0;
 }
 .title {
-
 }
 .element {
     width: 100%;
@@ -20,4 +19,7 @@
     outline: none;
     background-color: rgba(var(--background-contrast), 5%);
     border-bottom: solid 1px rgba(var(--background-contrast), 70%);
+}
+.error {
+    color: rgb(var(--alert));
 }

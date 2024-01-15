@@ -62,9 +62,10 @@ func createUser(ctx context.Context, username string, passwordHash []byte, name 
 }
 
 type CreateUserRequest struct {
-	Username string `json:"username" validate:"required"`
-	Name     string `json:"name"     validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Username string `json:"username" validate:"required|min:1"`
+	Name     string `json:"name"     validate:"required|min:1"`
+	Email    string `json:"email"    validate:"required|min:1|email"`
+	Password string `json:"password" validate:"required|min:1"`
 	Request  *http.Request
 }
 type CreateUserResponse *db.User

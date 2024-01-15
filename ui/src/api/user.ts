@@ -3,6 +3,7 @@ import { apiFetch } from './internal'
 export interface CreateUserRequest {
     name: string
     username: string
+    email: string
     password: string
 }
 

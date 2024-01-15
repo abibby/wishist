@@ -1,7 +1,20 @@
 import { getToken } from '../auth'
 
-export class FetchError<T> extends Error {
-    constructor(message: string, public status: number, public body: T) {
+export interface ErrorBody {
+    error: string
+}
+
+export interface ValidationErrorBody extends ErrorBody {
+    fields: Record<string, string[]>
+    status: number
+}
+
+export class FetchError extends Error {
+    constructor(
+        message: string,
+        public status: number,
+        public body: ErrorBody,
+    ) {
         super(message)
     }
 }
