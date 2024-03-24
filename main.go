@@ -8,13 +8,16 @@ import (
 
 	"github.com/abibby/fileserver"
 	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/di"
+	"github.com/abibby/salusa/email"
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/salusa/router"
+	"github.com/abibby/salusa/salusadi"
 	"github.com/abibby/wishist/config"
 	"github.com/abibby/wishist/controller"
 	"github.com/abibby/wishist/db"
+	"github.com/abibby/wishist/dep"
 	"github.com/abibby/wishist/ui"
-	"github.com/gorilla/mux"
 )
 
 type ResponseWriter struct {
@@ -47,8 +50,14 @@ func main() {
 		slog.Error("failed to open database ", err)
 		os.Exit(1)
 	}
-
 	r := router.New()
+	salusadi.Register[*db.User](dep.DP)
+	di.RegisterSingleton(dep.DP, func() email.Mailer {
+		return config.Email.Mailer()
+	})
+	r.Register(dep.DP)
+
+	r.WithDependencyProvider(dep.DP)
 	r.Use(request.HandleErrors())
 	r.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -69,26 +78,37 @@ func main() {
 	// broken
 	// r.Use(controller.ErrorMiddleware())
 
-	r.Post("/login", controller.Login)
-	r.Post("/user", controller.CreateUser)
+	type CreateUserRequest struct {
+		Username string `json:"username" validate:"required"`
+		Email    string `json:"email" validate:"required|email"`
+		Name     string `json:"name" validate:"required"`
+	}
+	auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
+		return &db.User{
+			Username: r.Username,
+			Email:    r.Email,
+			Name:     r.Name,
+			Password: []byte{},
+		}
+	})
 	// Post.Handle("/user/passwordless", controller.CreateUserPasswordless)
 
 	r.Group("", func(r *router.Router) {
 
-		r.Use(auth.AttachUser)
+		r.Use(auth.AttachUser())
 
 		r.Get("/item", controller.ItemList)
 
 		r.Group("", func(r *router.Router) {
-			r.Use(auth.LoggedIn)
+			r.Use(auth.LoggedIn())
+
+			// r.Group("", func(r *router.Router) {
+			// 	r.Use(HasPurpose(controller.PurposeRefresh))
+			// 	r.Post("/refresh", controller.Refresh)
+			// })
 
 			r.Group("", func(r *router.Router) {
-				r.Use(HasPurpose(controller.PurposeRefresh))
-				r.Post("/refresh", controller.Refresh)
-			})
-
-			r.Group("", func(r *router.Router) {
-				r.Use(HasPurpose(controller.PurposeAuthorize))
+				// r.Use(HasPurpose(controller.PurposeAuthorize))
 
 				r.Group("/item", func(r *router.Router) {
 					r.Post("", controller.ItemCreate)
@@ -115,8 +135,4 @@ func main() {
 
 	slog.Info("Listening on http://localhost:32148")
 	http.ListenAndServe(":32148", r)
-}
-
-func HasPurpose(p controller.Purpose) mux.MiddlewareFunc {
-	return auth.HasClaim("purpose", string(p))
 }

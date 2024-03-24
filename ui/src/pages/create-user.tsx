@@ -11,6 +11,7 @@ h
 
 export function CreateUser() {
     const [name, setName] = useState('')
+    const [email, setEmail] = useState('')
     const [user, setUser] = useState('')
     const [password1, setPassword1] = useState('')
     const [password2, setPassword2] = useState('')
@@ -23,6 +24,7 @@ export function CreateUser() {
             }
             await userCreate({
                 name: name,
+                email: email,
                 username: user,
                 password: password1,
             })
@@ -44,6 +46,7 @@ export function CreateUser() {
                 value={user}
                 onInput={setUser}
             />
+            <Input title='email' type='text' value={email} onInput={setEmail} />
             <Input title='Name' type='text' value={name} onInput={setName} />
             <Input
                 title='Password'

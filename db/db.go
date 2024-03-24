@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"sync"
 
+	"github.com/abibby/salusa/database/databasedi"
 	"github.com/abibby/wishist/config"
+	"github.com/abibby/wishist/dep"
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
 )
@@ -19,7 +21,7 @@ func Open() error {
 	if err != nil {
 		return err
 	}
-
+	databasedi.Register(dep.DP, db)
 	return nil
 }
 

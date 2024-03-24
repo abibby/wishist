@@ -1,13 +1,8 @@
 package db
 
-import "github.com/abibby/nulls"
-
-type User struct {
-	ID       int    `db:"id"       json:"id"`
-	Name     string `db:"name"     json:"name"`
-	Username string `db:"username" json:"username"`
-	Password []byte `db:"password" json:"-"`
-}
+import (
+	"github.com/abibby/nulls"
+)
 
 type Item struct {
 	ID             int        `db:"id"              json:"id"`

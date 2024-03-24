@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/abibby/salusa/email"
 	"github.com/joho/godotenv"
 )
 
@@ -46,6 +47,8 @@ var AppKey []byte
 var DBPath string
 var Verbose bool
 
+var Email email.Config
+
 func Init() error {
 	err := godotenv.Load("./.env")
 	if errors.Is(err, fs.ErrNotExist) {
@@ -56,6 +59,14 @@ func Init() error {
 	DBPath = env("DB_PATH", "./db.sqlite")
 
 	Verbose = envBool("VERBOSE", false)
+
+	Email = &email.SMTPConfig{
+		From:     env("MAIL_FROM", "wishist@example.com"),
+		Host:     env("MAIL_HOST", "sandbox.smtp.mailtrap.io"),
+		Port:     envInt("MAIL_PORT", 2525),
+		Username: env("MAIL_USERNAME", "user"),
+		Password: env("MAIL_PASSWORD", "pass"),
+	}
 
 	return nil
 }
