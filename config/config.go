@@ -36,7 +36,7 @@ func envBool(key string, def bool) bool {
 	return str != "false" && str != "0"
 }
 func envInt(key string, def int) int {
-	value, err := strconv.Atoi(env("PORT", fmt.Sprint(def)))
+	value, err := strconv.Atoi(env(key, fmt.Sprint(def)))
 	if err != nil {
 		return def
 	}

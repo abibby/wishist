@@ -1,9 +1,9 @@
 :root {
-    --darkest: 25,28,64;
-    --dark: 64,68,114;
-    --light: 92,95,124;
-    --gold: 178,151,88;
-    --grey: 195,192,192;
+    --darkest: 25, 28, 64;
+    --dark: 64, 68, 114;
+    --light: 92, 95, 124;
+    --gold: 178, 151, 88;
+    --grey: 195, 192, 192;
 
     --primary: var(--gold);
     --primary-contrast: 0, 0, 0;
@@ -42,17 +42,21 @@ body {
 }
 
 a {
-    color: rgb(var(--primary))
+    color: rgb(var(--primary));
 }
 
+.button,
 button {
     border: none;
     background-color: rgb(var(--light));
     color: rgba(var(--light-contrast), var(--text-opacity));
     border-radius: 4px;
     padding: 4px 8px;
+    text-decoration: none;
+    font-size: inherit;
 }
 
+.button.primary,
 button.primary {
     background-color: rgb(var(--primary));
     color: rgba(var(--primary-contrast), var(--text-opacity));

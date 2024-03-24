@@ -27,6 +27,7 @@ class ModalCloseEvent<T> extends Event<'close'> {
 type ModalEventMap = {
     open: ModalOpenEvent
     close: ModalCloseEvent<any>
+    closeAll: Event<'closeAll'>
 }
 
 const modalEventTarget = new EventTarget<ModalEventMap>()
@@ -41,13 +42,18 @@ export function ModalController() {
         const close = (event: ModalCloseEvent<any>) => {
             setOpenModals(m => m.filter(e => e.id !== event.id))
         }
+        const closeAll = () => {
+            setOpenModals([])
+        }
 
         modalEventTarget.addEventListener('open', open)
         modalEventTarget.addEventListener('close', close)
+        modalEventTarget.addEventListener('closeAll', closeAll)
 
         return () => {
             modalEventTarget.removeEventListener('open', open)
             modalEventTarget.removeEventListener('close', close)
+            modalEventTarget.removeEventListener('closeAll', closeAll)
         }
     }, [setOpenModals])
 
@@ -110,4 +116,8 @@ export async function openModal<T extends ModalProps<TReturn>, TReturn>(
 
 export function ModalActions({ children }: RenderableProps<{}>) {
     return <div class={styles.actions}>{children}</div>
+}
+
+export function closeModals(): void {
+    modalEventTarget.dispatchEvent(new Event('closeAll'))
 }
