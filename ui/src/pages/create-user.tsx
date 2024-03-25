@@ -34,9 +34,11 @@ export function CreateUser() {
         } catch (e) {
             if (e instanceof FetchError) {
                 setError(e.body.error)
+            } else {
+                throw e
             }
         }
-    }, [name, user, password1, password2, setError])
+    }, [name, user, email, password1, password2, setError])
     return (
         <Fragment>
             <h1>Create User</h1>

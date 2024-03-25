@@ -46,6 +46,9 @@ export function LoginForm(props: LoginFormProps) {
             />
             <ModalActions>
                 <button type='submit'>Login</button>
+                <Link class='button' href={'/forgot-password'}>
+                    Forgot Password
+                </Link>
                 <Link
                     class='button'
                     href={

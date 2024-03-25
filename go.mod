@@ -7,7 +7,7 @@ toolchain go1.22.1
 require (
 	github.com/abibby/fileserver v0.0.0-20221208191705-087686654550
 	github.com/abibby/nulls v1.1.0
-	github.com/abibby/salusa v0.8.5
+	github.com/abibby/salusa v0.8.11
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/gorilla/mux v1.8.0

@@ -90,7 +90,7 @@ func main() {
 			Name:     r.Name,
 			Password: []byte{},
 		}
-	})
+	}, "reset-password")
 	// Post.Handle("/user/passwordless", controller.CreateUserPasswordless)
 
 	r.Group("", func(r *router.Router) {
