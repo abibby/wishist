@@ -12,27 +12,35 @@ export function ForgotPassword() {
     const [error, setError] = useState<string>()
     const [success, setSuccess] = useState(false)
     const [sending, setSending] = useState(false)
-    const clickSend = useCallback(async () => {
-        setSending(true)
-        try {
-            await forgotPassword({ email: email })
-            setSuccess(true)
-        } catch (e) {
-            if (e instanceof FetchError) {
-                setError(e.body.error)
-                setSending(false)
-            } else {
-                throw e
+    const submit = useCallback(
+        async (e: Event) => {
+            e.preventDefault()
+            if (sending) {
+                return
             }
-        }
-    }, [email, setError])
+            setSending(true)
+            try {
+                await forgotPassword({ email: email })
+            } catch (e) {
+                if (e instanceof FetchError) {
+                    setError(e.body.error)
+                    setSending(false)
+                } else {
+                    throw e
+                }
+            } finally {
+                setSuccess(true)
+            }
+        },
+        [sending, email],
+    )
     return (
         <Fragment>
             <h1>Forgot Password</h1>
             {success ? (
                 <p>Password reset email sent to {email}</p>
             ) : (
-                <Fragment>
+                <form onSubmit={submit}>
                     <Input
                         title='email'
                         type='text'
@@ -40,10 +48,10 @@ export function ForgotPassword() {
                         onInput={setEmail}
                     />
                     {error && <p class={styles.error}>{error}</p>}
-                    <button onClick={clickSend} disabled={sending}>
+                    <button type='submit' disabled={sending}>
                         {sending ? 'Sending...' : 'Send'}
                     </button>
-                </Fragment>
+                </form>
             )}
         </Fragment>
     )

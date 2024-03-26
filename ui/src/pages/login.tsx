@@ -7,7 +7,8 @@ h
 
 export function Login() {
     const login = useCallback(() => {
-        route('/')
+        const u = new URL(location.href).searchParams.get('redirect')
+        route(u ?? '/')
     }, [])
     return (
         <Fragment>

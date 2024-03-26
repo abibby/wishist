@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+	"embed"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -13,10 +16,10 @@ import (
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/salusa/router"
 	"github.com/abibby/salusa/salusadi"
+	"github.com/abibby/salusa/view"
 	"github.com/abibby/wishist/config"
 	"github.com/abibby/wishist/controller"
 	"github.com/abibby/wishist/db"
-	"github.com/abibby/wishist/dep"
 	"github.com/abibby/wishist/ui"
 )
 
@@ -30,10 +33,24 @@ func (w *ResponseWriter) WriteHeader(statusCode int) {
 	w.ResponseWriter.WriteHeader(statusCode)
 }
 
+//go:embed emails/*
+var emails embed.FS
+
 func main() {
+	ctx := di.ContextWithDependencyProvider(
+		context.Background(),
+		di.NewDependencyProvider(),
+	)
+
 	err := config.Init()
 	if err != nil {
 		slog.Error("failed initialize config ", err)
+		os.Exit(1)
+	}
+
+	err = view.Register(emails, "**/*.html")(ctx)
+	if err != nil {
+		slog.Error("failed register emails ", err)
 		os.Exit(1)
 	}
 
@@ -45,19 +62,18 @@ func main() {
 
 	auth.SetAppKey(config.AppKey)
 
-	err = db.Open()
+	err = db.Open(ctx)
 	if err != nil {
 		slog.Error("failed to open database ", err)
 		os.Exit(1)
 	}
 	r := router.New()
-	salusadi.Register[*db.User](dep.DP)
-	di.RegisterSingleton(dep.DP, func() email.Mailer {
+	salusadi.Register[*db.User](ctx)
+	di.RegisterSingleton(ctx, func() email.Mailer {
 		return config.Email.Mailer()
 	})
-	r.Register(dep.DP)
+	r.Register(ctx)
 
-	r.WithDependencyProvider(dep.DP)
 	r.Use(request.HandleErrors())
 	r.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +93,7 @@ func main() {
 	})
 	// broken
 	// r.Use(controller.ErrorMiddleware())
+	r.Use(request.HandleErrors())
 
 	type CreateUserRequest struct {
 		Username string `json:"username" validate:"required"`
@@ -91,7 +108,6 @@ func main() {
 			Password: []byte{},
 		}
 	}, "reset-password")
-	// Post.Handle("/user/passwordless", controller.CreateUserPasswordless)
 
 	r.Group("", func(r *router.Router) {
 
@@ -102,13 +118,7 @@ func main() {
 		r.Group("", func(r *router.Router) {
 			r.Use(auth.LoggedIn())
 
-			// r.Group("", func(r *router.Router) {
-			// 	r.Use(HasPurpose(controller.PurposeRefresh))
-			// 	r.Post("/refresh", controller.Refresh)
-			// })
-
 			r.Group("", func(r *router.Router) {
-				// r.Use(HasPurpose(controller.PurposeAuthorize))
 
 				r.Group("/item", func(r *router.Router) {
 					r.Post("", controller.ItemCreate)
@@ -134,5 +144,14 @@ func main() {
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
 
 	slog.Info("Listening on http://localhost:32148")
-	http.ListenAndServe(":32148", r)
+
+	s := &http.Server{
+		Addr:    ":32148",
+		Handler: r,
+		BaseContext: func(l net.Listener) context.Context {
+			return ctx
+		},
+	}
+
+	s.ListenAndServe()
 }
