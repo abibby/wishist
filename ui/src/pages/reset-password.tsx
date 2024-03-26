@@ -1,9 +1,9 @@
 import { Fragment, h } from 'preact'
 import { useCallback, useState } from 'preact/hooks'
-import { forgotPassword, resetPassword } from '../api/user'
+import { resetPassword } from '../api/user'
 import { Input } from '../components/form/input'
 import { FetchError } from '../api/internal'
-import styles from './forgot-password.module.css'
+import styles from './reset-password.module.css'
 import { route } from 'preact-router'
 
 h
