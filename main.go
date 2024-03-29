@@ -91,9 +91,7 @@ func main() {
 			)
 		})
 	})
-	// broken
-	// r.Use(controller.ErrorMiddleware())
-	r.Use(request.HandleErrors())
+
 	r.Use(auth.AttachUser())
 
 	type CreateUserRequest struct {
