@@ -65,7 +65,7 @@ export function CreateUser() {
                     onInput={setEmail}
                 />
                 <Input
-                    title='Name'
+                    title='Full Name'
                     type='text'
                     value={name}
                     onInput={setName}
