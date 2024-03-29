@@ -6,7 +6,7 @@ RUN npm ci
 COPY ui/ ./
 RUN npm run build
 
-FROM golang:1.21 as go-build
+FROM golang:1.22 as go-build
 
 WORKDIR /go/src/github.com/abibby/wishist
 

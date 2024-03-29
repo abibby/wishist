@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -144,7 +145,7 @@ func main() {
 	slog.Info("Listening on http://localhost:32148")
 
 	s := &http.Server{
-		Addr:    ":32148",
+		Addr:    fmt.Sprintf(":%d", config.Port),
 		Handler: r,
 		BaseContext: func(l net.Listener) context.Context {
 			return ctx
