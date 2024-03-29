@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"sync"
 
+	"github.com/abibby/salusa/database/databasedi"
 	"github.com/abibby/wishist/config"
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
@@ -13,13 +14,13 @@ import (
 var db *sqlx.DB
 var dbMtx = &sync.Mutex{}
 
-func Open() error {
+func Open(ctx context.Context) error {
 	var err error
 	db, err = sqlx.Open("sqlite", config.DBPath)
 	if err != nil {
 		return err
 	}
-
+	databasedi.Register(ctx, db)
 	return nil
 }
 

@@ -1,4 +1,4 @@
-import { buildRestModel } from './rest'
+import { NoArgs, buildRestModel } from './rest'
 
 export interface Item {
     id: number
@@ -33,7 +33,7 @@ export interface FriendDeleteRequest {
 
 export const friend = buildRestModel<
     Friend,
-    never,
+    NoArgs,
     FriendCreateRequest,
     never,
     FriendDeleteRequest

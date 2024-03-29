@@ -4,7 +4,6 @@
     margin: 10px 0;
 }
 .title {
-
 }
 .element {
     width: 100%;
@@ -15,6 +14,7 @@
     transition: background-color, border 0.25s;
     font: inherit;
     color: inherit;
+    resize: vertical;
 }
 .element:focus-visible {
     outline: none;

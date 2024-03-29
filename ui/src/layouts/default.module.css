@@ -13,7 +13,7 @@
     left: 0;
     right: 0;
     background-color: rgb(var(--surface));
-    color: rgba(var(--surface-contrast), var(--text-opacity));
+    color: rgba(var(--surface-contrast), 70%);
     padding: 10px;
     z-index: 50;
 }
