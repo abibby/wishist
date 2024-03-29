@@ -45,6 +45,7 @@ func envInt(key string, def int) int {
 
 var AppKey []byte
 var DBPath string
+var Port int
 var Verbose bool
 
 var Email email.Config
@@ -57,6 +58,7 @@ func Init() error {
 	}
 	AppKey = []byte(mustEnv("APP_KEY"))
 	DBPath = env("DB_PATH", "./db.sqlite")
+	Port = envInt("PORT", 32148)
 
 	Verbose = envBool("VERBOSE", false)
 
