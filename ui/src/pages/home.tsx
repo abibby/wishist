@@ -4,6 +4,9 @@ import { useEffect, useState } from 'preact/hooks'
 import { Friend, friend } from '../api'
 import { useUser } from '../auth'
 import { Default } from '../layouts/default'
+import classNames from 'classnames'
+import { ButtonList } from '../components/button-list'
+import styles from './home.module.css'
 
 h
 
@@ -26,17 +29,24 @@ export function Home() {
     return (
         <Fragment>
             <h1>Wishist</h1>
-            <Link href={`/list/${user?.username}`}>My List</Link>
+            <Link
+                class={classNames('button', styles.myList, styles.btn)}
+                href={`/list/${user?.username}`}
+            >
+                My List
+            </Link>
             <h2>Friends</h2>
-            <ul>
+            <ButtonList>
                 {friends?.map(f => (
-                    <li key={f.friend_id}>
-                        <Link href={`/list/${f.friend_username}`}>
-                            {f.friend_name}
-                        </Link>
-                    </li>
+                    <Link
+                        key={f.friend_id}
+                        class={classNames('button', styles.btn)}
+                        href={`/list/${f.friend_username}`}
+                    >
+                        {f.friend_name}
+                    </Link>
                 ))}
-            </ul>
+            </ButtonList>
         </Fragment>
     )
 }

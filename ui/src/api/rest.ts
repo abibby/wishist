@@ -1,15 +1,15 @@
 import { apiFetch } from './internal'
-
+export type NoArgs = Symbol
 export function buildRestModel<
     T,
-    TListRequest extends Record<string, any> = never,
+    TListRequest extends Record<string, any> | NoArgs = NoArgs,
     TCreateRequest = T extends { id: unknown } ? Omit<T, 'id'> : T,
     TUpdateRequest = T,
     TDeleteRequest = T extends { id: unknown } ? Pick<T, 'id'> : T,
 >(url: string) {
     return {
         async list(
-            ...request: TListRequest extends never ? [] : [TListRequest]
+            ...request: TListRequest extends NoArgs ? [] : [TListRequest]
         ): Promise<T[]> {
             return apiFetch(url, request[0] ?? null)
         },

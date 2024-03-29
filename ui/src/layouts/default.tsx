@@ -23,9 +23,9 @@ export function Default({ children }: RenderableProps<{}>) {
                     Wishist
                 </Link>
                 {user ? (
-                    <button class={styles.logout} onClick={logout}>
-                        logout
-                    </button>
+                    <Link class={styles.logout} href='/account'>
+                        Account
+                    </Link>
                 ) : (
                     <button class={styles.login} onClick={login}>
                         login

@@ -54,13 +54,13 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 
 type AddItemRequest struct {
 	Name        string `json:"name"        validate:"required"`
-	Description string `json:"description" validate:"required"`
-	URL         string `json:"url"         validate:"required"`
+	Description string `json:"description" validate:""`
+	URL         string `json:"url"         validate:""`
 	Request     *http.Request
 }
 type AddItemResponse *db.Item
 
-var ItemCreate = request.Handler(func(r *AddItemRequest) (any, error) {
+var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error) {
 	item := &db.Item{}
 	uid, ok := userID(r.Request.Context())
 	if !ok {
@@ -82,8 +82,8 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (any, error) {
 type EditItemRequest struct {
 	ID          int    `json:"id"          validate:"required"`
 	Name        string `json:"name"        validate:"required"`
-	Description string `json:"description" validate:"required"`
-	URL         string `json:"url"         validate:"required"`
+	Description string `json:"description" validate:""`
+	URL         string `json:"url"         validate:""`
 	Request     *http.Request
 }
 type EditItemResponse *db.Item

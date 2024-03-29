@@ -11,6 +11,7 @@ import { Login } from './pages/login'
 import { ForgotPassword } from './pages/forgot-password'
 import { ResetPassword } from './pages/reset-password'
 import { AwaitingVerification } from './pages/awaiting-verification'
+import { Account } from './pages/account'
 
 h
 
@@ -29,6 +30,7 @@ function Main() {
                 />
                 <Route component={CreateUser} path='/create-user' />
                 <Route component={List} path='/list/:username' />
+                <Route component={Account} path='/account' />
                 <Route component={Error404} default />
             </Router>
         </Default>

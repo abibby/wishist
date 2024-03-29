@@ -94,12 +94,14 @@ func main() {
 	// broken
 	// r.Use(controller.ErrorMiddleware())
 	r.Use(request.HandleErrors())
+	r.Use(auth.AttachUser())
 
 	type CreateUserRequest struct {
 		Username string `json:"username" validate:"required"`
 		Email    string `json:"email" validate:"required|email"`
 		Name     string `json:"name" validate:"required"`
 	}
+
 	auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
 		return &db.User{
 			Username: r.Username,
@@ -111,34 +113,32 @@ func main() {
 
 	r.Group("", func(r *router.Router) {
 
-		r.Use(auth.AttachUser())
-
 		r.Get("/item", controller.ItemList)
 
 		r.Group("", func(r *router.Router) {
 			r.Use(auth.LoggedIn())
 
-			r.Group("", func(r *router.Router) {
+			r.Get("/user", controller.GetUser)
 
-				r.Group("/item", func(r *router.Router) {
-					r.Post("", controller.ItemCreate)
-					r.Put("", controller.ItemUpdate)
-					r.Delete("", controller.ItemDelete)
-				})
-
-				r.Group("/friend", func(r *router.Router) {
-					r.Get("", controller.FriendList)
-					r.Post("", controller.FriendCreate)
-					r.Delete("", controller.FriendDelete)
-				})
-
-				r.Group("/user-item", func(r *router.Router) {
-					r.Get("", controller.UserItemList)
-					r.Post("", controller.UserItemCreate)
-					r.Put("", controller.UserItemUpdate)
-					r.Delete("", controller.UserItemDelete)
-				})
+			r.Group("/item", func(r *router.Router) {
+				r.Post("", controller.ItemCreate)
+				r.Put("", controller.ItemUpdate)
+				r.Delete("", controller.ItemDelete)
 			})
+
+			r.Group("/friend", func(r *router.Router) {
+				r.Get("", controller.FriendList)
+				r.Post("", controller.FriendCreate)
+				r.Delete("", controller.FriendDelete)
+			})
+
+			r.Group("/user-item", func(r *router.Router) {
+				r.Get("", controller.UserItemList)
+				r.Post("", controller.UserItemCreate)
+				r.Put("", controller.UserItemUpdate)
+				r.Delete("", controller.UserItemDelete)
+			})
+
 		})
 	})
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))

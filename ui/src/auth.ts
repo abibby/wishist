@@ -1,11 +1,14 @@
 import { Event, EventTarget } from 'event-target-shim'
-import { createStore, delMany, get, setMany } from 'idb-keyval'
+import { createStore, delMany, get, set, setMany } from 'idb-keyval'
 import { useEffect, useState } from 'preact/hooks'
 import jwt from './jwt'
+import { User, user } from './api/user'
+import { FetchError } from './api/internal'
 
-const tokenStore = createStore('auth-tokens', 'auth-tokens')
+const authStore = createStore('auth-tokens', 'auth-tokens')
 const tokenKey = 'token'
 const refreshKey = 'refresh'
+const userKey = 'user'
 
 type ChangeEventMap = {
     change: Event<'change'>
@@ -13,18 +16,52 @@ type ChangeEventMap = {
 const changes = new EventTarget<ChangeEventMap, 'strict'>()
 
 let _token: string | undefined
+let _user: User | undefined
+let _userPromise: Promise<User> | undefined
+
+export async function getUser(): Promise<User | null> {
+    const token = await getToken()
+    if (token === null) {
+        return null
+    }
+    if (_user !== undefined) {
+        return _user
+    }
+    try {
+        let u = await get<User | undefined>(userKey, authStore)
+        if (u != undefined) {
+            _user = u
+            return u
+        }
+        if (_userPromise === undefined) {
+            _userPromise = user()
+        }
+        u = await _userPromise
+        _userPromise = undefined
+        _user = u
+        await set(userKey, u, authStore)
+        return u
+    } catch (e) {
+        if (e instanceof FetchError && e.status === 401) {
+            // fallthrough
+        } else {
+            console.warn(e)
+        }
+        return null
+    }
+}
 
 export async function getToken(): Promise<string | null> {
     if (_token !== undefined) {
         return _token
     }
     try {
-        let token = await get<string | undefined>(tokenKey, tokenStore)
+        let token = await get<string | undefined>(tokenKey, authStore)
         if (token !== undefined && jwtExpired(token)) {
             token = undefined
         }
         if (token === undefined) {
-            let refresh = await get<string | undefined>(refreshKey, tokenStore)
+            let refresh = await get<string | undefined>(refreshKey, authStore)
             if (refresh === undefined || jwtExpired(refresh)) {
                 return null
             }
@@ -49,7 +86,7 @@ export async function getToken(): Promise<string | null> {
                     [tokenKey, result.token],
                     [refreshKey, result.refresh],
                 ],
-                tokenStore,
+                authStore,
             )
             changes.dispatchEvent(new Event('change'))
         }
@@ -96,7 +133,7 @@ export async function login(
                 [tokenKey, data.token],
                 [refreshKey, data.refresh],
             ],
-            tokenStore,
+            authStore,
         )
     } catch (e) {
         console.error('failed to save token', e)
@@ -107,8 +144,9 @@ export async function login(
 
 export async function logout() {
     _token = undefined
+    _user = undefined
     try {
-        await delMany([tokenKey, refreshKey], tokenStore)
+        await delMany([tokenKey, refreshKey, userKey], authStore)
     } catch (e) {
         console.error(e)
     }
@@ -120,15 +158,15 @@ export async function userID(): Promise<number | undefined> {
     if (token === null) {
         return undefined
     }
-    return jwt.parse(token).claims.sub
+    return Number(jwt.parse(token).claims.sub)
 }
 
 export async function username(): Promise<string | undefined> {
-    const token = await getToken()
-    if (token === null) {
+    const user = await getUser()
+    if (user === null) {
         return undefined
     }
-    return jwt.parse(token).claims.username
+    return user.username
 }
 
 // export interface UserCreatePasswordlessRequest {
@@ -167,28 +205,17 @@ export async function username(): Promise<string | undefined> {
 //     changes.dispatchEvent(new Event('change'))
 // }
 
-export interface User {
-    id: number
-    username: string
-    passwordless: boolean
-}
+// export interface User {
+//     id: number
+//     username: string
+//     passwordless: boolean
+// }
 
 export function useUser(): User | null {
     const [user, setUser] = useState<User | null>(null)
     useEffect(() => {
         const change = async () => {
-            const token = await getToken()
-            if (token !== null) {
-                const claims = jwt.parse(token).claims
-
-                setUser({
-                    id: claims.sub,
-                    username: claims.username,
-                    passwordless: claims.passwordless,
-                })
-            } else {
-                setUser(null)
-            }
+            setUser(await getUser())
         }
         changes.addEventListener('change', change)
         change()

@@ -7,6 +7,7 @@ import { item, Item, UserItem, userItem } from '../api'
 import { userID, useUser } from '../auth'
 import { Input } from './form/input'
 import styles from './item-list.module.css'
+import { TextArea } from './form/textarea'
 
 h
 
@@ -204,7 +205,7 @@ function Row({ item, onChange, onRemove }: RowProps) {
                     value={item.url}
                     onInput={bind('url', edit)}
                 />
-                <Input
+                <TextArea
                     title='Description'
                     value={item.description}
                     onInput={bind('description', edit)}
@@ -280,8 +281,9 @@ function ReadonlyRow({
     return (
         <li
             class={classNames(styles.item, {
-                [styles.thinking]: (item.thinking_count ?? 0) > 0,
-                [styles.purchased]: (item.purchased_count ?? 0) > 0,
+                [styles.thinking]: (item.thinking_count ?? 0) > 0 || isThinking,
+                [styles.purchased]:
+                    (item.purchased_count ?? 0) > 0 || isPurchased,
             })}
         >
             <span class={styles.name} onClick={bind(true, setOpen)}>
@@ -325,8 +327,16 @@ function ReadonlyRow({
                     )}
                 </div>
                 <div>Description: {item.description}</div>
-                <div>Watching: {item.thinking_count}</div>
-                <div>Purchased: {item.purchased_count}</div>
+                <div>
+                    Watching:
+                    {isThinking ? ' You + ' : ' '}
+                    {item.thinking_count}
+                </div>
+                <div>
+                    Purchased:
+                    {isPurchased ? ' You + ' : ' '}
+                    {item.purchased_count}
+                </div>
             </div>
         </li>
     )
