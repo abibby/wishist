@@ -75,7 +75,11 @@ func main() {
 	})
 	r.Register(ctx)
 
-	r.Use(request.HandleErrors())
+	r.Use(request.HandleErrors(
+		func(err error) {
+			slog.Warn("request failed", "error", err)
+		},
+	))
 	r.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := time.Now()
