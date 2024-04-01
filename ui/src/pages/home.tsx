@@ -15,14 +15,17 @@ export function Home() {
     const user = useUser()
 
     useEffect(() => {
-        friend.list().then(f => setFriends(f))
-    }, [setFriends])
+        if (user !== null) {
+            friend.list().then(f => setFriends(f))
+        }
+    }, [user])
 
     if (user === null) {
         return (
-            <Default>
+            <Fragment>
                 <h1>Wishist</h1>
-            </Default>
+                <p>Log in to view friends</p>
+            </Fragment>
         )
     }
 
