@@ -16,6 +16,7 @@ export async function apiFetch<T>(
         init = {
             ...init,
             headers: {
+                ...init?.headers,
                 Authorization: 'Bearer ' + token,
             },
         }

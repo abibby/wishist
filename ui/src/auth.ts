@@ -4,6 +4,7 @@ import { useEffect, useState } from 'preact/hooks'
 import jwt from './jwt'
 import { User, user } from './api/user'
 import { FetchError } from './api/internal'
+import * as authAPI from './api/auth'
 
 const authStore = createStore('auth-tokens', 'auth-tokens')
 const tokenKey = 'token'
@@ -65,18 +66,8 @@ export async function getToken(): Promise<string | null> {
             if (refresh === undefined || jwtExpired(refresh)) {
                 return null
             }
-            const response = await fetch('/refresh', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${refresh}`,
-                },
-            })
 
-            if (!response.ok) {
-                return null
-            }
-
-            const result = await response.json()
+            const result = await authAPI.refresh({ refresh: refresh })
 
             token = result.token
             _token = result.token
@@ -111,20 +102,10 @@ export async function login(
     username: string,
     password: string,
 ): Promise<boolean> {
-    const response = await fetch('/login', {
-        method: 'POST',
-        body: JSON.stringify({
-            username: username,
-            password: password,
-        }),
+    const data = await authAPI.login({
+        username: username,
+        password: password,
     })
-
-    if (!response.ok) {
-        return false
-    }
-
-    const data = await response.json()
-
     _token = data.token
 
     try {
@@ -168,48 +149,6 @@ export async function username(): Promise<string | undefined> {
     }
     return user.username
 }
-
-// export interface UserCreatePasswordlessRequest {
-//     name: string
-//     username: string
-// }
-// interface UserCreatePasswordlessResponse {
-//     user: unknown
-//     token: string
-//     refresh: string
-// }
-// export async function userCreatePasswordless(
-//     request: UserCreatePasswordlessRequest,
-// ): Promise<void> {
-//     const response: UserCreatePasswordlessResponse = await fetch(
-//         '/user/passwordless',
-//         {
-//             method: 'POST',
-//             body: JSON.stringify(request),
-//         },
-//     ).then(r => r.json())
-
-//     _token = response.token
-
-//     try {
-//         await setMany(
-//             [
-//                 [tokenKey, response.token],
-//                 [refreshKey, response.refresh],
-//             ],
-//             tokenStore,
-//         )
-//     } catch (e) {
-//         console.error('failed to save token', e)
-//     }
-//     changes.dispatchEvent(new Event('change'))
-// }
-
-// export interface User {
-//     id: number
-//     username: string
-//     passwordless: boolean
-// }
 
 export function useUser(): User | null {
     const [user, setUser] = useState<User | null>(null)
