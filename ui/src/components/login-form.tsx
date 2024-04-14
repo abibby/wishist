@@ -9,10 +9,10 @@ import { ModalActions } from './modal'
 h
 
 interface LoginFormProps {
-    onLogin?: () => void
+    onLogin: () => void
 }
 
-export function LoginForm(props: LoginFormProps) {
+export function LoginForm(props: Readonly<LoginFormProps>) {
     const [user, setUser] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string>()
@@ -24,7 +24,7 @@ export function LoginForm(props: LoginFormProps) {
                 setError('Invalid username or password')
                 return
             }
-            props.onLogin?.()
+            props.onLogin()
         },
         [user, password, setError],
     )
