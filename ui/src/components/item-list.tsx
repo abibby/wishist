@@ -232,7 +232,7 @@ function ReadonlyRow({
     onUserItemCreate,
     onUserItemChange,
     onUserItemRemove,
-}: ReadonlyRowProps) {
+}: Readonly<ReadonlyRowProps>) {
     const [open, setOpen] = useState(false)
     const user = useUser()
 
@@ -260,7 +260,14 @@ function ReadonlyRow({
                 await userItem.create(newUserItem)
             }
         },
-        [hasUserItem, itemID, userItemType],
+        [
+            hasUserItem,
+            itemID,
+            userItemType,
+            onUserItemCreate,
+            onUserItemChange,
+            onUserItemRemove,
+        ],
     )
     const setThinking = useCallback(() => {
         setType('thinking')

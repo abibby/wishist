@@ -42,7 +42,7 @@ export function ChangePasswordModal({ close }: ChangePasswordModalProps) {
                 setRunning(false)
             }
         },
-        [currentPassword, newPassword1, newPassword2, running],
+        [currentPassword, newPassword1, newPassword2, running, close],
     )
     return (
         <Modal title='Change Password' close={close}>

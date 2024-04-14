@@ -10,8 +10,12 @@ export default tseslint.config(
         files: ['**/*.{ts,tsx}'],
         ignores: ['dist'],
         plugins: {
-            eslintPluginReact,
-            eslintPluginReactHooks,
+            "react": eslintPluginReact,
+            "react-hooks": eslintPluginReactHooks,
+        },
+        rules: {
+            ...eslintPluginReactHooks.configs.recommended.rules,
+            // ...eslintPluginReact.configs.recommended.rules,
         },
         languageOptions: {
             parserOptions: {

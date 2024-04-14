@@ -14,7 +14,7 @@ interface ListProps {
     }
 }
 
-export function List({ matches }: ListProps) {
+export function List({ matches }: Readonly<ListProps>) {
     const { username } = matches
     const myUser = useUser()
     const myList = myUser?.username === username
@@ -34,7 +34,7 @@ export function List({ matches }: ListProps) {
                     ),
                 )
         }
-    }, [setIsFriend, loggedIn])
+    }, [username, loggedIn])
 
     const addFriend = useCallback(() => {
         if (loggedIn) {
