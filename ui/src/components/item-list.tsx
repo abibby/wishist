@@ -14,7 +14,7 @@ h
 const debouncedItemUpdate: typeof item.update = debounce(
     item.update,
     500,
-) as any
+) as typeof item.update
 
 interface ListProps {
     username: string
@@ -232,7 +232,7 @@ function ReadonlyRow({
     onUserItemCreate,
     onUserItemChange,
     onUserItemRemove,
-}: ReadonlyRowProps) {
+}: Readonly<ReadonlyRowProps>) {
     const [open, setOpen] = useState(false)
     const user = useUser()
 
@@ -260,7 +260,14 @@ function ReadonlyRow({
                 await userItem.create(newUserItem)
             }
         },
-        [hasUserItem, itemID, userItemType],
+        [
+            hasUserItem,
+            itemID,
+            userItemType,
+            onUserItemCreate,
+            onUserItemChange,
+            onUserItemRemove,
+        ],
     )
     const setThinking = useCallback(() => {
         setType('thinking')
@@ -275,7 +282,9 @@ function ReadonlyRow({
     let host: string | undefined
     try {
         host = new URL(item.url).host
-    } catch (e) {}
+    } catch (e) {
+        console.warn(e)
+    }
 
     const hasExtraInfo = item.url !== '' || item.description !== ''
     return (

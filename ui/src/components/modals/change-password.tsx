@@ -1,5 +1,4 @@
 import { h } from 'preact'
-import { LoginForm } from '../login-form'
 import { Modal, ModalActions, ModalProps } from '../modal'
 import { useCallback, useState } from 'preact/hooks'
 import { Input } from '../form/input'
@@ -43,7 +42,7 @@ export function ChangePasswordModal({ close }: ChangePasswordModalProps) {
                 setRunning(false)
             }
         },
-        [currentPassword, newPassword1, newPassword2, running],
+        [currentPassword, newPassword1, newPassword2, running, close],
     )
     return (
         <Modal title='Change Password' close={close}>

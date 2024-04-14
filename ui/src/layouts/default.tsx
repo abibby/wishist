@@ -1,15 +1,14 @@
 import { h, RenderableProps } from 'preact'
 import { Link } from 'preact-router'
 import { useCallback } from 'preact/hooks'
-import { logout, useUser } from '../auth'
+import { useUser } from '../auth'
 import { openModal } from '../components/modal'
-import { Ask } from '../components/modals/ask'
 import { LoginModal } from '../components/modals/login'
 import styles from './default.module.css'
 
 h
 
-export function Default({ children }: RenderableProps<{}>) {
+export function Default({ children }: RenderableProps<never>) {
     const user = useUser()
 
     const login = useCallback(async () => {

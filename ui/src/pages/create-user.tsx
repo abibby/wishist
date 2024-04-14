@@ -3,7 +3,6 @@ import { route } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
 import { userCreate } from '../api/user'
 import { Input } from '../components/form/input'
-import { login } from '../auth'
 import { FetchError } from '../api/internal'
 import styles from './create-user.module.css'
 

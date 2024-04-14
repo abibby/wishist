@@ -1,7 +1,6 @@
-import debounce from 'lodash.debounce'
 import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { friend, item } from '../api'
+import { friend } from '../api'
 import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
 import { openModal } from '../components/modal'
@@ -15,7 +14,7 @@ interface ListProps {
     }
 }
 
-export function List({ matches }: ListProps) {
+export function List({ matches }: Readonly<ListProps>) {
     const { username } = matches
     const myUser = useUser()
     const myList = myUser?.username === username
@@ -35,7 +34,7 @@ export function List({ matches }: ListProps) {
                     ),
                 )
         }
-    }, [setIsFriend, loggedIn])
+    }, [username, loggedIn])
 
     const addFriend = useCallback(() => {
         if (loggedIn) {
