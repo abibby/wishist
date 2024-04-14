@@ -1,5 +1,9 @@
 import { getToken } from '../auth'
 
+type AuthRequestInit = {
+    withoutToken?: boolean
+}
+
 export class FetchError<T> extends Error {
     constructor(message: string, public status: number, public body: T) {
         super(message)
@@ -9,16 +13,18 @@ export class FetchError<T> extends Error {
 export async function apiFetch<T>(
     path: string,
     query: Record<string, string> | null = null,
-    init?: RequestInit,
+    init?: RequestInit & AuthRequestInit,
 ): Promise<T> {
-    const token = await getToken()
-    if (token !== null) {
-        init = {
-            ...init,
-            headers: {
-                ...init?.headers,
-                Authorization: 'Bearer ' + token,
-            },
+    if (init?.withoutToken !== true) {
+        const token = await getToken()
+        if (token !== null) {
+            init = {
+                ...init,
+                headers: {
+                    ...init?.headers,
+                    Authorization: 'Bearer ' + token,
+                },
+            }
         }
     }
 

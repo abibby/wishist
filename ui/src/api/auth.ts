@@ -17,6 +17,7 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
         {
             method: 'POST',
             body: JSON.stringify(request),
+            withoutToken: true,
         },
     )
 }
@@ -31,6 +32,7 @@ export async function refresh(request: RefreshRequest): Promise<LoginResponse> {
         {
             method: 'POST',
             body: JSON.stringify(request),
+            withoutToken: true,
         },
     )
 }
