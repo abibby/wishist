@@ -25,6 +25,7 @@ export async function userCreate(request: CreateUserRequest): Promise<User> {
         {
             method: 'POST',
             body: JSON.stringify(request),
+            withoutToken: true,
         },
     )
 }
@@ -41,6 +42,7 @@ export async function forgotPassword(
         {
             method: 'POST',
             body: JSON.stringify(request),
+            withoutToken: true,
         },
     )
 }
@@ -58,6 +60,7 @@ export async function resetPassword(
         {
             method: 'POST',
             body: JSON.stringify(request),
+            withoutToken: true,
         },
     )
 }

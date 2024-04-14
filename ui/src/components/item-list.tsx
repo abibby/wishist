@@ -21,7 +21,7 @@ interface ListProps {
     readonly: boolean
 }
 
-export function ItemList({ username: name, readonly }: ListProps) {
+export function ItemList({ username: name, readonly }: Readonly<ListProps>) {
     const [newItem, setNewItem] = useState('')
     const [items, setItems] = useState<Item[] | undefined>()
     const [userItems, setUserItems] = useState<UserItem[] | undefined>()
