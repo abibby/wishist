@@ -1,7 +1,6 @@
-import debounce from 'lodash.debounce'
 import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { friend, item } from '../api'
+import { friend } from '../api'
 import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
 import { openModal } from '../components/modal'

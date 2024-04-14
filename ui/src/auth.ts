@@ -62,7 +62,7 @@ export async function getToken(): Promise<string | null> {
             token = undefined
         }
         if (token === undefined) {
-            let refresh = await get<string | undefined>(refreshKey, authStore)
+            const refresh = await get<string | undefined>(refreshKey, authStore)
             if (refresh === undefined || jwtExpired(refresh)) {
                 return null
             }

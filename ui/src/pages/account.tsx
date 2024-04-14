@@ -1,5 +1,5 @@
 import { Fragment, h } from 'preact'
-import { getUser, logout, useUser } from '../auth'
+import { getUser, logout } from '../auth'
 import { useCallback, useEffect } from 'preact/hooks'
 import { openModal } from '../components/modal'
 import { ChangePasswordModal } from '../components/modals/change-password'

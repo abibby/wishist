@@ -12,7 +12,7 @@ interface LoginFormProps {
     onLogin: () => void
 }
 
-export function LoginForm(props: Readonly<LoginFormProps>) {
+export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
     const [user, setUser] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string>()
@@ -24,9 +24,9 @@ export function LoginForm(props: Readonly<LoginFormProps>) {
                 setError('Invalid username or password')
                 return
             }
-            props.onLogin()
+            onLogin()
         },
-        [user, password, setError],
+        [user, password, onLogin],
     )
 
     return (

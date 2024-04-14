@@ -8,6 +8,8 @@ h
 
 let id = 0
 
+/* eslint @typescript-eslint/no-explicit-any: 0 */
+
 class ModalOpenEvent extends Event<'open'> {
     public readonly id: number
     constructor(
@@ -99,7 +101,7 @@ export async function openModal<T extends ModalProps<TReturn>, TReturn>(
     modal: FunctionalComponent<T>,
     props: Omit<T, keyof ModalProps<TReturn>>,
 ): Promise<TReturn | undefined> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         const openEvent = new ModalOpenEvent(modal, props)
         modalEventTarget.dispatchEvent(openEvent)
 
@@ -114,7 +116,7 @@ export async function openModal<T extends ModalProps<TReturn>, TReturn>(
     })
 }
 
-export function ModalActions({ children }: RenderableProps<{}>) {
+export function ModalActions({ children }: RenderableProps<never>) {
     return <div class={styles.actions}>{children}</div>
 }
 

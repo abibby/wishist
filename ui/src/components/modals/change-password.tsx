@@ -1,5 +1,4 @@
 import { h } from 'preact'
-import { LoginForm } from '../login-form'
 import { Modal, ModalActions, ModalProps } from '../modal'
 import { useCallback, useState } from 'preact/hooks'
 import { Input } from '../form/input'

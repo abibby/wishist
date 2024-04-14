@@ -14,7 +14,7 @@ h
 const debouncedItemUpdate: typeof item.update = debounce(
     item.update,
     500,
-) as any
+) as typeof item.update
 
 interface ListProps {
     username: string
@@ -275,7 +275,9 @@ function ReadonlyRow({
     let host: string | undefined
     try {
         host = new URL(item.url).host
-    } catch (e) {}
+    } catch (e) {
+        console.warn(e)
+    }
 
     const hasExtraInfo = item.url !== '' || item.description !== ''
     return (

@@ -1,7 +1,8 @@
 import { apiFetch } from './internal'
-export type NoArgs = Symbol
+export type NoArgs = { __no_args__: symbol }
 export function buildRestModel<
     T,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     TListRequest extends Record<string, any> | NoArgs = NoArgs,
     TCreateRequest = T extends { id: unknown } ? Omit<T, 'id'> : T,
     TUpdateRequest = T,
