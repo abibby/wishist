@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/abibby/fileserver"
 	"github.com/abibby/salusa/auth"
@@ -77,27 +78,28 @@ func main() {
 
 	r.Register(ctx)
 
-	// r.Use(func(h http.Handler) http.Handler {
-	// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 		s := time.Now()
-	// 		rw := &ResponseWriter{ResponseWriter: w, Status: 200}
-
-	// 		h.ServeHTTP(rw, r)
-
-	// 		slog.Info("request",
-	// 			"remote_address", r.RemoteAddr,
-	// 			"path", r.URL.String(),
-	// 			"method", r.Method,
-	// 			"time", time.Since(s),
-	// 			"status", rw.Status,
-	// 		)
-	// 	})
-	// })
 	r.Use(request.HandleErrors(
 		func(err error) {
 			slog.Warn("request failed", "error", err)
 		},
 	))
+
+	r.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			s := time.Now()
+			rw := &ResponseWriter{ResponseWriter: w, Status: 200}
+
+			h.ServeHTTP(rw, r)
+
+			slog.Info("request",
+				"remote_address", r.RemoteAddr,
+				"path", r.URL.String(),
+				"method", r.Method,
+				"time", time.Since(s),
+				"status", rw.Status,
+			)
+		})
+	})
 
 	r.Use(auth.AttachUser())
 
