@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -53,20 +54,20 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 })
 
 type AddItemRequest struct {
-	Name        string `json:"name"        validate:"required"`
-	Description string `json:"description" validate:""`
-	URL         string `json:"url"         validate:""`
-	Request     *http.Request
+	Name        string          `json:"name"        validate:"required"`
+	Description string          `json:"description" validate:""`
+	URL         string          `json:"url"         validate:""`
+	Ctx         context.Context `inject:""`
 }
 type AddItemResponse *db.Item
 
 var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error) {
 	item := &db.Item{}
-	uid, ok := userID(r.Request.Context())
+	uid, ok := userID(r.Ctx)
 	if !ok {
 		return nil, fmt.Errorf("user not logged in")
 	}
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	err := db.Tx(r.Ctx, func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("INSERT INTO items (user_id,name,description,url) VALUES (?, ?, ?, ?)", uid, r.Name, r.Description, r.URL)
 		if err != nil {
 			return err
