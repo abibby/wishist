@@ -9,8 +9,16 @@ import (
 	"strings"
 
 	"github.com/abibby/salusa/email"
+	"github.com/abibby/salusa/kernel"
 	"github.com/joho/godotenv"
 )
+
+type Cfg interface {
+	kernel.KernelConfig
+	email.MailConfiger
+}
+
+type config struct{}
 
 func env(key string, def string) string {
 	v, ok := os.LookupEnv(key)
@@ -50,6 +58,8 @@ var Verbose bool
 
 var Email email.Config
 
+var Config Cfg = &config{}
+
 func Init() error {
 	err := godotenv.Load("./.env")
 	if errors.Is(err, fs.ErrNotExist) {
@@ -71,4 +81,14 @@ func Init() error {
 	}
 
 	return nil
+}
+
+func (c *config) GetHTTPPort() int {
+	return Port
+}
+func (c *config) GetBaseURL() string {
+	return ""
+}
+func (c *config) MailConfig() email.Config {
+	return &email.SMTPConfig{}
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/abibby/fileserver"
 	"github.com/abibby/salusa/auth"
 	"github.com/abibby/salusa/di"
-	"github.com/abibby/salusa/email"
+	"github.com/abibby/salusa/kernel"
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/salusa/router"
 	"github.com/abibby/salusa/salusadi"
@@ -55,6 +55,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	di.RegisterSingleton(ctx, func() kernel.KernelConfig {
+		return config.Config
+	})
+	// must be before the db.Open because of dumb di stuff
+	_ = salusadi.Register[*db.User](nil)(ctx)
+
 	err = db.Migrate()
 	if err != nil {
 		slog.Error("failed to migrate database ", err)
@@ -69,10 +75,7 @@ func main() {
 		os.Exit(1)
 	}
 	r := router.New()
-	salusadi.Register[*db.User](ctx)
-	di.RegisterSingleton(ctx, func() email.Mailer {
-		return config.Email.Mailer()
-	})
+
 	r.Register(ctx)
 
 	r.Use(request.HandleErrors(
@@ -80,6 +83,7 @@ func main() {
 			slog.Warn("request failed", "error", err)
 		},
 	))
+
 	r.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := time.Now()
