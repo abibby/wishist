@@ -1,0 +1,2 @@
+ALTER TABLE items
+    ADD user_order INTEGER DEFAULT 0 NOT NULL;

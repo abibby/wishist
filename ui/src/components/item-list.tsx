@@ -1,13 +1,14 @@
 import { bind, bindValue } from '@zwzn/spicy'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
-import { h } from 'preact'
-import { useCallback, useEffect, useState } from 'preact/hooks'
+import { JSX, h } from 'preact'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { item, Item, UserItem, userItem } from '../api'
 import { userID, useUser } from '../auth'
 import { Input } from './form/input'
 import styles from './item-list.module.css'
 import { TextArea } from './form/textarea'
+import { OrderableList } from './orderable-list'
 
 h
 
@@ -109,12 +110,38 @@ export function ItemList({ username: name, readonly }: Readonly<ListProps>) {
         [setUserItems],
     )
 
+    const onMove = useCallback((newIndex: number, oldIndex: number) => {
+        setItems(items => {
+            if (newIndex === oldIndex) {
+                return items
+            }
+
+            items = Array.from(items ?? [])
+
+            const tmp = items[oldIndex]
+            if (newIndex < oldIndex) {
+                for (let i = oldIndex; i > newIndex; i--) {
+                    items[i] = items[i - 1]
+                }
+            } else {
+                for (let i = oldIndex; i < newIndex; i++) {
+                    items[i] = items[i + 1]
+                }
+            }
+            items[newIndex] = tmp
+            return items
+        })
+    }, [])
+
     if (items === undefined) {
         return <div>loading...</div>
     }
 
     return (
-        <ul class={classNames(styles.list, { [styles.edit]: !readonly })}>
+        <OrderableList
+            class={classNames(styles.list, { [styles.edit]: !readonly })}
+            onMove={onMove}
+        >
             {items.map(i => {
                 if (readonly) {
                     return (
@@ -152,7 +179,7 @@ export function ItemList({ username: name, readonly }: Readonly<ListProps>) {
                     <button onClick={addItem}>Add</button>
                 </li>
             )}
-        </ul>
+        </OrderableList>
     )
 }
 
@@ -163,7 +190,15 @@ interface RowProps {
 }
 
 function Row({ item, onChange, onRemove }: RowProps) {
+    // const root = useRef<HTMLLIElement | null>(null)
     const [open, setOpen] = useState(false)
+    // const originalPos = useRef<[number, number]>()
+    // const [translate, setTranslate] = useState<[number, number]>()
+
+    // let translateStyle: string | undefined
+    // if (translate !== undefined) {
+    //     translateStyle = `transform: translate(${translate[0]}px, ${translate[1]}px);`
+    // }
 
     const edit = useCallback(
         (field: keyof Item, value: string) => {
@@ -175,8 +210,43 @@ function Row({ item, onChange, onRemove }: RowProps) {
         [item, onChange],
     )
 
+    // const handleDown = useCallback((e: MouseEvent) => {
+    //     const rect = root.current?.getBoundingClientRect()
+    //     if (rect === undefined) {
+    //         return
+    //     }
+    //     originalPos.current = [e.x, e.y]
+    // }, [])
+    // const handleUp = useCallback(() => {
+    //     originalPos.current = undefined
+    //     setTranslate(undefined)
+    // }, [])
+    // const handleMove = useCallback((e: MouseEvent) => {
+    //     if (originalPos.current === undefined) {
+    //         return
+    //     }
+    //     const [x, y] = originalPos.current
+    //     setTranslate([e.x - x, e.y - y])
+    // }, [])
+
+    // console.log(translateStyle)
     return (
-        <li>
+        <li
+        // ref={root}
+        // style={translateStyle}
+        // class={classNames({
+        //     [styles.moving]: translateStyle !== undefined,
+        // })}
+        >
+            {/* <div
+                class={styles.handle}
+                onMouseDown={handleDown}
+                onMouseMove={handleMove}
+                onMouseUp={handleUp}
+                onMouseLeave={handleUp}
+            >
+                #
+            </div> */}
             <label class={styles.item}>
                 <input
                     class={styles.name}

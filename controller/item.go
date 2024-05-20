@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/abibby/nulls"
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
@@ -39,7 +40,8 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 				(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='thinking') as thinking_count,
 				(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='purchased') as purchased_count
 			from items
-			where user_id = ?`
+			where user_id = ?
+			order by user_order`
 			args = []any{uid, uid, u.ID}
 		}
 
@@ -68,7 +70,12 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error
 		return nil, fmt.Errorf("user not logged in")
 	}
 	err := db.Tx(r.Ctx, func(tx *sqlx.Tx) error {
-		_, err := tx.Exec("INSERT INTO items (user_id,name,description,url) VALUES (?, ?, ?, ?)", uid, r.Name, r.Description, r.URL)
+		order := nulls.NewInt(0)
+		err := tx.Get(&order, "select max(user_order) from items where user_id=?", uid)
+		if err != nil {
+			return err
+		}
+		_, err = tx.Exec("INSERT INTO items (user_id,name,description,url,user_order) VALUES (?, ?, ?, ?, ?)", uid, r.Name, r.Description, r.URL, order.Value()+1)
 		if err != nil {
 			return err
 		}

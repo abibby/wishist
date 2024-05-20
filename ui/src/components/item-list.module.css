@@ -7,6 +7,22 @@
 .list li {
     position: relative;
 }
+.moving .item {
+    background-color: rgb(var(--background));
+}
+.handle {
+    position: absolute;
+    top: 50%;
+    transform: translate(10px, -50%);
+    opacity: 0;
+    transition: opacity 200ms, transform 200ms;
+    padding: 1em;
+}
+.list li:hover .handle {
+    transform: translate(-100%, -50%);
+    opacity: 1;
+    cursor: pointer;
+}
 
 .item {
     display: flex;
@@ -14,6 +30,7 @@
     padding: 10px;
     transition: background-color, border 0.25s;
     height: 46px;
+    transition: background-color 100ms;
 }
 .item.new {
     background-color: rgba(var(--background-contrast), 5%);
@@ -48,15 +65,14 @@
 
 .actions {
     display: flex;
-    gap: 5px
-
+    gap: 5px;
 }
 .action {
     background: none;
     border: none;
     opacity: 0.5;
 }
-.action.active{
+.action.active {
     opacity: 1;
 }
 
