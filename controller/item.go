@@ -19,7 +19,7 @@ type ListItemsRequest struct {
 }
 type ListItemsResponse []*db.Item
 
-var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
+var ItemList = request.Handler(func(r *ListItemsRequest) (ListItemsResponse, error) {
 	items := []*db.Item{}
 	uid, ok := userID(r.Request.Context())
 
@@ -32,7 +32,7 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 		} else if err != nil {
 			return err
 		}
-		query := "select * from items where user_id = ?"
+		query := "select * from items where user_id = ? order by user_order"
 		args := []any{u.ID}
 		if uid != u.ID && ok {
 			query = `select 
@@ -96,7 +96,7 @@ type EditItemRequest struct {
 }
 type EditItemResponse *db.Item
 
-var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
+var ItemUpdate = request.Handler(func(r *EditItemRequest) (EditItemResponse, error) {
 	item := &db.Item{}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("UPDATE items SET name=?, description=?, url=? WHERE id=?", r.Name, r.Description, r.URL, r.ID)
@@ -119,7 +119,7 @@ type RemoveItemResponse struct {
 	Success bool `json:"success"`
 }
 
-var ItemDelete = request.Handler(func(r *RemoveItemRequest) (any, error) {
+var ItemDelete = request.Handler(func(r *RemoveItemRequest) (*RemoveItemResponse, error) {
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM items WHERE id=?", r.ID)
 		return err
@@ -128,6 +128,68 @@ var ItemDelete = request.Handler(func(r *RemoveItemRequest) (any, error) {
 		return nil, err
 	}
 	return &RemoveItemResponse{
+		Success: true,
+	}, nil
+})
+
+type ItemMoveRequest struct {
+	ItemID            int `json:"item_id"`
+	DestinationItemID int `json:"destination_item_id"`
+	Ctx               context.Context
+}
+type ItemMoveResponse struct {
+	Success bool `json:"success"`
+}
+
+var ItemMove = request.Handler(func(r *ItemMoveRequest) (*ItemMoveResponse, error) {
+	item := &db.Item{}
+	destItem := &db.Item{}
+	uid, ok := userID(r.Ctx)
+	if !ok {
+		return nil, fmt.Errorf("user not logged in")
+	}
+	err := db.Tx(r.Ctx, func(tx *sqlx.Tx) error {
+		err := tx.Get(destItem, "SELECT * FROM items WHERE id=?", r.DestinationItemID)
+		if err != nil {
+			return err
+		}
+		err = tx.Get(item, "SELECT * FROM items WHERE id=?", r.ItemID)
+		if err != nil {
+			return err
+		}
+
+		// return fmt.Errorf(`dst %d item %d`, destItem.Order, item.Order)
+
+		if destItem.Order > item.Order {
+			_, err = tx.Exec(`UPDATE items 
+				SET user_order=user_order-1 
+				WHERE user_order <= ? 
+					AND user_order > ?
+					AND user_id = ?`, destItem.Order, item.Order, uid)
+			if err != nil {
+				return err
+			}
+		} else {
+			_, err = tx.Exec(`UPDATE items 
+				SET user_order=user_order+1 
+				WHERE user_order >= ?
+					AND user_order < ?
+					AND user_id = ?`, destItem.Order, item.Order, uid)
+			if err != nil {
+				return err
+			}
+		}
+		_, err = tx.Exec("UPDATE items SET user_order=? WHERE id=?", destItem.Order, item.ID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &ItemMoveResponse{
 		Success: true,
 	}, nil
 })

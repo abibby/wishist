@@ -131,6 +131,7 @@ func main() {
 				r.Post("", controller.ItemCreate)
 				r.Put("", controller.ItemUpdate)
 				r.Delete("", controller.ItemDelete)
+				r.Post("/move", controller.ItemMove)
 			})
 
 			r.Group("/friend", func(r *router.Router) {

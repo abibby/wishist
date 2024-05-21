@@ -1,3 +1,4 @@
+import { apiFetch } from './internal'
 import { NoArgs, buildRestModel } from './rest'
 
 export interface Item {
@@ -16,6 +17,21 @@ export const item = buildRestModel<
     Omit<Item, 'id' | 'user_id'>,
     Omit<Item, 'user_id'>
 >('/item')
+
+export type ItemMoveRequest = {
+    item_id: number
+    destination_item_id: number
+}
+export function itemMove(body: ItemMoveRequest) {
+    return apiFetch(
+        '/item/move',
+        {},
+        {
+            method: 'POST',
+            body: JSON.stringify(body),
+        },
+    )
+}
 
 export interface Friend {
     user_id: number

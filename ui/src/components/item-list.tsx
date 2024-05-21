@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import debounce from 'lodash.debounce'
 import { JSX, h } from 'preact'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
-import { item, Item, UserItem, userItem } from '../api'
+import { item, Item, itemMove, UserItem, userItem } from '../api'
 import { userID, useUser } from '../auth'
 import { Input } from './form/input'
 import styles from './item-list.module.css'
@@ -117,6 +117,13 @@ export function ItemList({ username: name, readonly }: Readonly<ListProps>) {
             }
 
             items = Array.from(items ?? [])
+
+            itemMove({
+                item_id: items[oldIndex].id,
+                destination_item_id: items[newIndex].id,
+            }).catch(err => {
+                alert(err)
+            })
 
             const tmp = items[oldIndex]
             if (newIndex < oldIndex) {
