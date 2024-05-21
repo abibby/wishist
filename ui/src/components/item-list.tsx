@@ -197,15 +197,7 @@ interface RowProps {
 }
 
 function Row({ item, onChange, onRemove }: RowProps) {
-    // const root = useRef<HTMLLIElement | null>(null)
     const [open, setOpen] = useState(false)
-    // const originalPos = useRef<[number, number]>()
-    // const [translate, setTranslate] = useState<[number, number]>()
-
-    // let translateStyle: string | undefined
-    // if (translate !== undefined) {
-    //     translateStyle = `transform: translate(${translate[0]}px, ${translate[1]}px);`
-    // }
 
     const edit = useCallback(
         (field: keyof Item, value: string) => {
@@ -216,44 +208,8 @@ function Row({ item, onChange, onRemove }: RowProps) {
         },
         [item, onChange],
     )
-
-    // const handleDown = useCallback((e: MouseEvent) => {
-    //     const rect = root.current?.getBoundingClientRect()
-    //     if (rect === undefined) {
-    //         return
-    //     }
-    //     originalPos.current = [e.x, e.y]
-    // }, [])
-    // const handleUp = useCallback(() => {
-    //     originalPos.current = undefined
-    //     setTranslate(undefined)
-    // }, [])
-    // const handleMove = useCallback((e: MouseEvent) => {
-    //     if (originalPos.current === undefined) {
-    //         return
-    //     }
-    //     const [x, y] = originalPos.current
-    //     setTranslate([e.x - x, e.y - y])
-    // }, [])
-
-    // console.log(translateStyle)
     return (
-        <li
-        // ref={root}
-        // style={translateStyle}
-        // class={classNames({
-        //     [styles.moving]: translateStyle !== undefined,
-        // })}
-        >
-            {/* <div
-                class={styles.handle}
-                onMouseDown={handleDown}
-                onMouseMove={handleMove}
-                onMouseUp={handleUp}
-                onMouseLeave={handleUp}
-            >
-                #
-            </div> */}
+        <li>
             <label class={styles.item}>
                 <input
                     class={styles.name}
