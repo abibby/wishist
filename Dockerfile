@@ -1,4 +1,4 @@
-FROM node:19 as ui
+FROM node:22 as ui
 
 COPY ui/package.json ui/package-lock.json ./
 RUN npm ci
