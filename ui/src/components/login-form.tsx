@@ -5,6 +5,7 @@ import { login } from '../auth'
 import { Input } from './form/input'
 import styles from './login-form.module.css'
 import { ModalActions } from './modal'
+import { FetchError } from '../api/internal'
 
 h
 
@@ -19,9 +20,20 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
     const loginSubmit = useCallback(
         async (e: Event) => {
             e.preventDefault()
-            const success = await login(user, password)
+            let success = false
+            try {
+                success = await login(user, password)
+            } catch (e) {
+                if (e instanceof FetchError) {
+                    setError(e.body.error)
+                } else if (e instanceof Error) {
+                    setError(e.message)
+                } else {
+                    setError('unknown error')
+                }
+            }
+
             if (!success) {
-                setError('Invalid username or password')
                 return
             }
             onLogin()
