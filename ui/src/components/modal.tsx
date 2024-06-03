@@ -116,7 +116,7 @@ export async function openModal<T extends ModalProps<TReturn>, TReturn>(
     })
 }
 
-export function ModalActions({ children }: RenderableProps<never>) {
+export function ModalActions({ children }: RenderableProps<{}>) {
     return <div class={styles.actions}>{children}</div>
 }
 
