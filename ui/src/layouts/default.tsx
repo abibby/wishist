@@ -8,7 +8,7 @@ import styles from './default.module.css'
 
 h
 
-export function Default({ children }: RenderableProps<never>) {
+export function Default({ children }: RenderableProps<{}>) {
     const user = useUser()
 
     const login = useCallback(async () => {
