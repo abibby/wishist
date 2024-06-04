@@ -2,7 +2,7 @@ import { bind, bindValue } from '@zwzn/spicy'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
 import { Fragment, h } from 'preact'
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
+import { useCallback, useEffect, useState } from 'preact/hooks'
 import { item, Item, UserItem, userItem } from '../api'
 import { userID, useUser } from '../auth'
 import { Input } from './form/input'
@@ -58,7 +58,7 @@ export function ItemList({
         } else {
             setUserItems(undefined)
         }
-    }, [name, userID])
+    }, [name, userID, onFetchError])
 
     const addItem = useCallback(async () => {
         const createdItem = await item.create({
@@ -392,7 +392,9 @@ function ItemLink({ url }: { url: string }) {
     if (url !== undefined && url !== '') {
         try {
             host = new URL(url).host
-        } catch (_e) {}
+        } catch (_e) {
+            // intentionally empty
+        }
     }
 
     if (host === undefined) {

@@ -6,7 +6,6 @@ import { ItemList } from '../components/item-list'
 import { openModal } from '../components/modal'
 import { LoginModal } from '../components/modals/login'
 import { FetchError } from '../api/internal'
-import { Error404 } from './error-404'
 import { ErrorFetchError } from './error-fetch-error'
 
 h

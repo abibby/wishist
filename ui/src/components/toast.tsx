@@ -3,6 +3,8 @@ import { h } from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 import styles from './toast.module.css'
 
+h
+
 let lastID = 0
 type ToastData = {
     id: number
