@@ -63,7 +63,7 @@ func main() {
 
 	err = db.Migrate()
 	if err != nil {
-		slog.Error("failed to migrate database ", err)
+		slog.Error("failed to migrate database", "error", err)
 		os.Exit(1)
 	}
 
@@ -71,7 +71,7 @@ func main() {
 
 	err = db.Open(ctx)
 	if err != nil {
-		slog.Error("failed to open database ", err)
+		slog.Error("failed to open database", "error", err)
 		os.Exit(1)
 	}
 	r := router.New()
@@ -150,7 +150,7 @@ func main() {
 	})
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
 
-	slog.Info("Listening on http://localhost:32148")
+	slog.Info("Listening on " + config.Config.GetBaseURL())
 
 	s := &http.Server{
 		Addr:    fmt.Sprintf(":%d", config.Port),
