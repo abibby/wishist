@@ -36,4 +36,5 @@ jobs:
           cache-dependency-path: ui/package-lock.json
 
       - run: npm --prefix ui ci
+      - run: npm --prefix ui run typecheck
       - run: npm --prefix ui run build
