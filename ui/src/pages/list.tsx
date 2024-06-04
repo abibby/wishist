@@ -1,6 +1,6 @@
 import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { friend } from '../api'
+import { User, friend, user } from '../api'
 import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
 import { openModal } from '../components/modal'
@@ -21,6 +21,7 @@ export function List({ matches }: Readonly<ListProps>) {
     const myUser = useUser()
     const [fetchError, setFetchError] = useState<FetchError<unknown>>()
     const myList = myUser?.username === username
+    const [listUser, setListUser] = useState<User>()
 
     const [isFriend, setIsFriend] = useState(false)
     useEffect(() => {
@@ -37,6 +38,10 @@ export function List({ matches }: Readonly<ListProps>) {
                 )
         }
     }, [username, myUser])
+
+    useEffect(() => {
+        user.get(username).then(u => setListUser(u))
+    }, [username])
 
     const addFriend = useCallback(() => {
         if (myUser !== null) {
@@ -65,7 +70,11 @@ export function List({ matches }: Readonly<ListProps>) {
 
     return (
         <Fragment>
-            <h1>{myList ? 'My Wishlist' : `${username}'s Wishlist`}</h1>
+            <h1>
+                {myList
+                    ? 'My Wishlist'
+                    : `${listUser?.name ?? username}'s Wishlist`}
+            </h1>
             {!myList && (
                 <Fragment>
                     {isFriend ? (

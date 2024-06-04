@@ -109,23 +109,23 @@ func main() {
 		Name     string `json:"name" validate:"required"`
 	}
 
-	auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
-		return &db.User{
-			Username: r.Username,
-			Email:    r.Email,
-			Name:     r.Name,
-			Password: []byte{},
-		}
-	}, "reset-password")
-
-	r.Group("", func(r *router.Router) {
+	r.Group("/api", func(r *router.Router) {
+		auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
+			return &db.User{
+				Username: r.Username,
+				Email:    r.Email,
+				Name:     r.Name,
+				Password: []byte{},
+			}
+		}, "reset-password")
 
 		r.Get("/item", controller.ItemList)
+		r.Get("/user/{username}", controller.GetUser)
 
 		r.Group("", func(r *router.Router) {
 			r.Use(auth.LoggedIn())
 
-			r.Get("/user", controller.GetUser)
+			r.Get("/user", controller.GetCurrentUser)
 
 			r.Group("/item", func(r *router.Router) {
 				r.Post("", controller.ItemCreate)

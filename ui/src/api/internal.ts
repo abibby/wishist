@@ -29,6 +29,9 @@ export async function apiFetch<T>(
     }
 
     let input = path
+    if (input.startsWith('/')) {
+        input = '/api' + input
+    }
     if (query !== null) {
         input += '?' + new URLSearchParams(query).toString()
     }
