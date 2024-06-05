@@ -14,7 +14,14 @@ type StandardError = {
 }
 
 function isStandardError(v: unknown): v is StandardError {
-    return true
+    return (
+        typeof v === 'object' &&
+        v !== null &&
+        'error' in v &&
+        typeof v.error === 'string' &&
+        'status' in v &&
+        typeof v.status === 'string'
+    )
 }
 
 export function ErrorFetchError({ err }: ErrorFetchErrorProps) {

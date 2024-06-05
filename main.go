@@ -160,5 +160,9 @@ func main() {
 		},
 	}
 
-	s.ListenAndServe()
+	err = s.ListenAndServe()
+	if err != nil {
+		slog.Error("http server failed", "error", err)
+		os.Exit(1)
+	}
 }

@@ -1,4 +1,4 @@
-import EventTarget, { Event } from 'event-target-shim'
+import { Event, EventTarget } from '../events'
 import { h } from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 import styles from './toast.module.css'

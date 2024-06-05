@@ -1,5 +1,5 @@
 import { bind } from '@zwzn/spicy'
-import EventTarget, { Event } from 'event-target-shim'
+import { Event, EventTarget } from '../events'
 import { Fragment, FunctionalComponent, h, RenderableProps } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 import styles from './modal.module.css'
