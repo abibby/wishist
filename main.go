@@ -24,6 +24,12 @@ import (
 	"github.com/abibby/wishist/ui"
 )
 
+type CreateUserRequest struct {
+	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required|email"`
+	Name     string `json:"name" validate:"required"`
+}
+
 type ResponseWriter struct {
 	http.ResponseWriter
 	Status int
@@ -101,15 +107,9 @@ func main() {
 		})
 	})
 
-	r.Use(auth.AttachUser())
-
-	type CreateUserRequest struct {
-		Username string `json:"username" validate:"required"`
-		Email    string `json:"email" validate:"required|email"`
-		Name     string `json:"name" validate:"required"`
-	}
-
 	r.Group("/api", func(r *router.Router) {
+		r.Use(auth.AttachUser())
+
 		auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
 			return &db.User{
 				Username: r.Username,
