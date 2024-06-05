@@ -95,6 +95,10 @@
 .popupLink a {
     color: inherit;
 }
+.divider {
+    border-top: solid 1px rgba(var(--surface-contrast), 25%);
+    padding-top: 0.5em;
+}
 .popupDescription p {
     margin: 0;
 }

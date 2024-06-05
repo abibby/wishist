@@ -363,25 +363,32 @@ function ItemPopup({ item, open, isThinking, isPurchased }: ItemPopupProps) {
             })}
         >
             <h3 class={styles.popupName}>{item.name}</h3>
-            <div class={styles.popupLink}>
-                <ItemLink url={item.url} />
-            </div>
+            {item.url !== '' && (
+                <div class={styles.popupLink}>
+                    <ItemLink url={item.url} />
+                </div>
+            )}
             {item.description && (
-                <div class={styles.popupDescription}>
+                <div
+                    class={classNames(styles.popupDescription, styles.divider)}
+                >
                     {item.description.split('\n').map(line => (
                         <p>{line}</p>
                     ))}
                 </div>
             )}
-            {item.thinking_count !== undefined && (
-                <div>
-                    Watching: {formatCount(isThinking, item.thinking_count)}
-                </div>
-            )}
-            {item.purchased_count !== undefined && (
-                <div>
-                    Purchased: {formatCount(isPurchased, item.purchased_count)}
-                </div>
+            {(item.thinking_count !== undefined ||
+                item.purchased_count !== undefined) && (
+                <>
+                    <div class={styles.divider}>
+                        Watching:{' '}
+                        {formatCount(isThinking, item.thinking_count ?? 0)}
+                    </div>
+                    <div>
+                        Purchased:{' '}
+                        {formatCount(isPurchased, item.purchased_count ?? 0)}
+                    </div>
+                </>
             )}
         </div>
     )
