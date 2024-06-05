@@ -24,6 +24,12 @@ import (
 	"github.com/abibby/wishist/ui"
 )
 
+type CreateUserRequest struct {
+	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required|email"`
+	Name     string `json:"name" validate:"required"`
+}
+
 type ResponseWriter struct {
 	http.ResponseWriter
 	Status int
@@ -63,7 +69,7 @@ func main() {
 
 	err = db.Migrate()
 	if err != nil {
-		slog.Error("failed to migrate database ", err)
+		slog.Error("failed to migrate database", "error", err)
 		os.Exit(1)
 	}
 
@@ -71,7 +77,7 @@ func main() {
 
 	err = db.Open(ctx)
 	if err != nil {
-		slog.Error("failed to open database ", err)
+		slog.Error("failed to open database", "error", err)
 		os.Exit(1)
 	}
 	r := router.New()
@@ -101,31 +107,25 @@ func main() {
 		})
 	})
 
-	r.Use(auth.AttachUser())
+	r.Group("/api", func(r *router.Router) {
+		r.Use(auth.AttachUser())
 
-	type CreateUserRequest struct {
-		Username string `json:"username" validate:"required"`
-		Email    string `json:"email" validate:"required|email"`
-		Name     string `json:"name" validate:"required"`
-	}
-
-	auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
-		return &db.User{
-			Username: r.Username,
-			Email:    r.Email,
-			Name:     r.Name,
-			Password: []byte{},
-		}
-	}, "reset-password")
-
-	r.Group("", func(r *router.Router) {
+		auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
+			return &db.User{
+				Username: r.Username,
+				Email:    r.Email,
+				Name:     r.Name,
+				Password: []byte{},
+			}
+		}, "reset-password")
 
 		r.Get("/item", controller.ItemList)
+		r.Get("/user/{username}", controller.GetUser)
 
 		r.Group("", func(r *router.Router) {
 			r.Use(auth.LoggedIn())
 
-			r.Get("/user", controller.GetUser)
+			r.Get("/user", controller.GetCurrentUser)
 
 			r.Group("/item", func(r *router.Router) {
 				r.Post("", controller.ItemCreate)
@@ -150,7 +150,7 @@ func main() {
 	})
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
 
-	slog.Info("Listening on http://localhost:32148")
+	slog.Info("Listening on " + config.Config.GetBaseURL())
 
 	s := &http.Server{
 		Addr:    fmt.Sprintf(":%d", config.Port),
@@ -160,5 +160,9 @@ func main() {
 		},
 	}
 
-	s.ListenAndServe()
+	err = s.ListenAndServe()
+	if err != nil {
+		slog.Error("http server failed", "error", err)
+		os.Exit(1)
+	}
 }

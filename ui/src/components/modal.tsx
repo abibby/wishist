@@ -1,5 +1,5 @@
 import { bind } from '@zwzn/spicy'
-import EventTarget, { Event } from 'event-target-shim'
+import { Event, EventTarget } from '../events'
 import { Fragment, FunctionalComponent, h, RenderableProps } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 import styles from './modal.module.css'
@@ -116,7 +116,7 @@ export async function openModal<T extends ModalProps<TReturn>, TReturn>(
     })
 }
 
-export function ModalActions({ children }: RenderableProps<{}>) {
+export function ModalActions({ children }: RenderableProps<unknown>) {
     return <div class={styles.actions}>{children}</div>
 }
 

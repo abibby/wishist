@@ -12,7 +12,7 @@ type User struct {
 	ID       int    `db:"id,autoincrement,primary" json:"id"`
 	Name     string `db:"name"                     json:"name"`
 	Username string `db:"username"                 json:"username"`
-	Email    string `db:"email"                    json:"email"`
+	Email    string `db:"email"                    json:"-"`
 	Password []byte `db:"password"                 json:"-"`
 	Lookup   string `db:"lookup"                   json:"-"`
 	Verified bool   `db:"verified"                 json:"-"`

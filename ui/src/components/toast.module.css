@@ -1,0 +1,19 @@
+.controller {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 500px;
+    max-width: 100%;
+    padding: 10px;
+    bottom: 0;
+    right: 0;
+    z-index: 10000;
+}
+
+.toast {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--surface-contrast));
+    width: 100%;
+    padding: 10px;
+}

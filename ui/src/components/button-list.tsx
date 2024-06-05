@@ -3,6 +3,6 @@ import styles from './button-list.module.css'
 
 h
 
-export function ButtonList({ children }: RenderableProps<{}>) {
+export function ButtonList({ children }: RenderableProps<unknown>) {
     return <section class={styles.buttonList}>{children}</section>
 }

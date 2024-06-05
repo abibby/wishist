@@ -1,4 +1,4 @@
-import { Event, EventTarget } from 'event-target-shim'
+import { Event, EventTarget } from './events'
 import { createStore, delMany, get, set, setMany } from 'idb-keyval'
 import { useEffect, useState } from 'preact/hooks'
 import jwt from './jwt'

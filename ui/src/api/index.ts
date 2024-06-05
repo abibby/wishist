@@ -1,4 +1,7 @@
 import { NoArgs, buildRestModel } from './rest'
+import { User as _User } from './user'
+
+export type User = _User
 
 export interface Item {
     id: number
@@ -52,3 +55,5 @@ export const userItem = buildRestModel<
     Omit<UserItem, 'user_id'>,
     Pick<UserItem, 'item_id'>
 >('/user-item')
+
+export * as user from './user'

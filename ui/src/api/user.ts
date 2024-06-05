@@ -4,7 +4,6 @@ export interface User {
     id: number
     name: string
     username: string
-    email: string
 }
 
 export async function user(): Promise<User> {
@@ -80,4 +79,8 @@ export async function changePassword(
             body: JSON.stringify(request),
         },
     )
+}
+
+export async function get(username: string): Promise<User> {
+    return await apiFetch('/user/' + encodeURIComponent(username), {})
 }

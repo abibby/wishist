@@ -1,3 +1,5 @@
+import './error'
+
 import { h, render } from 'preact'
 import Router, { Route } from 'preact-router'
 import { ModalController, closeModals } from './components/modal'
@@ -12,6 +14,7 @@ import { ForgotPassword } from './pages/forgot-password'
 import { ResetPassword } from './pages/reset-password'
 import { AwaitingVerification } from './pages/awaiting-verification'
 import { Account } from './pages/account'
+import { ToastController } from './components/toast'
 
 h
 
@@ -19,6 +22,7 @@ function Main() {
     return (
         <Default>
             <ModalController />
+            <ToastController />
             <Router onChange={closeModals}>
                 <Route component={Home} path='/' />
                 <Route component={Login} path='/login' />

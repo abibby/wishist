@@ -1,13 +1,14 @@
 import { bind, bindValue } from '@zwzn/spicy'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
 import { item, Item, UserItem, userItem } from '../api'
 import { userID, useUser } from '../auth'
 import { Input } from './form/input'
 import styles from './item-list.module.css'
 import { TextArea } from './form/textarea'
+import { FetchError } from '../api/internal'
 
 h
 
@@ -19,23 +20,45 @@ const debouncedItemUpdate: typeof item.update = debounce(
 interface ListProps {
     username: string
     readonly: boolean
+    onFetchError: (err: FetchError<unknown> | undefined) => void
 }
 
-export function ItemList({ username: name, readonly }: Readonly<ListProps>) {
+export function ItemList({
+    username: name,
+    readonly,
+    onFetchError,
+}: Readonly<ListProps>) {
     const [newItem, setNewItem] = useState('')
     const [items, setItems] = useState<Item[] | undefined>()
     const [userItems, setUserItems] = useState<UserItem[] | undefined>()
     const { id: userID } = useUser() ?? {}
 
     useEffect(() => {
+        onFetchError(undefined)
         item.list({ user: name })
             .then(setItems)
-            .catch(() => setItems(undefined))
-        userItem
-            .list({ user: name })
-            .then(setUserItems)
-            .catch(() => setUserItems(undefined))
-    }, [name, userID])
+            .catch(e => {
+                if (e instanceof FetchError) {
+                    onFetchError(e)
+                }
+                setItems(undefined)
+            })
+        if (userID !== undefined) {
+            userItem
+                .list({ user: name })
+                .then(setUserItems)
+                .catch(e => {
+                    if (e instanceof FetchError) {
+                        if (e.status !== 401) {
+                            onFetchError(e)
+                        }
+                    }
+                    setUserItems(undefined)
+                })
+        } else {
+            setUserItems(undefined)
+        }
+    }, [name, userID, onFetchError])
 
     const addItem = useCallback(async () => {
         const createdItem = await item.create({
@@ -279,13 +302,6 @@ function ReadonlyRow({
     const isThinking = ui?.type === 'thinking'
     const isPurchased = ui?.type === 'purchased'
 
-    let host: string | undefined
-    try {
-        host = new URL(item.url).host
-    } catch (e) {
-        console.warn(e)
-    }
-
     const hasExtraInfo = item.url !== '' || item.description !== ''
     return (
         <li
@@ -323,30 +339,88 @@ function ReadonlyRow({
                 class={classNames(styles.screen, { [styles.open]: open })}
                 onClick={bind(false, setOpen)}
             />
-            <div class={classNames(styles.popup, { [styles.open]: open })}>
-                <div>Name: {item.name}</div>
-                <div>
-                    URL:{' '}
-                    {host ? (
-                        <a href={item.url} target='_blank'>
-                            {host}
-                        </a>
-                    ) : (
-                        item.url
-                    )}
-                </div>
-                <div>Description: {item.description}</div>
-                <div>
-                    Watching:
-                    {isThinking ? ' You + ' : ' '}
-                    {item.thinking_count}
-                </div>
-                <div>
-                    Purchased:
-                    {isPurchased ? ' You + ' : ' '}
-                    {item.purchased_count}
-                </div>
-            </div>
+            <ItemPopup
+                item={item}
+                open={open}
+                isThinking={isThinking}
+                isPurchased={isPurchased}
+            />
         </li>
     )
+}
+
+type ItemPopupProps = {
+    item: Item
+    open: boolean
+    isThinking: boolean
+    isPurchased: boolean
+}
+function ItemPopup({ item, open, isThinking, isPurchased }: ItemPopupProps) {
+    return (
+        <div
+            class={classNames(styles.popup, styles.readonly, {
+                [styles.open]: open,
+            })}
+        >
+            <h3 class={styles.popupName}>{item.name}</h3>
+            {item.url !== '' && (
+                <div class={styles.popupLink}>
+                    <ItemLink url={item.url} />
+                </div>
+            )}
+            {item.description && (
+                <div
+                    class={classNames(styles.popupDescription, styles.divider)}
+                >
+                    {item.description.split('\n').map(line => (
+                        <p>{line}</p>
+                    ))}
+                </div>
+            )}
+            {(item.thinking_count !== undefined ||
+                item.purchased_count !== undefined) && (
+                <>
+                    <div class={styles.divider}>
+                        Watching:{' '}
+                        {formatCount(isThinking, item.thinking_count ?? 0)}
+                    </div>
+                    <div>
+                        Purchased:{' '}
+                        {formatCount(isPurchased, item.purchased_count ?? 0)}
+                    </div>
+                </>
+            )}
+        </div>
+    )
+}
+
+function ItemLink({ url }: { url: string }) {
+    let host: string | undefined
+    if (url !== undefined && url !== '') {
+        try {
+            host = new URL(url).host
+        } catch (_e) {
+            // intentionally empty
+        }
+    }
+
+    if (host === undefined) {
+        return <Fragment>{url}</Fragment>
+    }
+    return (
+        <a href={url} target='_blank'>
+            {host}
+        </a>
+    )
+}
+function formatCount(you: boolean, count: number): string {
+    if (you && count === 0) {
+        if (count === 0) {
+            return 'Only you'
+        } else {
+            return 'You + ' + count
+        }
+    }
+
+    return String(count)
 }

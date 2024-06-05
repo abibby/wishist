@@ -1,10 +1,12 @@
 import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { friend } from '../api'
+import { User, friend, user } from '../api'
 import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
 import { openModal } from '../components/modal'
 import { LoginModal } from '../components/modals/login'
+import { FetchError } from '../api/internal'
+import { ErrorFetchError } from './error-fetch-error'
 
 h
 
@@ -17,12 +19,13 @@ interface ListProps {
 export function List({ matches }: Readonly<ListProps>) {
     const { username } = matches
     const myUser = useUser()
+    const [fetchError, setFetchError] = useState<FetchError<unknown>>()
     const myList = myUser?.username === username
-    const loggedIn = myUser?.id !== undefined
+    const [listUser, setListUser] = useState<User>()
 
     const [isFriend, setIsFriend] = useState(false)
     useEffect(() => {
-        if (loggedIn) {
+        if (myUser === null) {
             setIsFriend(false)
         } else {
             friend
@@ -34,10 +37,14 @@ export function List({ matches }: Readonly<ListProps>) {
                     ),
                 )
         }
-    }, [username, loggedIn])
+    }, [username, myUser])
+
+    useEffect(() => {
+        user.get(username).then(u => setListUser(u))
+    }, [username])
 
     const addFriend = useCallback(() => {
-        if (loggedIn) {
+        if (myUser !== null) {
             friend.create({ username: username })
             setIsFriend(true)
         } else {
@@ -50,16 +57,24 @@ export function List({ matches }: Readonly<ListProps>) {
                 }
             })
         }
-    }, [username, loggedIn, setIsFriend])
+    }, [username, myUser, setIsFriend])
 
     const removeFriend = useCallback(() => {
         friend.delete({ username: username })
         setIsFriend(false)
     }, [username, setIsFriend])
 
+    if (fetchError !== undefined) {
+        return <ErrorFetchError err={fetchError} />
+    }
+
     return (
         <Fragment>
-            <h1>{myList ? 'My Wishlist' : `${username}'s Wishlist`}</h1>
+            <h1>
+                {myList
+                    ? 'My Wishlist'
+                    : `${listUser?.name ?? username}'s Wishlist`}
+            </h1>
             {!myList && (
                 <Fragment>
                     {isFriend ? (
@@ -75,7 +90,7 @@ export function List({ matches }: Readonly<ListProps>) {
                             </button>
                         </Fragment>
                     )}
-                    {loggedIn && (
+                    {myUser !== null && (
                         <Fragment>
                             <p>
                                 Click the 👁️ if you are thinking of buying the
@@ -91,7 +106,11 @@ export function List({ matches }: Readonly<ListProps>) {
                     )}
                 </Fragment>
             )}
-            <ItemList username={username} readonly={!myList} />
+            <ItemList
+                username={username}
+                readonly={!myList}
+                onFetchError={setFetchError}
+            />
         </Fragment>
     )
 }

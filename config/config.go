@@ -53,6 +53,7 @@ func envInt(key string, def int) int {
 
 var AppKey []byte
 var DBPath string
+var BaseURL string
 var Port int
 var Verbose bool
 
@@ -69,6 +70,7 @@ func Init() error {
 	AppKey = []byte(mustEnv("APP_KEY"))
 	DBPath = env("DB_PATH", "./db.sqlite")
 	Port = envInt("PORT", 32148)
+	BaseURL = env("BASE_URL", fmt.Sprintf("http://localhost:%d", Port))
 
 	Verbose = envBool("VERBOSE", false)
 
@@ -87,8 +89,8 @@ func (c *config) GetHTTPPort() int {
 	return Port
 }
 func (c *config) GetBaseURL() string {
-	return ""
+	return BaseURL
 }
 func (c *config) MailConfig() email.Config {
-	return &email.SMTPConfig{}
+	return Email
 }
