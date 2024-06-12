@@ -73,7 +73,11 @@ export function ToastController() {
     return (
         <div class={styles.controller}>
             {toasts.map(t => (
-                <div class={styles.toast}>{t.message}</div>
+                <div class={styles.toast}>
+                    {t.message.split('\n').map(line => (
+                        <p>{line}</p>
+                    ))}
+                </div>
             ))}
         </div>
     )

@@ -22,7 +22,7 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 	items := []*db.Item{}
 	uid, ok := userID(r.Request.Context())
 
-	errNoUsers := fmt.Errorf("Not Found")
+	errNoUsers := fmt.Errorf(http.StatusText(http.StatusNotFound))
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		u := &db.User{}
 		err := tx.Get(u, "select * from users where username=?", r.User)

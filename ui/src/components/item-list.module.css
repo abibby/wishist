@@ -17,6 +17,10 @@
 }
 .item.new {
     background-color: rgba(var(--background-contrast), 5%);
+    transition: background-color 250ms;
+}
+.item.new.flashInput {
+    background-color: rgba(var(--primary), 25%) !important;
 }
 .edit .item:focus-within {
     background-color: rgba(var(--background-contrast), 5%);
