@@ -9,6 +9,8 @@ import { Input } from './form/input'
 import styles from './item-list.module.css'
 import { TextArea } from './form/textarea'
 import { FetchError } from '../api/internal'
+import { useFlash } from '../hooks/use-flash'
+import { Form } from './form/form'
 
 h
 
@@ -20,7 +22,7 @@ const debouncedItemUpdate: typeof item.update = debounce(
 interface ListProps {
     username: string
     readonly: boolean
-    onFetchError: (err: FetchError<unknown> | undefined) => void
+    onFetchError: (err: FetchError | undefined) => void
 }
 
 export function ItemList({
@@ -32,6 +34,7 @@ export function ItemList({
     const [items, setItems] = useState<Item[] | undefined>()
     const [userItems, setUserItems] = useState<UserItem[] | undefined>()
     const { id: userID } = useUser() ?? {}
+    const [flashInput, triggerFlashInput] = useFlash()
 
     useEffect(() => {
         onFetchError(undefined)
@@ -61,6 +64,10 @@ export function ItemList({
     }, [name, userID, onFetchError])
 
     const addItem = useCallback(async () => {
+        if (newItem === '') {
+            triggerFlashInput()
+            return
+        }
         const createdItem = await item.create({
             name: newItem,
             description: '',
@@ -99,7 +106,6 @@ export function ItemList({
                     return i
                 }),
             )
-            debouncedItemUpdate(item)
         },
         [setItems],
     )
@@ -164,7 +170,11 @@ export function ItemList({
                 }
             })}
             {!readonly && (
-                <li class={classNames(styles.item, styles.new)}>
+                <li
+                    class={classNames(styles.item, styles.new, {
+                        [styles.flashInput]: flashInput,
+                    })}
+                >
                     <input
                         class={styles.name}
                         type='text'
@@ -185,57 +195,87 @@ interface RowProps {
     onRemove: (id: number) => void
 }
 
-function Row({ item, onChange, onRemove }: RowProps) {
+function Row({ item: item2, onChange, onRemove }: RowProps) {
     const [open, setOpen] = useState(false)
+    const [name, setName] = useState('')
+    const [url, setURL] = useState('')
+    const [description, setDescription] = useState('')
 
-    const edit = useCallback(
-        (field: keyof Item, value: string) => {
-            onChange({
-                ...item,
-                [field]: value,
-            })
+    useEffect(() => {
+        setName(item2.name)
+        setURL(item2.url)
+        setDescription(item2.description)
+    }, [item2])
+
+    const nameChange = useCallback(
+        (value: string) => {
+            const newItem = {
+                ...item2,
+                name: value,
+            }
+            onChange(newItem)
+            debouncedItemUpdate(newItem)
         },
-        [item, onChange],
+        [item2, onChange],
     )
 
+    const save = useCallback(async () => {
+        const newItem = {
+            ...item2,
+            name: name,
+            url: url,
+            description: description,
+        }
+
+        await item.update(newItem)
+        onChange(newItem)
+        setOpen(false)
+    }, [item2, name, url, description, onChange])
     return (
         <li>
             <label class={styles.item}>
                 <input
                     class={styles.name}
                     type='text'
-                    value={item.name}
-                    onInput={bindValue(bind('name', edit))}
+                    value={item2.name}
+                    onInput={bindValue(nameChange)}
                 />
 
                 <div class={styles.actions}>
                     <button onClick={bind(true, setOpen)}>+</button>
-                    <button onClick={bind(item.id, onRemove)}>x</button>
+                    <button onClick={bind(item2.id, onRemove)}>x</button>
                 </div>
                 <div
-                    class={classNames(styles.screen, { [styles.open]: open })}
+                    class={classNames(styles.screen, {
+                        [styles.open]: open,
+                    })}
                     onClick={bind(false, setOpen)}
                 />
             </label>
             <div class={classNames(styles.popup, { [styles.open]: open })}>
-                <Input
-                    title='Name'
-                    value={item.name}
-                    onInput={bind('name', edit)}
-                />
-                <Input
-                    title='URL'
-                    value={item.url}
-                    onInput={bind('url', edit)}
-                />
-                <TextArea
-                    title='Description'
-                    value={item.description}
-                    onInput={bind('description', edit)}
-                />
-                <div>
-                    <button onClick={bind(false, setOpen)}>Save</button>
-                </div>
+                <Form onSubmit={save}>
+                    <Input
+                        title='Name'
+                        value={name}
+                        onInput={setName}
+                        name='name'
+                    />
+                    <Input
+                        title='URL'
+                        value={url}
+                        onInput={setURL}
+                        name='url'
+                    />
+                    <TextArea
+                        title='Description'
+                        value={description}
+                        onInput={setDescription}
+                        name='description'
+                    />
+                    <div>
+                        <button type='submit'>Save</button>
+                    </div>
+                </Form>
             </div>
         </li>
     )

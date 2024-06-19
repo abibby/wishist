@@ -21,3 +21,7 @@
     background-color: rgba(var(--background-contrast), 5%);
     border-bottom: solid 1px rgba(var(--background-contrast), 70%);
 }
+.errorMessage {
+    float: right;
+    color: rgb(var(--alert));
+}

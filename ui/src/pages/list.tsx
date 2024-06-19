@@ -19,7 +19,7 @@ interface ListProps {
 export function List({ matches }: Readonly<ListProps>) {
     const { username } = matches
     const myUser = useUser()
-    const [fetchError, setFetchError] = useState<FetchError<unknown>>()
+    const [fetchError, setFetchError] = useState<FetchError>()
     const myList = myUser?.username === username
     const [listUser, setListUser] = useState<User>()
 

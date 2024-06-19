@@ -17,3 +17,7 @@
     width: 100%;
     padding: 10px;
 }
+
+.toast p {
+    margin: 0;
+}

@@ -4,8 +4,18 @@ type AuthRequestInit = {
     withoutToken?: boolean
 }
 
-export class FetchError<T> extends Error {
-    constructor(message: string, public status: number, public body: T) {
+type ErrorBody = {
+    error: string
+    status: number
+    fields?: Record<string, string[]>
+}
+
+export class FetchError extends Error {
+    constructor(
+        message: string,
+        public status: number,
+        public body: ErrorBody,
+    ) {
         super(message)
     }
 }

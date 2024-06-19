@@ -1,91 +1,87 @@
 import { Fragment, h } from 'preact'
 import { route } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
-import { userCreate } from '../api/user'
 import { Input } from '../components/form/input'
 import { FetchError } from '../api/internal'
-import styles from './create-user.module.css'
+import { user } from '../api'
+import { Form } from '../components/form/form'
+import { bind } from '@zwzn/spicy'
 
 h
 
 export function CreateUser() {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
-    const [user, setUser] = useState('')
+    const [username, setUser] = useState('')
     const [password1, setPassword1] = useState('')
     const [password2, setPassword2] = useState('')
-    const [error, setError] = useState<string>()
     const [running, setRunning] = useState(false)
-    const submit = useCallback(
-        async (e: Event) => {
-            e.preventDefault()
-            if (running) {
-                return
-            }
-            if (password1 !== password2) {
-                setError('passwords do not match')
-                return
-            }
-            setRunning(true)
-            try {
-                await userCreate({
-                    name: name,
-                    email: email,
-                    username: user,
-                    password: password1,
-                })
-                route('/awaiting-verification')
-            } catch (e) {
-                if (e instanceof FetchError) {
-                    setError(e.body.error)
-                } else {
-                    throw e
-                }
-            } finally {
-                setRunning(false)
-            }
-        },
-        [running, name, user, email, password1, password2, setError],
-    )
+    const submit = useCallback(async () => {
+        if (running) {
+            return
+        }
+        if (password1 !== password2) {
+            throw new FetchError('', 0, {
+                error: '',
+                status: 0,
+                fields: {
+                    password: ['Passwords do not match'],
+                    password2: ['Passwords do not match'],
+                },
+            })
+        }
+        setRunning(true)
+        await user.create({
+            name: name,
+            email: email,
+            username: username,
+            password: password1,
+        })
+        route('/awaiting-verification')
+    }, [running, password1, password2, name, email, username])
     return (
         <Fragment>
             <h1>Create User</h1>
-            <form onSubmit={submit}>
+            <Form onSubmit={submit} onCleanup={bind(false, setRunning)}>
                 <Input
-                    title='username'
+                    title='Username'
                     type='text'
-                    value={user}
+                    value={username}
                     onInput={setUser}
+                    name='username'
                 />
                 <Input
-                    title='email'
+                    title='Email'
                     type='text'
                     value={email}
                     onInput={setEmail}
+                    name='email'
                 />
                 <Input
                     title='Full Name'
                     type='text'
                     value={name}
                     onInput={setName}
+                    name='name'
                 />
                 <Input
                     title='Password'
                     type='password'
                     value={password1}
                     onInput={setPassword1}
+                    name='password'
                 />
                 <Input
                     title='Reenter Password'
                     type='password'
                     value={password2}
                     onInput={setPassword2}
+                    name='password2'
                 />
-                {error && <p class={styles.error}>{error}</p>}
                 <button type='submit' disabled={running}>
                     {running ? 'Creating user...' : 'Create User'}
                 </button>
-            </form>
+            </Form>
         </Fragment>
     )
 }
