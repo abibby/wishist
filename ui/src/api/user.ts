@@ -17,7 +17,7 @@ export interface CreateUserRequest {
     password: string
 }
 
-export async function userCreate(request: CreateUserRequest): Promise<User> {
+export async function create(request: CreateUserRequest): Promise<User> {
     return await apiFetch(
         '/user',
         {},

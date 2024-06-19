@@ -10,6 +10,7 @@ import styles from './item-list.module.css'
 import { TextArea } from './form/textarea'
 import { FetchError } from '../api/internal'
 import { useFlash } from '../hooks/use-flash'
+import { Form } from './form/form'
 
 h
 
@@ -199,7 +200,6 @@ function Row({ item: item2, onChange, onRemove }: RowProps) {
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
     const [description, setDescription] = useState('')
-    const [fetchError, setFetchError] = useState<FetchError>()
 
     useEffect(() => {
         setName(item2.name)
@@ -226,22 +226,11 @@ function Row({ item: item2, onChange, onRemove }: RowProps) {
             url: url,
             description: description,
         }
-        console.log(newItem, name, url, description)
 
-        try {
-            await item.update(newItem)
-        } catch (e) {
-            if (e instanceof FetchError && e.body.fields) {
-                setFetchError(e)
-                return
-            } else {
-                throw e
-            }
-        }
+        await item.update(newItem)
         onChange(newItem)
         setOpen(false)
-    }, [onChange, item2, name, url, description])
-
+    }, [item2, name, url, description, onChange])
     return (
         <li>
             <label class={styles.item}>
@@ -257,35 +246,36 @@ function Row({ item: item2, onChange, onRemove }: RowProps) {
                     <button onClick={bind(item2.id, onRemove)}>x</button>
                 </div>
                 <div
-                    class={classNames(styles.screen, { [styles.open]: open })}
+                    class={classNames(styles.screen, {
+                        [styles.open]: open,
+                    })}
                     onClick={bind(false, setOpen)}
                 />
             </label>
             <div class={classNames(styles.popup, { [styles.open]: open })}>
-                <Input
-                    title='Name'
-                    value={name}
-                    onInput={setName}
-                    fetchError={fetchError}
-                    name='name'
-                />
-                <Input
-                    title='URL'
-                    value={url}
-                    onInput={setURL}
-                    fetchError={fetchError}
-                    name='url'
-                />
-                <TextArea
-                    title='Description'
-                    value={description}
-                    onInput={setDescription}
-                    fetchError={fetchError}
-                    name='description'
-                />
-                <div>
-                    <button onClick={save}>Save</button>
-                </div>
+                <Form onSubmit={save}>
+                    <Input
+                        title='Name'
+                        value={name}
+                        onInput={setName}
+                        name='name'
+                    />
+                    <Input
+                        title='URL'
+                        value={url}
+                        onInput={setURL}
+                        name='url'
+                    />
+                    <TextArea
+                        title='Description'
+                        value={description}
+                        onInput={setDescription}
+                        name='description'
+                    />
+                    <div>
+                        <button type='submit'>Save</button>
+                    </div>
+                </Form>
             </div>
         </li>
     )

@@ -1,35 +1,42 @@
 import { h, RenderableProps } from 'preact'
 import styles from './form-component.module.css'
-import { FetchError } from '../../api/internal'
+import { FormContext } from './form'
 
 h
 
 export interface FormComponentProps {
     title: string
-    fetchError?: FetchError
     name?: string
 }
 
 export function FormComponent({
     title,
     children,
-    fetchError,
     name,
 }: RenderableProps<FormComponentProps>) {
-    let errMsg = undefined
-
-    const errors = fetchError?.body.fields?.[name ?? ''] ?? []
-    if (errors.length > 0) {
-        errMsg = errors.join(', ')
-    }
-
     return (
-        <label class={styles.wrapper}>
-            <div class={styles.title}>
-                {title}
-                {errMsg && <span class={styles.errorMessage}>{errMsg}</span>}
-            </div>
-            {children}
-        </label>
+        <FormContext.Consumer>
+            {fetchError => {
+                let errMsg = undefined
+
+                const errors = fetchError?.body.fields?.[name ?? ''] ?? []
+                if (errors.length > 0) {
+                    errMsg = errors[0]
+                }
+                return (
+                    <label class={styles.wrapper}>
+                        <div class={styles.title}>
+                            {title}
+                            {errMsg && (
+                                <span class={styles.errorMessage}>
+                                    {errMsg}
+                                </span>
+                            )}
+                        </div>
+                        {children}
+                    </label>
+                )
+            }}
+        </FormContext.Consumer>
     )
 }

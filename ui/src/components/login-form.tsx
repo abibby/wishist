@@ -3,9 +3,8 @@ import { Link } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
 import { login } from '../auth'
 import { Input } from './form/input'
-import styles from './login-form.module.css'
 import { ModalActions } from './modal'
-import { FetchError } from '../api/internal'
+import { Form } from './form/form'
 
 h
 
@@ -16,34 +15,13 @@ interface LoginFormProps {
 export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
     const [user, setUser] = useState('')
     const [password, setPassword] = useState('')
-    const [error, setError] = useState<string>()
-    const loginSubmit = useCallback(
-        async (e: Event) => {
-            e.preventDefault()
-            let success = false
-            try {
-                success = await login(user, password)
-            } catch (e) {
-                if (e instanceof FetchError) {
-                    setError(e.body.error)
-                } else if (e instanceof Error) {
-                    setError(e.message)
-                } else {
-                    setError('unknown error')
-                }
-            }
-
-            if (!success) {
-                return
-            }
-            onLogin()
-        },
-        [user, password, onLogin],
-    )
+    const loginSubmit = useCallback(async () => {
+        await login(user, password)
+        onLogin()
+    }, [user, password, onLogin])
 
     return (
-        <form onSubmit={loginSubmit}>
-            {error && <div class={styles.error}>{error}</div>}
+        <Form onSubmit={loginSubmit}>
             <Input
                 title='Username'
                 type='text'
@@ -73,6 +51,6 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
                     Create User
                 </Link>
             </ModalActions>
-        </form>
+        </Form>
     )
 }
