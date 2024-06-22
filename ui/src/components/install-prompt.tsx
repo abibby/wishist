@@ -9,7 +9,7 @@ h
 
 export function FloatingInstallPrompt() {
     const [baseInstall, canInstall] = useInstallPrompt()
-    const [state, setState] = usePersistentState<'ready' | Outcome>(
+    const [state, setState, stateReady] = usePersistentState<'ready' | Outcome>(
         'before-install-prompt-outcome',
         'ready',
     )
@@ -28,7 +28,7 @@ export function FloatingInstallPrompt() {
         setState('dismissed')
     }, [setState])
 
-    if (!canInstall || state !== 'ready') {
+    if (stateReady && (!canInstall || state !== 'ready')) {
         return <></>
     }
 

@@ -6,8 +6,9 @@ const store = createStore('usePersistentState', 'usePersistentState')
 export function usePersistentState<T>(
     name: string,
     defaultValue: T,
-): [T, (v: T) => Promise<void>] {
+): [T, (v: T) => Promise<void>, boolean] {
     const [value, setValue] = useState<T>(defaultValue)
+    const [loaded, setLoaded] = useState(false)
     useEffect(() => {
         get(name, store).then(v => {
             if (v === undefined) {
@@ -15,6 +16,7 @@ export function usePersistentState<T>(
             }
 
             setValue(v)
+            setLoaded(true)
         })
     }, [name])
 
@@ -26,5 +28,5 @@ export function usePersistentState<T>(
         [name],
     )
 
-    return [value, update]
+    return [value, update, loaded]
 }
