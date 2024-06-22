@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -80,6 +81,9 @@ func main() {
 		slog.Error("failed to open database", "error", err)
 		os.Exit(1)
 	}
+
+	mime.AddExtensionType(".webmanifest", "application/manifest+json")
+
 	r := router.New()
 
 	r.Register(ctx)

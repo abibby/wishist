@@ -209,6 +209,9 @@ function Row({ item: item2, onChange, onRemove }: RowProps) {
 
     const nameChange = useCallback(
         (value: string) => {
+            if (value === '') {
+                return
+            }
             const newItem = {
                 ...item2,
                 name: value,

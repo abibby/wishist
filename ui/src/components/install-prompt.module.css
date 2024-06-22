@@ -1,0 +1,16 @@
+.installPrompt {
+    --margin: 10px;
+    position: fixed;
+    background-color: rgb(var(--surface));
+    width: 500px;
+    max-width: calc(100vw - var(--margin) * 2);
+    bottom: var(--margin);
+    right: var(--margin);
+    padding: 10px;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}

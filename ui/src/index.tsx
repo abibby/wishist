@@ -15,6 +15,7 @@ import { ResetPassword } from './pages/reset-password'
 import { AwaitingVerification } from './pages/awaiting-verification'
 import { Account } from './pages/account'
 import { ToastController } from './components/toast'
+import { FloatingInstallPrompt } from './components/install-prompt'
 
 h
 
@@ -37,6 +38,7 @@ function Main() {
                 <Route component={Account} path='/account' />
                 <Route component={Error404} default />
             </Router>
+            <FloatingInstallPrompt />
         </Default>
     )
 }

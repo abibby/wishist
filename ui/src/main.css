@@ -50,7 +50,7 @@ button {
     background-color: rgb(var(--light));
     color: rgba(var(--light-contrast), var(--text-opacity));
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 0.25em 0.5em;
     text-decoration: none;
     font-size: inherit;
     text-align: center;
@@ -60,6 +60,17 @@ button {
 button.primary {
     background-color: rgb(var(--primary));
     color: rgba(var(--primary-contrast), var(--text-opacity));
+}
+
+.button.default,
+button.default {
+    background-color: rgba(var(--surface-contrast), 15%);
+    color: rgba(var(--surface-contrast), var(--text-opacity));
+}
+
+.button.lg,
+button.lg {
+    font-size: 1.25rem;
 }
 
 .button-list {
