@@ -75,7 +75,7 @@ export function ItemList({
         })
         setItems(i => i?.concat([createdItem]))
         setNewItem('')
-    }, [newItem, setNewItem, setItems])
+    }, [newItem, triggerFlashInput])
 
     const removeItem = useCallback(
         async (id: number) => {
@@ -209,6 +209,9 @@ function Row({ item: item2, onChange, onRemove }: RowProps) {
 
     const nameChange = useCallback(
         (value: string) => {
+            if (value === '') {
+                return
+            }
             const newItem = {
                 ...item2,
                 name: value,
