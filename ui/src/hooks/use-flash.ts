@@ -13,6 +13,6 @@ export function useFlash(timeMs: number = 250): [boolean, () => void] {
             activeTimeouts.current = setTimeout(() => {
                 setFlash(false)
             }, timeMs)
-        }, []),
+        }, [timeMs]),
     ]
 }

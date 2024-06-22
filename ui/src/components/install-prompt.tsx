@@ -22,11 +22,11 @@ export function FloatingInstallPrompt() {
                 'Install canceled. You can install from the Account page at any time',
             )
         }
-    }, [baseInstall])
+    }, [baseInstall, setState])
 
     const dismiss = useCallback(() => {
         setState('dismissed')
-    }, [])
+    }, [setState])
 
     if (!canInstall || state !== 'ready') {
         return <></>

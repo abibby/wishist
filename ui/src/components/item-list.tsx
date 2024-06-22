@@ -75,7 +75,7 @@ export function ItemList({
         })
         setItems(i => i?.concat([createdItem]))
         setNewItem('')
-    }, [newItem, setNewItem, setItems])
+    }, [newItem, triggerFlashInput])
 
     const removeItem = useCallback(
         async (id: number) => {

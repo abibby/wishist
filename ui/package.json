@@ -9,9 +9,8 @@
         "watch": "vite build --watch",
         "build": "vite build",
         "typecheck": "tsc --noEmit",
-        "lint": "eslint . --ignore-pattern=dist",
-        "lint-fix": "eslint . --fix --ignore-pattern=dist",
-        "generate-pwa-assets": "pwa-assets-generator"
+        "lint": "eslint ./src",
+        "lint-fix": "eslint ./src --fix"
     },
     "keywords": [],
     "author": "",
