@@ -28,7 +28,7 @@ export function FloatingInstallPrompt() {
         setState('dismissed')
     }, [setState])
 
-    if (stateReady && (!canInstall || state !== 'ready')) {
+    if (!stateReady || !canInstall || state !== 'ready') {
         return <></>
     }
 
