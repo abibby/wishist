@@ -11,12 +11,12 @@ export function usePersistentState<T>(
     const [loaded, setLoaded] = useState(false)
     useEffect(() => {
         get(name, store).then(v => {
+            setLoaded(true)
             if (v === undefined) {
                 return
             }
 
             setValue(v)
-            setLoaded(true)
         })
     }, [name])
 

@@ -22,7 +22,7 @@ export default defineConfig(({ mode }): UserConfig => {
                     name: 'Wishist',
                     short_name: 'Wishist',
                     description: 'Wishlist app',
-                    theme_color: '#76abae',
+                    theme_color: '#31363f',
                     background_color: '#222831',
                     start_url: '/',
                     id: 'ca.wishist',
