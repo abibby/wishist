@@ -1,9 +1,9 @@
 import { h } from 'preact'
 import styles from './install-prompt.module.css'
-import { Outcome, useInstallPrompt } from '../hooks/use-insall-prompt'
 import { usePersistentState } from '../hooks/use-persistent-state'
 import { useCallback } from 'preact/hooks'
 import { openToast } from './toast'
+import { Outcome, useInstallPrompt } from '../hooks/use-install-prompt'
 
 h
 

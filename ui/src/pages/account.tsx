@@ -5,7 +5,7 @@ import { openModal } from '../components/modal'
 import { ChangePasswordModal } from '../components/modals/change-password'
 import { route } from 'preact-router'
 import { ButtonList } from '../components/button-list'
-import { useInstallPrompt } from '../hooks/use-insall-prompt'
+import { useInstallPrompt } from '../hooks/use-install-prompt'
 
 h
 
