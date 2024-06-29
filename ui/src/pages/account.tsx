@@ -33,9 +33,17 @@ export function Account() {
         <Fragment>
             <h1>Account</h1>
             <ButtonList>
-                <button onClick={logoutClick}>Logout</button>
-                <button onClick={changePasswordClick}>Change Password</button>
-                {canInstall && <button onClick={install}>Install</button>}
+                <button class='light' onClick={logoutClick}>
+                    Logout
+                </button>
+                <button class='light' onClick={changePasswordClick}>
+                    Change Password
+                </button>
+                {canInstall && (
+                    <button class='light' onClick={install}>
+                        Install
+                    </button>
+                )}
             </ButtonList>
         </Fragment>
     )

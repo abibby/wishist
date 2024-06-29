@@ -26,18 +26,17 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
                 type='text'
                 value={user}
                 onInput={setUser}
+                tabIndex={1}
+                autoFocus
             />
             <Input
                 title='Password'
                 type='password'
                 value={password}
                 onInput={setPassword}
+                tabIndex={2}
             />
             <ModalActions>
-                <button type='submit'>Login</button>
-                <a class='button' href={'/forgot-password'}>
-                    Forgot Password
-                </a>
                 <a
                     class='button'
                     href={
@@ -46,9 +45,16 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
                             location.pathname + location.search + location.hash,
                         )
                     }
+                    tabIndex={5}
                 >
                     Create User
                 </a>
+                <a class='button' href={'/forgot-password'} tabIndex={4}>
+                    Forgot Password
+                </a>
+                <button class='light' type='submit' tabIndex={3}>
+                    Login
+                </button>
             </ModalActions>
         </Form>
     )

@@ -45,6 +45,11 @@ export function ItemEditModal() {
         closeModal()
     }, [item, name, url, description, closeModal])
 
+    const remove = useCallback(async () => {
+        await itemAPI.delete({ id: Number(id) })
+        closeModal()
+    }, [id, closeModal])
+
     if (err) {
         return (
             <Modal title={err.message}>
@@ -68,9 +73,13 @@ export function ItemEditModal() {
                     onInput={setDescription}
                     name='description'
                 />
-                <div></div>
                 <ModalActions>
-                    <button type='submit'>Save</button>
+                    <button class='danger-hover' type='button' onClick={remove}>
+                        Delete
+                    </button>
+                    <button class='light' type='submit'>
+                        Save
+                    </button>
                 </ModalActions>
             </Form>
         </Modal>

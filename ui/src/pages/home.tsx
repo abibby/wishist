@@ -31,7 +31,7 @@ export function Home() {
         <Fragment>
             <h1>Wishist</h1>
             <a
-                class={classNames('button', styles.myList, styles.btn)}
+                class={classNames('button', 'light', styles.myList, styles.btn)}
                 href={`/list/${user?.username}`}
             >
                 My List
@@ -41,7 +41,7 @@ export function Home() {
                 {friends?.map(f => (
                     <a
                         key={f.friend_id}
-                        class={classNames('button', styles.btn)}
+                        class={classNames('button', 'light', styles.btn)}
                         href={`/list/${f.friend_username}`}
                     >
                         {f.friend_name}

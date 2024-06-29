@@ -112,9 +112,14 @@ export function ModalController({ children }: RenderableProps<unknown>) {
 
 export interface ModalProps {
     title: string
+    class?: string
 }
 
-export function Modal({ title, children }: RenderableProps<ModalProps>) {
+export function Modal({
+    title,
+    children,
+    class: className,
+}: RenderableProps<ModalProps>) {
     const modal = useContext(modalContext)
     return (
         <Fragment>
@@ -133,7 +138,7 @@ export function Modal({ title, children }: RenderableProps<ModalProps>) {
                 <button class={styles.close} onClick={modal.close}>
                     x
                 </button>
-                <div class={styles.body}>{children}</div>
+                <div class={classNames(styles.body, className)}>{children}</div>
             </div>
         </Fragment>
     )

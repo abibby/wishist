@@ -58,7 +58,7 @@ export function ItemListEdit({ items }: ItemListEditProps) {
                         value={newItem}
                         onInput={bindValue(setNewItem)}
                     />
-                    <button>Add</button>
+                    <button class='light'>Add</button>
                 </Form>
             </li>
         </ul>
@@ -71,9 +71,9 @@ interface RowProps {
 
 function Row({ item: item2 }: RowProps) {
     const openModal = useOpenModal()
-    const remove = useCallback(async () => {
-        await item.delete({ id: item2.id })
-    }, [item2.id])
+    // const remove = useCallback(async () => {
+    //     await item.delete({ id: item2.id })
+    // }, [item2.id])
 
     const nameChange = useCallback(
         (value: string) => {
@@ -102,7 +102,7 @@ function Row({ item: item2 }: RowProps) {
                     <button onClick={bind(`/item/${item2.id}/edit`, openModal)}>
                         +
                     </button>
-                    <button onClick={remove}>x</button>
+                    {/* <button onClick={remove}>x</button> */}
                 </div>
             </label>
         </li>

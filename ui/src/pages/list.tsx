@@ -51,8 +51,8 @@ export function List() {
     return (
         <Conditions>
             <h1 v-if={myList}>My Wishlist</h1>
-            <h1 v-else>{listUser?.name ?? username}'s Wishlist</h1>
-            <Fragment v-if={!myList}>
+            <Fragment v-else>
+                <h1>{listUser?.name ?? username}'s Wishlist</h1>
                 <button v-if={isFriend} onClick={removeFriend}>
                     Remove Friend
                 </button>
@@ -65,17 +65,6 @@ export function List() {
                         Add Friend
                     </button>
                 </Fragment>
-            </Fragment>
-            <Fragment v-if={myUser !== null}>
-                <p>
-                    Click the 👁️ if you are thinking of buying the item and the
-                    🛍️ if you have already purchased it.
-                </p>
-                <p>
-                    Clicking on the item will show more how many people are
-                    thinking of buying the item as well as any related links or
-                    descriptions.
-                </p>
             </Fragment>
             <ItemList items={items} userItems={userItems} readonly={!myList} />
         </Conditions>

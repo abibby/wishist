@@ -1,10 +1,13 @@
 import { Fragment, h } from 'preact'
-import { Modal } from '../modal'
+import { Modal, ModalActions } from '../modal'
 import { useRoute } from 'preact-iso'
-import { item as itemAPI, userItem } from '../../api'
+import { UserItem, item as itemAPI, userItem } from '../../api'
 import classNames from 'classnames'
 import styles from './item-view.module.css'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
+import { useCallback } from 'preact/hooks'
+import { userID } from '../../auth'
+import { bind } from '@zwzn/spicy'
 
 h
 
@@ -27,6 +30,29 @@ export function ItemViewModal() {
     const isThinking = ui?.type === 'thinking'
     const isPurchased = ui?.type === 'purchased'
 
+    const setType = useCallback(
+        async (type: UserItem['type']) => {
+            if (ui?.type === type) {
+                await userItem.delete({ item_id: Number(id) })
+                return
+            }
+            const uid = await userID()
+            if (uid == undefined) {
+                throw new Error('Must be logged in to update purchase state')
+            }
+            const newUserItem = {
+                user_id: uid,
+                item_id: Number(id),
+                type: type,
+            }
+            if (ui?.type !== undefined) {
+                await userItem.update(newUserItem)
+            } else {
+                await userItem.create(newUserItem)
+            }
+        },
+        [id, ui?.type],
+    )
     if (err) {
         return (
             <Modal title={err.message}>
@@ -36,7 +62,7 @@ export function ItemViewModal() {
     }
 
     return (
-        <Modal title={item.name}>
+        <Modal title={item.name} class={styles.readonly}>
             {item.url !== '' && (
                 <div class={styles.popupLink}>
                     <ItemLink url={item.url} />
@@ -64,6 +90,21 @@ export function ItemViewModal() {
                     </div>
                 </>
             )}
+
+            <ModalActions>
+                <button
+                    class={classNames({ primary: isThinking })}
+                    onClick={bind('thinking', setType)}
+                >
+                    Thinking of Buying
+                </button>
+                <button
+                    class={classNames({ primary: isPurchased })}
+                    onClick={bind('purchased', setType)}
+                >
+                    Bought It
+                </button>
+            </ModalActions>
         </Modal>
     )
 }

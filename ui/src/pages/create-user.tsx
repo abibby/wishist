@@ -17,6 +17,7 @@ export function CreateUser() {
     const [password1, setPassword1] = useState('')
     const [password2, setPassword2] = useState('')
     const [running, setRunning] = useState(false)
+
     const submit = useCallback(async () => {
         if (running) {
             return
@@ -27,7 +28,6 @@ export function CreateUser() {
                 status: 0,
                 fields: {
                     password: ['Passwords do not match'],
-                    password2: ['Passwords do not match'],
                 },
             })
         }
@@ -40,6 +40,7 @@ export function CreateUser() {
         })
         route('/awaiting-verification')
     }, [running, password1, password2, name, email, username, route])
+
     return (
         <Fragment>
             <h1>Create User</h1>
@@ -50,6 +51,7 @@ export function CreateUser() {
                     value={username}
                     onInput={setUser}
                     name='username'
+                    autoFocus
                 />
                 <Input
                     title='Email'

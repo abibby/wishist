@@ -6,7 +6,7 @@
     right: 0;
     backdrop-filter: blur(5px);
     z-index: 100;
-    animation: blur-in 0.2s;
+    animation: blur-in var(--transition-time);
 }
 @keyframes blur-in {
     0% {
@@ -18,7 +18,7 @@
 }
 
 .screen.closing {
-    animation: blur-out 0.2s forwards;
+    animation: blur-out var(--transition-time) forwards;
     pointer-events: none;
 }
 @keyframes blur-out {
@@ -45,7 +45,7 @@
 
     z-index: 101;
 
-    animation: slide-in 0.2s;
+    animation: slide-in var(--transition-time);
 }
 
 @keyframes slide-in {
@@ -58,7 +58,7 @@
 }
 
 .modal.closing {
-    animation: slide-out 0.2s forwards;
+    animation: slide-out var(--transition-time) forwards;
 }
 @keyframes slide-out {
     0% {

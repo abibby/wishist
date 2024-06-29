@@ -1,13 +1,21 @@
 :root {
     --darkest: 34, 40, 49;
     --dark: 49, 54, 63;
+
     --light: 80, 114, 123;
+    --light-contrast: 255, 255, 255;
 
     --primary: 118, 171, 174;
     --primary-contrast: 0, 0, 0;
 
     --alert: 255, 160, 71;
     --alert-contrast: 0, 0, 0;
+
+    --danger: 171, 52, 40;
+    --danger-contrast: 255, 255, 255;
+
+    --dim: 85, 88, 96;
+    --dim-contrast: 255, 255, 255;
 
     --surface: var(--dark);
     --surface-contrast: 255, 255, 255;
@@ -20,6 +28,8 @@
 
     --content-width: 500px;
     --max-content-width: calc(100vw - 20px);
+
+    --transition-time: 200ms;
 }
 
 body {
@@ -47,13 +57,17 @@ a {
 button {
     display: inline-block;
     border: none;
-    background-color: rgb(var(--light));
-    color: rgba(var(--light-contrast), var(--text-opacity));
+    background-color: rgb(var(--dim));
+    color: rgba(var(--dim-contrast), var(--text-opacity));
     border-radius: 4px;
     padding: 0.25em 0.5em;
     text-decoration: none;
     font-size: inherit;
     text-align: center;
+    transition: background-color var(--transition-time),
+        color var(--transition-time);
+
+    cursor: pointer;
 }
 
 .button.primary,
@@ -62,15 +76,51 @@ button.primary {
     color: rgba(var(--primary-contrast), var(--text-opacity));
 }
 
-.button.default,
-button.default {
-    background-color: rgba(var(--surface-contrast), 15%);
-    color: rgba(var(--surface-contrast), var(--text-opacity));
+.button.light,
+button.light {
+    background-color: rgb(var(--light));
+    color: rgba(var(--light-contrast), var(--text-opacity));
+}
+
+.button.alert,
+button.alert {
+    background-color: rgb(var(--alert));
+    color: rgba(var(--alert-contrast), var(--text-opacity));
+}
+
+.button.danger-hover:hover,
+button.danger-hover:hover {
+    background-color: rgb(var(--danger));
+    color: rgba(var(--danger-contrast), var(--text-opacity));
+}
+
+.button.primary-hover:hover,
+button.primary-hover:hover {
+    background-color: rgb(var(--primary));
+    color: rgba(var(--primary-contrast), var(--text-opacity));
+}
+
+.button.light-hover:hover,
+button.light-hover:hover {
+    background-color: rgb(var(--light));
+    color: rgba(var(--light-contrast), var(--text-opacity));
+}
+
+.button.alert-hover:hover,
+button.alert-hover:hover {
+    background-color: rgb(var(--alert));
+    color: rgba(var(--alert-contrast), var(--text-opacity));
+}
+
+.button.danger-hover:hover,
+button.danger-hover:hover {
+    background-color: rgb(var(--danger));
+    color: rgba(var(--danger-contrast), var(--text-opacity));
 }
 
 .button.lg,
 button.lg {
-    font-size: 1.25rem;
+    padding: 0.5em 0.75em;
 }
 
 .button-list {
