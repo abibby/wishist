@@ -63,6 +63,6 @@ export const userItem = buildRestModel<
     Omit<UserItem, 'user_id'>,
     Omit<UserItem, 'user_id'>,
     Pick<UserItem, 'item_id'>
->('/user-item', ['user_id', 'item_id'], () => true)
+>('/user-item', ['item_id'], () => true)
 
 export * as user from './user'

@@ -1,11 +1,13 @@
 import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
-import { User, friend, item, user, userItem } from '../api'
+import { Item, User, UserItem, friend, item, user, userItem } from '../api'
 import { useUser } from '../auth'
-import { ItemList } from '../components/item-list'
+import { ItemListEdit } from '../components/item-list-edit'
 import { useOpenModal } from '../components/modal'
 import { ErrorFetchError } from './error-fetch-error'
 import { useRoute } from 'preact-iso'
+import { ItemListReadonly } from '../components/item-list-readonly'
+import { Conditions } from '../components/conditions'
 
 h
 
@@ -47,44 +49,47 @@ export function List() {
     }
 
     return (
-        <Fragment>
-            <h1>
-                {myList
-                    ? 'My Wishlist'
-                    : `${listUser?.name ?? username}'s Wishlist`}
-            </h1>
-            {!myList && (
-                <Fragment>
-                    {isFriend ? (
-                        <button onClick={removeFriend}>Remove Friend</button>
-                    ) : (
-                        <Fragment>
-                            <p>
-                                Adding a friend will let you keep track of who
-                                else is thinking about getting items.
-                            </p>
-                            <button class='primary' onClick={addFriend}>
-                                Add Friend
-                            </button>
-                        </Fragment>
-                    )}
-                    {myUser !== null && (
-                        <Fragment>
-                            <p>
-                                Click the 👁️ if you are thinking of buying the
-                                item and the 🛍️ if you have already purchased
-                                it.
-                            </p>
-                            <p>
-                                Clicking on the item will show more how many
-                                people are thinking of buying the item as well
-                                as any related links or descriptions.
-                            </p>
-                        </Fragment>
-                    )}
+        <Conditions>
+            <h1 v-if={myList}>My Wishlist</h1>
+            <h1 v-else>{listUser?.name ?? username}'s Wishlist</h1>
+            <Fragment v-if={!myList}>
+                <button v-if={isFriend} onClick={removeFriend}>
+                    Remove Friend
+                </button>
+                <Fragment v-else>
+                    <p>
+                        Adding a friend will let you keep track of who else is
+                        thinking about getting items.
+                    </p>
+                    <button class='primary' onClick={addFriend}>
+                        Add Friend
+                    </button>
                 </Fragment>
-            )}
+            </Fragment>
+            <Fragment v-if={myUser !== null}>
+                <p>
+                    Click the 👁️ if you are thinking of buying the item and the
+                    🛍️ if you have already purchased it.
+                </p>
+                <p>
+                    Clicking on the item will show more how many people are
+                    thinking of buying the item as well as any related links or
+                    descriptions.
+                </p>
+            </Fragment>
             <ItemList items={items} userItems={userItems} readonly={!myList} />
-        </Fragment>
+        </Conditions>
     )
+}
+
+interface ItemListProps {
+    items: Item[] | undefined
+    userItems: UserItem[] | undefined
+    readonly: boolean
+}
+function ItemList({ items, userItems, readonly }: ItemListProps) {
+    if (readonly) {
+        return <ItemListReadonly items={items} userItems={userItems} />
+    }
+    return <ItemListEdit items={items} />
 }
