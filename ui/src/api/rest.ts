@@ -88,7 +88,6 @@ export function buildRestModel<
                     setResult(r =>
                         r?.filter(r => {
                             for (const model of e.models) {
-                                console.log(r, model, pkeys)
                                 if (idsMatch(r, model, pkeys)) {
                                     return false
                                 }

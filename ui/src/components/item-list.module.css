@@ -14,6 +14,7 @@
     padding: 10px;
     transition: background-color, border var(--transition-time);
     height: 46px;
+    align-items: center;
 }
 .item.new {
     background-color: rgba(var(--background-contrast), 5%);
@@ -21,6 +22,9 @@
 }
 .item.new.flashInput {
     background-color: rgba(var(--primary), 25%) !important;
+}
+.item.new .loading {
+    font-size: 7px;
 }
 
 .edit .item:focus-within {

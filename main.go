@@ -31,12 +31,19 @@ type CreateUserRequest struct {
 	Name     string `json:"name" validate:"required"`
 }
 
-type ResponseWriter struct {
+type StatusRecorder struct {
 	http.ResponseWriter
 	Status int
 }
 
-func (w *ResponseWriter) WriteHeader(statusCode int) {
+func NewStatusRecorder(w http.ResponseWriter) *StatusRecorder {
+	return &StatusRecorder{
+		Status:         200,
+		ResponseWriter: w,
+	}
+}
+
+func (w *StatusRecorder) WriteHeader(statusCode int) {
 	w.Status = statusCode
 	w.ResponseWriter.WriteHeader(statusCode)
 }
@@ -97,16 +104,16 @@ func main() {
 	r.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := time.Now()
-			rw := &ResponseWriter{ResponseWriter: w, Status: 200}
+			sr := NewStatusRecorder(w)
 
-			h.ServeHTTP(rw, r)
+			h.ServeHTTP(sr, r)
 
 			slog.Info("request",
 				"remote_address", r.RemoteAddr,
 				"path", r.URL.String(),
 				"method", r.Method,
 				"time", time.Since(s),
-				"status", rw.Status,
+				"status", sr.Status,
 			)
 		})
 	})

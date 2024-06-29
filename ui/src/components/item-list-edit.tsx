@@ -8,6 +8,7 @@ import styles from './item-list.module.css'
 import { useFlash } from '../hooks/use-flash'
 import { useOpenModal } from './modal'
 import { Form } from './form/form'
+import { Spinner } from './spinner'
 
 h
 
@@ -21,6 +22,7 @@ export interface ItemListEditProps {
 }
 export function ItemListEdit({ items }: ItemListEditProps) {
     const [newItem, setNewItem] = useState('')
+    const [adding, setAdding] = useState(false)
 
     const [flashInput, triggerFlashInput] = useFlash()
     const addItem = useCallback(async () => {
@@ -28,12 +30,14 @@ export function ItemListEdit({ items }: ItemListEditProps) {
             triggerFlashInput()
             return
         }
+        setAdding(true)
         await item.create({
             name: newItem,
             description: '',
             url: '',
         })
         setNewItem('')
+        setAdding(false)
     }, [newItem, triggerFlashInput])
 
     if (items === undefined) {
@@ -57,8 +61,12 @@ export function ItemListEdit({ items }: ItemListEditProps) {
                         type='text'
                         value={newItem}
                         onInput={bindValue(setNewItem)}
+                        disabled={adding}
                     />
-                    <button class='light'>Add</button>
+                    {adding && <Spinner class={styles.loading} />}
+                    <button class='light' disabled={adding}>
+                        Add
+                    </button>
                 </Form>
             </li>
         </ul>

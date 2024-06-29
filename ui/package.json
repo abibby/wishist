@@ -6,6 +6,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
+        "dev-public": "vite --host",
         "watch": "vite build --watch",
         "build": "vite build",
         "typecheck": "tsc --noEmit",
