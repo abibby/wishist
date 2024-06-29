@@ -1,5 +1,5 @@
 import { h } from 'preact'
-import { Modal, ModalActions, ModalProps } from '../modal'
+import { Modal, ModalActions, useCloseModal } from '../modal'
 import { useCallback, useState } from 'preact/hooks'
 import { Input } from '../form/input'
 import { FetchError } from '../../api/internal'
@@ -7,9 +7,8 @@ import { changePassword } from '../../api/user'
 
 h
 
-interface ChangePasswordModalProps extends ModalProps<void> {}
-
-export function ChangePasswordModal({ close }: ChangePasswordModalProps) {
+export function ChangePasswordModal() {
+    const close = useCloseModal()
     const [currentPassword, setCurrentPassword] = useState('')
     const [newPassword1, setNewPassword1] = useState('')
     const [newPassword2, setNewPassword2] = useState('')
@@ -45,7 +44,7 @@ export function ChangePasswordModal({ close }: ChangePasswordModalProps) {
         [currentPassword, newPassword1, newPassword2, running, close],
     )
     return (
-        <Modal title='Change Password' close={close}>
+        <Modal title='Change Password'>
             <form onSubmit={submit}>
                 {error && <div>{error}</div>}
                 <Input

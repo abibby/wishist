@@ -22,6 +22,7 @@
 .item.new.flashInput {
     background-color: rgba(var(--primary), 25%) !important;
 }
+
 .edit .item:focus-within {
     background-color: rgba(var(--background-contrast), 5%);
     border-bottom: solid 1px rgba(var(--background-contrast), 70%);

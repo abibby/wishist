@@ -4,7 +4,8 @@ import { resetPassword } from '../api/user'
 import { Input } from '../components/form/input'
 import { FetchError } from '../api/internal'
 import styles from './reset-password.module.css'
-import { route } from 'preact-router'
+import { useOpenModal } from '../components/modal'
+import { useLocation } from 'preact-iso'
 
 h
 
@@ -12,6 +13,8 @@ export function ResetPassword() {
     const [password1, setPassword1] = useState('')
     const [password2, setPassword2] = useState('')
     const [error, setError] = useState<string>()
+    const openModal = useOpenModal()
+    const { route } = useLocation()
     const clickSend = useCallback(async () => {
         try {
             if (password1 !== password2) {
@@ -23,7 +26,8 @@ export function ResetPassword() {
                 token: url.searchParams.get('token') ?? '',
                 password: password1,
             })
-            route('/login')
+            route('/')
+            openModal('/login')
         } catch (e) {
             if (e instanceof FetchError) {
                 setError(e.body.error)
@@ -31,7 +35,7 @@ export function ResetPassword() {
                 throw e
             }
         }
-    }, [password1, password2, setError])
+    }, [openModal, password1, password2, route])
     return (
         <Fragment>
             <h1>Reset Password</h1>

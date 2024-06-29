@@ -1,43 +1,28 @@
 import { Fragment, h } from 'preact'
-import { useCallback, useEffect, useState } from 'preact/hooks'
-import { User, friend, user } from '../api'
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
+import { User, friend, item, user, userItem } from '../api'
 import { useUser } from '../auth'
 import { ItemList } from '../components/item-list'
-import { openModal } from '../components/modal'
-import { LoginModal } from '../components/modals/login'
-import { FetchError } from '../api/internal'
+import { useOpenModal } from '../components/modal'
 import { ErrorFetchError } from './error-fetch-error'
+import { useRoute } from 'preact-iso'
 
 h
 
-interface ListProps {
-    matches: {
-        username: string
-    }
-}
-
-export function List({ matches }: Readonly<ListProps>) {
-    const { username } = matches
+export function List() {
+    const { params } = useRoute()
+    const { username } = params
     const myUser = useUser()
-    const [fetchError, setFetchError] = useState<FetchError>()
     const myList = myUser?.username === username
     const [listUser, setListUser] = useState<User>()
-
-    const [isFriend, setIsFriend] = useState(false)
-    useEffect(() => {
+    const [friends] = friend.useList()
+    const isFriend = useMemo(() => {
         if (myUser === null) {
-            setIsFriend(false)
-        } else {
-            friend
-                .list()
-                .then(friends =>
-                    setIsFriend(
-                        friends.find(f => f.friend_username === username) !==
-                            undefined,
-                    ),
-                )
+            return false
         }
-    }, [username, myUser])
+        return friends?.find(f => f.friend_username === username) !== undefined
+    }, [friends, myUser, username])
+    const openModal = useOpenModal()
 
     useEffect(() => {
         user.get(username).then(u => setListUser(u))
@@ -45,27 +30,20 @@ export function List({ matches }: Readonly<ListProps>) {
 
     const addFriend = useCallback(() => {
         if (myUser !== null) {
-            friend.create({ username: username })
-            setIsFriend(true)
+            friend.create({ friend_username: username })
         } else {
-            openModal(LoginModal, {
-                message: 'You must log in to add a friend.',
-            }).then(userCreated => {
-                if (userCreated) {
-                    friend.create({ username: username })
-                    setIsFriend(true)
-                }
-            })
+            openModal('/login?message=You must log in to add a friend')
         }
-    }, [username, myUser, setIsFriend])
+    }, [myUser, username, openModal])
 
     const removeFriend = useCallback(() => {
-        friend.delete({ username: username })
-        setIsFriend(false)
-    }, [username, setIsFriend])
+        friend.delete({ friend_username: username })
+    }, [username])
 
-    if (fetchError !== undefined) {
-        return <ErrorFetchError err={fetchError} />
+    const [items, err] = item.useList({ user: username })
+    const [userItems] = userItem.useList({ user: username })
+    if (err) {
+        return <ErrorFetchError err={err} />
     }
 
     return (
@@ -106,11 +84,7 @@ export function List({ matches }: Readonly<ListProps>) {
                     )}
                 </Fragment>
             )}
-            <ItemList
-                username={username}
-                readonly={!myList}
-                onFetchError={setFetchError}
-            />
+            <ItemList items={items} userItems={userItems} readonly={!myList} />
         </Fragment>
     )
 }

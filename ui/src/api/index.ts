@@ -15,10 +15,19 @@ export interface Item {
 
 export const item = buildRestModel<
     Item,
-    { user: string },
+    { user: string } | { id: string | number },
     Omit<Item, 'id' | 'user_id'>,
     Omit<Item, 'user_id'>
->('/item')
+>('/item', ['id'], (m, params) => {
+    if ('user' in params) {
+        // return params.user === m.user_id
+        return true
+    }
+    if ('id' in params) {
+        return params.id === m.id
+    }
+    return false
+})
 
 export interface Friend {
     user_id: number
@@ -28,10 +37,10 @@ export interface Friend {
 }
 
 export interface FriendCreateRequest {
-    username: string
+    friend_username: string
 }
 export interface FriendDeleteRequest {
-    username: string
+    friend_username: string
 }
 
 export const friend = buildRestModel<
@@ -40,7 +49,7 @@ export const friend = buildRestModel<
     FriendCreateRequest,
     never,
     FriendDeleteRequest
->('/friend')
+>('/friend', ['friend_username'], () => true)
 
 export interface UserItem {
     user_id: number
@@ -50,10 +59,10 @@ export interface UserItem {
 
 export const userItem = buildRestModel<
     UserItem,
-    { user: string },
+    { user: string } | { item_id: string | number },
     Omit<UserItem, 'user_id'>,
     Omit<UserItem, 'user_id'>,
     Pick<UserItem, 'item_id'>
->('/user-item')
+>('/user-item', ['user_id', 'item_id'], () => true)
 
 export * as user from './user'

@@ -1,30 +1,29 @@
 import { h, RenderableProps } from 'preact'
-import { Link } from 'preact-router'
 import { useCallback } from 'preact/hooks'
 import { useUser } from '../auth'
-import { openModal } from '../components/modal'
-import { LoginModal } from '../components/modals/login'
+import { useOpenModal } from '../components/modal'
 import styles from './default.module.css'
 
 h
 
 export function Default({ children }: RenderableProps<unknown>) {
     const user = useUser()
+    const openModal = useOpenModal()
 
     const login = useCallback(async () => {
-        await openModal(LoginModal, {})
-    }, [])
+        openModal('/login')
+    }, [openModal])
 
     return (
         <div class={styles.default}>
             <nav class={styles.nav}>
-                <Link class={styles.home} href='/'>
+                <a class={styles.home} href='/'>
                     Wishist
-                </Link>
+                </a>
                 {user ? (
-                    <Link class={styles.logout} href='/account'>
+                    <a class={styles.logout} href='/account'>
                         Account
-                    </Link>
+                    </a>
                 ) : (
                     <button class={styles.login} onClick={login}>
                         login

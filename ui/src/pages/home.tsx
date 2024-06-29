@@ -1,5 +1,4 @@
 import { Fragment, h } from 'preact'
-import { Link } from 'preact-router'
 import { useEffect, useState } from 'preact/hooks'
 import { Friend, friend } from '../api'
 import { useUser } from '../auth'
@@ -31,22 +30,22 @@ export function Home() {
     return (
         <Fragment>
             <h1>Wishist</h1>
-            <Link
+            <a
                 class={classNames('button', styles.myList, styles.btn)}
                 href={`/list/${user?.username}`}
             >
                 My List
-            </Link>
+            </a>
             <h2>Friends</h2>
             <ButtonList>
                 {friends?.map(f => (
-                    <Link
+                    <a
                         key={f.friend_id}
                         class={classNames('button', styles.btn)}
                         href={`/list/${f.friend_username}`}
                     >
                         {f.friend_name}
-                    </Link>
+                    </a>
                 ))}
             </ButtonList>
         </Fragment>

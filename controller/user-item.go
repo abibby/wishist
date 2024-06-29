@@ -12,7 +12,8 @@ import (
 )
 
 type ListUserItemsRequest struct {
-	User    string `query:"user" validate:"required"`
+	User    string `query:"user"`
+	ItemID  string `query:"item_id"`
 	Request *http.Request
 }
 type ListUserItemsResponse []*db.UserItem
@@ -24,26 +25,51 @@ var UserItemList = request.Handler(func(r *ListUserItemsRequest) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("user not logged in")
 	}
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		u := &db.User{}
-		err := tx.Get(u, "select * from users where username=?", r.User)
-		if errors.Is(err, sql.ErrNoRows) {
-			return errNoUsers
-		} else if err != nil {
-			return err
-		}
-		return tx.Select(
-			&items,
-			`select
-				user_items.*
-			from user_items
-			join items on user_items.item_id=items.id
-			where
-				user_items.user_id = ?
-				and items.user_id`,
-			uid, u.ID,
-		)
-	})
+	if r.User == "" && r.ItemID == "" {
+		return nil, request.NewHTTPError(fmt.Errorf("must have user or item_id"), 422)
+	}
+	var err error
+	if r.ItemID != "" {
+		err = db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+			return tx.Select(
+				&items,
+				`select
+					user_items.*
+				from user_items
+				join items on user_items.item_id=items.id
+				where
+					user_items.user_id = ?
+					and items.user_id != ?
+					and items.id = ?`,
+				uid, uid, r.ItemID,
+			)
+		})
+	} else {
+		err = db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+			u := &db.User{}
+			err := tx.Get(u, "select * from users where username=?", r.User)
+			if errors.Is(err, sql.ErrNoRows) {
+				return errNoUsers
+			} else if err != nil {
+				return err
+			}
+
+			if u.ID == uid {
+				return nil
+			}
+			return tx.Select(
+				&items,
+				`select
+					user_items.*
+				from user_items
+				join items on user_items.item_id=items.id
+				where
+					user_items.user_id = ?
+					and items.user_id = ?`,
+				uid, u.ID,
+			)
+		})
+	}
 	if err == errNoUsers {
 		return nil, request.NewHTTPError(err, 404)
 	} else if err != nil {

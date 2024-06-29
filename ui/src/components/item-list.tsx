@@ -1,15 +1,13 @@
 import { bind, bindValue } from '@zwzn/spicy'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
-import { Fragment, h } from 'preact'
-import { useCallback, useEffect, useState } from 'preact/hooks'
+import { h } from 'preact'
+import { useCallback, useState } from 'preact/hooks'
 import { item, Item, UserItem, userItem } from '../api'
 import { userID, useUser } from '../auth'
-import { Input } from './form/input'
 import styles from './item-list.module.css'
-import { TextArea } from './form/textarea'
-import { FetchError } from '../api/internal'
 import { useFlash } from '../hooks/use-flash'
+import { useOpenModal } from './modal'
 import { Form } from './form/form'
 
 h
@@ -20,192 +18,96 @@ const debouncedItemUpdate: typeof item.update = debounce(
 ) as typeof item.update
 
 interface ListProps {
-    username: string
+    items: Item[] | undefined
+    userItems: UserItem[] | undefined
     readonly: boolean
-    onFetchError: (err: FetchError | undefined) => void
 }
 
-export function ItemList({
-    username: name,
-    readonly,
-    onFetchError,
-}: Readonly<ListProps>) {
+export function ItemList({ items, userItems, readonly }: Readonly<ListProps>) {
+    if (readonly) {
+        return <ReadonlyList items={items} userItems={userItems} />
+    }
+    return <EditList items={items} />
+}
+
+interface ReadonlyListProps {
+    items: Item[] | undefined
+    userItems: UserItem[] | undefined
+}
+function ReadonlyList({ items, userItems }: ReadonlyListProps) {
+    if (items === undefined) {
+        return <div>loading...</div>
+    }
+    return (
+        <ul class={styles.list}>
+            {items.map(i => (
+                <ReadonlyRow
+                    key={i.id}
+                    item={i}
+                    userItem={userItems?.find(ui => ui.item_id === i.id)}
+                />
+            ))}
+        </ul>
+    )
+}
+interface EditListProps {
+    items: Item[] | undefined
+}
+function EditList({ items }: EditListProps) {
     const [newItem, setNewItem] = useState('')
-    const [items, setItems] = useState<Item[] | undefined>()
-    const [userItems, setUserItems] = useState<UserItem[] | undefined>()
-    const { id: userID } = useUser() ?? {}
+
     const [flashInput, triggerFlashInput] = useFlash()
-
-    useEffect(() => {
-        onFetchError(undefined)
-        item.list({ user: name })
-            .then(setItems)
-            .catch(e => {
-                if (e instanceof FetchError) {
-                    onFetchError(e)
-                }
-                setItems(undefined)
-            })
-        if (userID !== undefined) {
-            userItem
-                .list({ user: name })
-                .then(setUserItems)
-                .catch(e => {
-                    if (e instanceof FetchError) {
-                        if (e.status !== 401) {
-                            onFetchError(e)
-                        }
-                    }
-                    setUserItems(undefined)
-                })
-        } else {
-            setUserItems(undefined)
-        }
-    }, [name, userID, onFetchError])
-
     const addItem = useCallback(async () => {
         if (newItem === '') {
             triggerFlashInput()
             return
         }
-        const createdItem = await item.create({
+        await item.create({
             name: newItem,
             description: '',
             url: '',
         })
-        setItems(i => i?.concat([createdItem]))
         setNewItem('')
     }, [newItem, triggerFlashInput])
-
-    const removeItem = useCallback(
-        async (id: number) => {
-            await item.delete({
-                id: id,
-            })
-            setItems(items => items?.filter(i => i.id !== id))
-        },
-        [setItems],
-    )
-
-    const newItemKeyDown = useCallback(
-        (e: KeyboardEvent) => {
-            if (e.key === 'Enter') {
-                addItem()
-            }
-        },
-        [addItem],
-    )
-
-    const listChange = useCallback(
-        (item: Item) => {
-            setItems(items =>
-                items?.map(i => {
-                    if (i.id === item.id) {
-                        return item
-                    }
-                    return i
-                }),
-            )
-        },
-        [setItems],
-    )
-
-    const userItemCreate = useCallback(
-        (newUserItem: UserItem) => {
-            setUserItems(userItems => userItems?.concat([newUserItem]))
-        },
-        [setUserItems],
-    )
-    const userItemChange = useCallback(
-        (updatedUserItem: UserItem) => {
-            setUserItems(userItems =>
-                userItems?.map(ui => {
-                    if (ui.item_id === updatedUserItem.item_id) {
-                        return updatedUserItem
-                    }
-                    return ui
-                }),
-            )
-        },
-        [setUserItems],
-    )
-    const userItemRemove = useCallback(
-        (itemID: number) => {
-            setUserItems(userItems =>
-                userItems?.filter(ui => ui.item_id !== itemID),
-            )
-        },
-        [setUserItems],
-    )
 
     if (items === undefined) {
         return <div>loading...</div>
     }
 
     return (
-        <ul class={classNames(styles.list, { [styles.edit]: !readonly })}>
-            {items.map(i => {
-                if (readonly) {
-                    return (
-                        <ReadonlyRow
-                            key={i.id}
-                            item={i}
-                            userItem={userItems?.find(
-                                ui => ui.item_id === i.id,
-                            )}
-                            onUserItemCreate={userItemCreate}
-                            onUserItemChange={userItemChange}
-                            onUserItemRemove={userItemRemove}
-                        />
-                    )
-                } else {
-                    return (
-                        <Row
-                            key={i.id}
-                            item={i}
-                            onChange={listChange}
-                            onRemove={removeItem}
-                        />
-                    )
-                }
-            })}
-            {!readonly && (
-                <li
+        <ul class={classNames(styles.list, styles.edit)}>
+            {items.map(i => (
+                <Row key={i.id} item={i} />
+            ))}
+            <li>
+                <Form
                     class={classNames(styles.item, styles.new, {
                         [styles.flashInput]: flashInput,
                     })}
+                    onSubmit={addItem}
                 >
                     <input
                         class={styles.name}
                         type='text'
                         value={newItem}
                         onInput={bindValue(setNewItem)}
-                        onKeyDown={newItemKeyDown}
                     />
-                    <button onClick={addItem}>Add</button>
-                </li>
-            )}
+                    <button>Add</button>
+                </Form>
+            </li>
         </ul>
     )
 }
 
 interface RowProps {
     item: Item
-    onChange: (item: Item) => void
-    onRemove: (id: number) => void
 }
 
-function Row({ item: item2, onChange, onRemove }: RowProps) {
-    const [open, setOpen] = useState(false)
-    const [name, setName] = useState('')
-    const [url, setURL] = useState('')
-    const [description, setDescription] = useState('')
-
-    useEffect(() => {
-        setName(item2.name)
-        setURL(item2.url)
-        setDescription(item2.description)
-    }, [item2])
+function Row({ item: item2 }: RowProps) {
+    const openModal = useOpenModal()
+    const remove = useCallback(async () => {
+        await item.delete({ id: item2.id })
+    }, [item2.id])
 
     const nameChange = useCallback(
         (value: string) => {
@@ -216,24 +118,10 @@ function Row({ item: item2, onChange, onRemove }: RowProps) {
                 ...item2,
                 name: value,
             }
-            onChange(newItem)
             debouncedItemUpdate(newItem)
         },
-        [item2, onChange],
+        [item2],
     )
-
-    const save = useCallback(async () => {
-        const newItem = {
-            ...item2,
-            name: name,
-            url: url,
-            description: description,
-        }
-
-        await item.update(newItem)
-        onChange(newItem)
-        setOpen(false)
-    }, [item2, name, url, description, onChange])
     return (
         <li>
             <label class={styles.item}>
@@ -245,41 +133,12 @@ function Row({ item: item2, onChange, onRemove }: RowProps) {
                 />
 
                 <div class={styles.actions}>
-                    <button onClick={bind(true, setOpen)}>+</button>
-                    <button onClick={bind(item2.id, onRemove)}>x</button>
+                    <button onClick={bind(`/item/${item2.id}/edit`, openModal)}>
+                        +
+                    </button>
+                    <button onClick={remove}>x</button>
                 </div>
-                <div
-                    class={classNames(styles.screen, {
-                        [styles.open]: open,
-                    })}
-                    onClick={bind(false, setOpen)}
-                />
             </label>
-            <div class={classNames(styles.popup, { [styles.open]: open })}>
-                <Form onSubmit={save}>
-                    <Input
-                        title='Name'
-                        value={name}
-                        onInput={setName}
-                        name='name'
-                    />
-                    <Input
-                        title='URL'
-                        value={url}
-                        onInput={setURL}
-                        name='url'
-                    />
-                    <TextArea
-                        title='Description'
-                        value={description}
-                        onInput={setDescription}
-                        name='description'
-                    />
-                    <div>
-                        <button type='submit'>Save</button>
-                    </div>
-                </Form>
-            </div>
         </li>
     )
 }
@@ -287,53 +146,34 @@ function Row({ item: item2, onChange, onRemove }: RowProps) {
 interface ReadonlyRowProps {
     item: Item
     userItem?: UserItem
-    onUserItemCreate: (userItem: UserItem) => void
-    onUserItemChange: (userItem: UserItem) => void
-    onUserItemRemove: (itemID: number) => void
 }
 
-function ReadonlyRow({
-    item,
-    userItem: ui,
-    onUserItemCreate,
-    onUserItemChange,
-    onUserItemRemove,
-}: Readonly<ReadonlyRowProps>) {
-    const [open, setOpen] = useState(false)
+function ReadonlyRow({ item, userItem: ui }: Readonly<ReadonlyRowProps>) {
+    const openModal = useOpenModal()
     const user = useUser()
 
-    const itemID = item.id
-    const userItemType = ui?.type
-    const hasUserItem = ui !== undefined
     const setType = useCallback(
         async (type: UserItem['type']) => {
-            if (userItemType === type) {
-                onUserItemRemove(itemID)
-                await userItem.delete({ item_id: itemID })
+            if (ui?.type === type) {
+                await userItem.delete({ item_id: item.id })
                 return
             }
             const uid = await userID()
+            if (uid == undefined) {
+                throw new Error('Must be logged in to update purchase state')
+            }
             const newUserItem = {
-                user_id: uid ?? 0,
-                item_id: itemID,
+                user_id: uid,
+                item_id: item.id,
                 type: type,
             }
-            if (hasUserItem) {
-                onUserItemChange(newUserItem)
+            if (ui?.type !== undefined) {
                 await userItem.update(newUserItem)
             } else {
-                onUserItemCreate(newUserItem)
                 await userItem.create(newUserItem)
             }
         },
-        [
-            hasUserItem,
-            itemID,
-            userItemType,
-            onUserItemCreate,
-            onUserItemChange,
-            onUserItemRemove,
-        ],
+        [item.id, ui?.type],
     )
     const setThinking = useCallback(() => {
         setType('thinking')
@@ -354,7 +194,10 @@ function ReadonlyRow({
                     (item.purchased_count ?? 0) > 0 || isPurchased,
             })}
         >
-            <span class={styles.name} onClick={bind(true, setOpen)}>
+            <span
+                class={styles.name}
+                onClick={bind(`/item/${item.id}`, openModal)}
+            >
                 {item.name}
                 {hasExtraInfo && ' *'}
             </span>
@@ -378,92 +221,6 @@ function ReadonlyRow({
                     </button>
                 </div>
             )}
-            <div
-                class={classNames(styles.screen, { [styles.open]: open })}
-                onClick={bind(false, setOpen)}
-            />
-            <ItemPopup
-                item={item}
-                open={open}
-                isThinking={isThinking}
-                isPurchased={isPurchased}
-            />
         </li>
     )
-}
-
-type ItemPopupProps = {
-    item: Item
-    open: boolean
-    isThinking: boolean
-    isPurchased: boolean
-}
-function ItemPopup({ item, open, isThinking, isPurchased }: ItemPopupProps) {
-    return (
-        <div
-            class={classNames(styles.popup, styles.readonly, {
-                [styles.open]: open,
-            })}
-        >
-            <h3 class={styles.popupName}>{item.name}</h3>
-            {item.url !== '' && (
-                <div class={styles.popupLink}>
-                    <ItemLink url={item.url} />
-                </div>
-            )}
-            {item.description && (
-                <div
-                    class={classNames(styles.popupDescription, styles.divider)}
-                >
-                    {item.description.split('\n').map(line => (
-                        <p>{line}</p>
-                    ))}
-                </div>
-            )}
-            {(item.thinking_count !== undefined ||
-                item.purchased_count !== undefined) && (
-                <>
-                    <div class={styles.divider}>
-                        Watching:{' '}
-                        {formatCount(isThinking, item.thinking_count ?? 0)}
-                    </div>
-                    <div>
-                        Purchased:{' '}
-                        {formatCount(isPurchased, item.purchased_count ?? 0)}
-                    </div>
-                </>
-            )}
-        </div>
-    )
-}
-
-function ItemLink({ url }: { url: string }) {
-    let host: string | undefined
-    if (url !== undefined && url !== '') {
-        try {
-            host = new URL(url).host
-        } catch (_e) {
-            // intentionally empty
-        }
-    }
-
-    if (host === undefined) {
-        return <Fragment>{url}</Fragment>
-    }
-    return (
-        <a href={url} target='_blank'>
-            {host}
-        </a>
-    )
-}
-function formatCount(you: boolean, count: number): string {
-    if (you && count === 0) {
-        if (count === 0) {
-            return 'Only you'
-        } else {
-            return 'You + ' + count
-        }
-    }
-
-    return String(count)
 }

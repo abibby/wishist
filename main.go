@@ -151,6 +151,9 @@ func main() {
 			})
 
 		})
+		r.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(404)
+		}))
 	})
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
 

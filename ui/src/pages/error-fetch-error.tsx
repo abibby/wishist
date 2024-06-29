@@ -1,5 +1,4 @@
 import { Fragment, h } from 'preact'
-import { Link } from 'preact-router'
 import { FetchError } from '../api/internal'
 
 h
@@ -14,7 +13,7 @@ export function ErrorFetchError({ err }: ErrorFetchErrorProps) {
             <h1>
                 {err.body.status} {err.body.error}
             </h1>
-            <Link href={'/'}>Home</Link>
+            <a href={'/'}>Home</a>
         </Fragment>
     )
 }

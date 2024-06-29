@@ -9,8 +9,25 @@
     animation: blur-in 0.2s;
 }
 @keyframes blur-in {
-    0%   { backdrop-filter: blur(0); }
-    100% { backdrop-filter: blur(5px); }
+    0% {
+        backdrop-filter: blur(0);
+    }
+    100% {
+        backdrop-filter: blur(5px);
+    }
+}
+
+.screen.closing {
+    animation: blur-out 0.2s forwards;
+    pointer-events: none;
+}
+@keyframes blur-out {
+    0% {
+        backdrop-filter: blur(5px);
+    }
+    100% {
+        backdrop-filter: blur(0);
+    }
 }
 
 .modal {
@@ -30,13 +47,26 @@
 
     animation: slide-in 0.2s;
 }
-@keyframes face-in {
-    0%   { opacity: 0; }
-    100% { opacity: 1; }
-}
+
 @keyframes slide-in {
-    0%   { transform: translateX(-50%) translateY(calc(-100% - 100px)); }
-    100% { transform: translateX(-50%) translateY(0); }
+    0% {
+        transform: translateX(-50%) translateY(calc(-100% - 100px));
+    }
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.modal.closing {
+    animation: slide-out 0.2s forwards;
+}
+@keyframes slide-out {
+    0% {
+        transform: translateX(-50%) translateY(0);
+    }
+    100% {
+        transform: translateX(-50%) translateY(calc(-100% - 100px));
+    }
 }
 
 .title {

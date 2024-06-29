@@ -1,5 +1,4 @@
 import { h } from 'preact'
-import { Link } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
 import { login } from '../auth'
 import { Input } from './form/input'
@@ -36,10 +35,10 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
             />
             <ModalActions>
                 <button type='submit'>Login</button>
-                <Link class='button' href={'/forgot-password'}>
+                <a class='button' href={'/forgot-password'}>
                     Forgot Password
-                </Link>
-                <Link
+                </a>
+                <a
                     class='button'
                     href={
                         '/create-user?redirect=' +
@@ -49,7 +48,7 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
                     }
                 >
                     Create User
-                </Link>
+                </a>
             </ModalActions>
         </Form>
     )

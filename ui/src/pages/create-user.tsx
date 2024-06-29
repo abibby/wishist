@@ -1,15 +1,16 @@
 import { Fragment, h } from 'preact'
-import { route } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
 import { Input } from '../components/form/input'
 import { FetchError } from '../api/internal'
 import { user } from '../api'
 import { Form } from '../components/form/form'
 import { bind } from '@zwzn/spicy'
+import { useLocation } from 'preact-iso'
 
 h
 
 export function CreateUser() {
+    const { route } = useLocation()
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [username, setUser] = useState('')
@@ -38,7 +39,7 @@ export function CreateUser() {
             password: password1,
         })
         route('/awaiting-verification')
-    }, [running, password1, password2, name, email, username])
+    }, [running, password1, password2, name, email, username, route])
     return (
         <Fragment>
             <h1>Create User</h1>

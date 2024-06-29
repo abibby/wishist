@@ -14,6 +14,9 @@ export default defineConfig(({ mode }): UserConfig => {
         plugins: [
             preact(),
             VitePWA({
+                strategies: 'injectManifest',
+                srcDir: 'src',
+                filename: 'sw.ts',
                 injectRegister: 'auto',
                 workbox: {
                     globPatterns: ['**/*.{js,css,html,ico,png,svg}'],

@@ -41,7 +41,7 @@ var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 })
 
 type AddFriendRequest struct {
-	FriendUsername string `json:"username" validate:"required"`
+	FriendUsername string `json:"friend_username" validate:"required"`
 	Request        *http.Request
 }
 type AddFriendResponse *db.Friend
@@ -77,7 +77,7 @@ var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 })
 
 type RemoveFriendRequest struct {
-	FriendUsername string `json:"username" validate:"required"`
+	FriendUsername string `json:"friend_username" validate:"required"`
 	Request        *http.Request
 }
 type RemoveFriendResponse struct {
