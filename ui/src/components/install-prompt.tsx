@@ -37,7 +37,7 @@ export function FloatingInstallPrompt() {
             <h3>Install Wishist</h3>
             <p>Add Wishist to your home screen</p>
             <div class={styles.buttons}>
-                <button class='default lg' onClick={dismiss}>
+                <button class='lg' onClick={dismiss}>
                     Dismiss
                 </button>
                 <button class='primary lg' onClick={install}>

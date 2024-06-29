@@ -2,8 +2,7 @@
     --margin: 10px;
     position: fixed;
     background-color: rgb(var(--surface));
-    width: 500px;
-    max-width: calc(100vw - var(--margin) * 2);
+    width: calc(100vw - var(--margin) * 2);
     bottom: var(--margin);
     right: var(--margin);
     padding: 10px;
@@ -13,4 +12,10 @@
     display: flex;
     gap: 10px;
     justify-content: center;
+}
+
+@media screen and (min-width: 700px) {
+    .installPrompt {
+        width: 300px;
+    }
 }

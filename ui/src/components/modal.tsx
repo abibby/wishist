@@ -1,125 +1,171 @@
-import { bind } from '@zwzn/spicy'
-import { Event, EventTarget } from '../events'
-import { Fragment, FunctionalComponent, h, RenderableProps } from 'preact'
-import { useCallback, useEffect, useState } from 'preact/hooks'
+import { createContext, Fragment, h, Provider, RenderableProps } from 'preact'
+import { useCallback, useContext, useMemo, useRef } from 'preact/hooks'
 import styles from './modal.module.css'
+import { LocationHook, LocationProvider, useLocation } from 'preact-iso'
+import classNames from 'classnames'
 
 h
 
-let id = 0
+const MODAL_QUERY = 'm'
 
-/* eslint @typescript-eslint/no-explicit-any: 0 */
-
-class ModalOpenEvent extends Event<'open'> {
-    public readonly id: number
-    constructor(
-        public readonly modal: FunctionalComponent<any>,
-        public readonly props: any,
-    ) {
-        super('open')
-        this.id = id++
-    }
-}
-class ModalCloseEvent<T> extends Event<'close'> {
-    constructor(public readonly id: number, public readonly value: T) {
-        super('close')
-    }
+let modalUUID = 0
+type ModalContext = {
+    uuid: number
+    uri: string
+    close(): void
+    closing: boolean
 }
 
-type ModalEventMap = {
-    open: ModalOpenEvent
-    close: ModalCloseEvent<any>
-    closeAll: Event<'closeAll'>
-}
+const modalContext = createContext<ModalContext>({
+    uuid: -1,
+    uri: '',
+    close() {},
+    closing: false,
+})
 
-const modalEventTarget = new EventTarget<ModalEventMap>()
+export function ModalController({ children }: RenderableProps<unknown>) {
+    const loc = useLocation()
+    const lastModals = useRef<(ModalContext | undefined)[]>([])
+    const modals = useMemo<ModalContext[]>(() => {
+        const url = new URL(loc.url, location.href)
 
-export function ModalController() {
-    const [openModals, setOpenModals] = useState<ModalOpenEvent[]>([])
+        const uris: (string | undefined)[] =
+            url.searchParams.getAll(MODAL_QUERY)
+        const newModals: ModalContext[] = []
+        let lastIndex = 0
+        let index = 0
 
-    useEffect(() => {
-        const open = (event: ModalOpenEvent) => {
-            setOpenModals(m => m.concat([event]))
+        while (index < uris.length || lastIndex < lastModals.current.length) {
+            const last = lastModals.current[lastIndex]
+            const uri = uris[index]
+
+            if (uri && (!last || last.uri === uri)) {
+                const uuid = last && !last.closing ? last.uuid : modalUUID++
+                newModals.push({
+                    uuid: uuid,
+                    uri: uri,
+                    close() {
+                        const newURL = new URL(location.href)
+                        newURL.searchParams.delete(MODAL_QUERY)
+
+                        for (const modal of newModals) {
+                            if (modal.uuid === uuid || modal.closing) {
+                                continue
+                            }
+
+                            newURL.searchParams.append(MODAL_QUERY, modal.uri)
+                        }
+                        loc.route(newURL.toString())
+                    },
+                    closing: false,
+                })
+                lastIndex++
+                index++
+            } else if (last) {
+                newModals.push({
+                    ...last,
+                    closing: true,
+                })
+                lastIndex++
+            } else {
+                throw new Error('no uri and last')
+            }
         }
-        const close = (event: ModalCloseEvent<any>) => {
-            setOpenModals(m => m.filter(e => e.id !== event.id))
-        }
-        const closeAll = () => {
-            setOpenModals([])
-        }
 
-        modalEventTarget.addEventListener('open', open)
-        modalEventTarget.addEventListener('close', close)
-        modalEventTarget.addEventListener('closeAll', closeAll)
+        lastModals.current = newModals
 
-        return () => {
-            modalEventTarget.removeEventListener('open', open)
-            modalEventTarget.removeEventListener('close', close)
-            modalEventTarget.removeEventListener('closeAll', closeAll)
-        }
-    }, [setOpenModals])
+        return newModals
+    }, [loc])
 
-    const close = useCallback((id: number, value: any) => {
-        modalEventTarget.dispatchEvent(new ModalCloseEvent(id, value))
-    }, [])
+    const locationValues = useMemo(() => {
+        return modals.map(m => {
+            const url = m.uri
+            const u = new URL(url, location.origin)
+            const path = u.pathname.replace(/(.)\/$/g, '$1')
+            return {
+                ...loc,
+                url,
+                path,
+                query: Object.fromEntries(u.searchParams),
+            }
+        })
+    }, [loc, modals])
+    const ModifiedLocationProvider: Provider<LocationHook> =
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        LocationProvider.ctx.Provider
 
+    const Provider = modalContext.Provider
     return (
         <div>
-            {openModals.map(e => {
-                const Comp = e.modal
-                return <Comp close={bind(e.id, close)} {...e.props} />
-            })}
+            {modals.map((value, i) => (
+                <ModifiedLocationProvider
+                    key={value.uuid}
+                    value={locationValues[i]}
+                >
+                    <Provider value={value}>{children}</Provider>
+                </ModifiedLocationProvider>
+            ))}
         </div>
     )
 }
 
-export interface ModalProps<TReturn> {
+export interface ModalProps {
     title: string
-    close: (value: TReturn | undefined) => void
+    class?: string
 }
 
-export function Modal<TReturn>({
+export function Modal({
     title,
-    close,
     children,
-}: RenderableProps<ModalProps<TReturn>>) {
+    class: className,
+}: RenderableProps<ModalProps>) {
+    const modal = useContext(modalContext)
     return (
         <Fragment>
-            <div class={styles.screen} onClick={bind(undefined, close)} />
-            <div class={styles.modal}>
+            <div
+                class={classNames(styles.screen, {
+                    [styles.closing]: modal.closing,
+                })}
+                onClick={modal.close}
+            />
+            <div
+                class={classNames(styles.modal, {
+                    [styles.closing]: modal.closing,
+                })}
+            >
                 <h2 class={styles.title}>{title}</h2>
-                <button class={styles.close} onClick={bind(undefined, close)}>
+                <button class={styles.close} onClick={modal.close}>
                     x
                 </button>
-                <div class={styles.body}>{children}</div>
+                <div class={classNames(styles.body, className)}>{children}</div>
             </div>
         </Fragment>
     )
-}
-
-export async function openModal<T extends ModalProps<TReturn>, TReturn>(
-    modal: FunctionalComponent<T>,
-    props: Omit<T, keyof ModalProps<TReturn>>,
-): Promise<TReturn | undefined> {
-    return new Promise(resolve => {
-        const openEvent = new ModalOpenEvent(modal, props)
-        modalEventTarget.dispatchEvent(openEvent)
-
-        function close(e: ModalCloseEvent<TReturn>) {
-            if (e.id !== openEvent.id) {
-                return
-            }
-            modalEventTarget.removeEventListener('close', close)
-            resolve(e.value)
-        }
-        modalEventTarget.addEventListener('close', close)
-    })
 }
 
 export function ModalActions({ children }: RenderableProps<unknown>) {
     return <div class={styles.actions}>{children}</div>
 }
 
-export function closeModals(): void {
-    modalEventTarget.dispatchEvent(new Event('closeAll'))
+export function useOpenModal(): (modalURI: string) => void {
+    const { route } = useLocation()
+    return useCallback(
+        uri => {
+            const url = new URL(location.href)
+            url.searchParams.append(MODAL_QUERY, uri)
+            route(url.toString())
+        },
+        [route],
+    )
+}
+export function useCloseModal(): () => void {
+    const modal = useContext(modalContext)
+    return useCallback(() => {
+        modal.close()
+    }, [modal])
+}
+
+export function DefaultModal() {
+    return <Modal title=''>Not Found</Modal>
 }

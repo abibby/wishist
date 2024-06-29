@@ -13,7 +13,8 @@ import (
 )
 
 type ListItemsRequest struct {
-	User    string `query:"user" validate:"required"`
+	User    string `query:"user"`
+	ID      string `query:"id"`
 	Request *http.Request
 }
 type ListItemsResponse []*db.Item
@@ -22,30 +23,46 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 	items := []*db.Item{}
 	uid, ok := userID(r.Request.Context())
 
-	errNoUsers := fmt.Errorf(http.StatusText(http.StatusNotFound))
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		u := &db.User{}
-		err := tx.Get(u, "select * from users where username=?", r.User)
-		if errors.Is(err, sql.ErrNoRows) {
-			return errNoUsers
-		} else if err != nil {
-			return err
-		}
-		query := "select * from items where user_id = ?"
-		args := []any{u.ID}
-		if uid != u.ID && ok {
-			query = `select 
-				items.*,
-				(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='thinking') as thinking_count,
-				(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='purchased') as purchased_count
-			from items
-			where user_id = ?`
-			args = []any{uid, uid, u.ID}
-		}
+	errNotFound := fmt.Errorf(http.StatusText(http.StatusNotFound))
+	if r.User == "" && r.ID == "" {
+		return nil, request.NewHTTPError(fmt.Errorf("must have user or id"), 422)
+	}
+	var err error
+	if r.ID != "" {
+		err = db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+			return tx.Select(&items, `select 
+					items.*,
+					(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='thinking') as thinking_count,
+					(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='purchased') as purchased_count
+				from items
+				where id = ?`, uid, uid, r.ID)
+		})
+	} else {
+		err = db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+			u := &db.User{}
+			err := tx.Get(u, "select * from users where username=?", r.User)
+			if errors.Is(err, sql.ErrNoRows) {
+				return errNotFound
+			} else if err != nil {
+				return err
+			}
+			query := "select * from items where user_id = ?"
+			args := []any{u.ID}
+			if uid != u.ID && ok {
+				query = `select 
+					items.*,
+					(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='thinking') as thinking_count,
+					(select count(*) from user_items where item_id=items.id and user_items.user_id!=? and type='purchased') as purchased_count
+				from items
+				where user_id = ?`
+				args = []any{uid, uid, u.ID}
+			}
 
-		return tx.Select(&items, query, args...)
-	})
-	if err == errNoUsers {
+			return tx.Select(&items, query, args...)
+		})
+	}
+
+	if err == errNotFound {
 		return nil, request.NewHTTPError(err, 404)
 	} else if err != nil {
 		return nil, err

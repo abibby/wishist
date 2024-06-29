@@ -1,16 +1,16 @@
 import { h } from 'preact'
 import { LoginForm } from '../login-form'
-import { Modal, ModalProps } from '../modal'
+import { Modal, useCloseModal } from '../modal'
+import { useRoute } from 'preact-iso'
 
 h
 
-interface LoginModalProps extends ModalProps<void> {
-    message?: string
-}
-
-export function LoginModal({ message, close }: LoginModalProps) {
+export function LoginModal() {
+    const { query } = useRoute()
+    const { message } = query
+    const close = useCloseModal()
     return (
-        <Modal title='Login' close={close}>
+        <Modal title='Login'>
             {message && <p>{message}</p>}
             <LoginForm onLogin={close} />
         </Modal>

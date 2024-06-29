@@ -1,21 +1,23 @@
 import { Fragment, h } from 'preact'
-import { route } from 'preact-router'
 import { useCallback, useState } from 'preact/hooks'
 import { Input } from '../components/form/input'
 import { FetchError } from '../api/internal'
 import { user } from '../api'
 import { Form } from '../components/form/form'
 import { bind } from '@zwzn/spicy'
+import { useLocation } from 'preact-iso'
 
 h
 
 export function CreateUser() {
+    const { route } = useLocation()
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [username, setUser] = useState('')
     const [password1, setPassword1] = useState('')
     const [password2, setPassword2] = useState('')
     const [running, setRunning] = useState(false)
+
     const submit = useCallback(async () => {
         if (running) {
             return
@@ -26,7 +28,6 @@ export function CreateUser() {
                 status: 0,
                 fields: {
                     password: ['Passwords do not match'],
-                    password2: ['Passwords do not match'],
                 },
             })
         }
@@ -38,7 +39,8 @@ export function CreateUser() {
             password: password1,
         })
         route('/awaiting-verification')
-    }, [running, password1, password2, name, email, username])
+    }, [running, password1, password2, name, email, username, route])
+
     return (
         <Fragment>
             <h1>Create User</h1>
@@ -49,6 +51,7 @@ export function CreateUser() {
                     value={username}
                     onInput={setUser}
                     name='username'
+                    autoFocus
                 />
                 <Input
                     title='Email'

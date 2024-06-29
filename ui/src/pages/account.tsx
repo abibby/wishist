@@ -1,24 +1,25 @@
 import { Fragment, h } from 'preact'
 import { getUser, logout } from '../auth'
 import { useCallback, useEffect } from 'preact/hooks'
-import { openModal } from '../components/modal'
-import { ChangePasswordModal } from '../components/modals/change-password'
-import { route } from 'preact-router'
+import { useLocation } from 'preact-iso'
+import { useOpenModal } from '../components/modal'
 import { ButtonList } from '../components/button-list'
 import { useInstallPrompt } from '../hooks/use-install-prompt'
 
 h
 
 export function Account() {
+    const { route } = useLocation()
     const [install, canInstall] = useInstallPrompt()
+    const openModal = useOpenModal()
 
     const changePasswordClick = useCallback(async () => {
-        await openModal(ChangePasswordModal, {})
-    }, [])
+        openModal('/change-password')
+    }, [openModal])
     const logoutClick = useCallback(async () => {
         await logout()
         route('/')
-    }, [])
+    }, [route])
 
     useEffect(() => {
         getUser().then(u => {
@@ -26,15 +27,23 @@ export function Account() {
                 route('/', true)
             }
         })
-    }, [])
+    }, [route])
 
     return (
         <Fragment>
             <h1>Account</h1>
             <ButtonList>
-                <button onClick={logoutClick}>Logout</button>
-                <button onClick={changePasswordClick}>Change Password</button>
-                {canInstall && <button onClick={install}>Install</button>}
+                <button class='light' onClick={logoutClick}>
+                    Logout
+                </button>
+                <button class='light' onClick={changePasswordClick}>
+                    Change Password
+                </button>
+                {canInstall && (
+                    <button class='light' onClick={install}>
+                        Install
+                    </button>
+                )}
             </ButtonList>
         </Fragment>
     )

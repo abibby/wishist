@@ -9,11 +9,15 @@ export default defineConfig(({ mode }): UserConfig => {
         ...process.env,
         ...loadEnv(mode, resolve(__dirname, '..')),
     }
+    const isProd = mode === 'production'
 
     return {
         plugins: [
             preact(),
             VitePWA({
+                strategies: 'injectManifest',
+                srcDir: 'src',
+                filename: 'sw.ts',
                 injectRegister: 'auto',
                 workbox: {
                     globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
@@ -25,7 +29,7 @@ export default defineConfig(({ mode }): UserConfig => {
                     theme_color: '#31363f',
                     background_color: '#222831',
                     start_url: '/',
-                    id: 'ca.wishist',
+                    id: isProd ? 'ca.wishist' : mode + '.ca.wishist',
                     screenshots: [
                         {
                             label: 'Your Wishlist',

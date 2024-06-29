@@ -21,6 +21,7 @@ export function Input(props: InputProps) {
                 type={props.type}
                 value={props.value}
                 onInput={bindValue(props.onInput)}
+                tabIndex={props.tabIndex}
             />
         </FormComponent>
     )

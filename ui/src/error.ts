@@ -13,7 +13,6 @@ function handleError(err: unknown) {
     } else {
         openToast('unknown error')
     }
-    console.error(err)
 }
 
 window.addEventListener('error', e => {

@@ -1,43 +1,30 @@
 import { Fragment, h } from 'preact'
-import { useCallback, useEffect, useState } from 'preact/hooks'
-import { User, friend, user } from '../api'
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
+import { Item, User, UserItem, friend, item, user, userItem } from '../api'
 import { useUser } from '../auth'
-import { ItemList } from '../components/item-list'
-import { openModal } from '../components/modal'
-import { LoginModal } from '../components/modals/login'
-import { FetchError } from '../api/internal'
+import { ItemListEdit } from '../components/item-list-edit'
+import { useOpenModal } from '../components/modal'
 import { ErrorFetchError } from './error-fetch-error'
+import { useRoute } from 'preact-iso'
+import { ItemListReadonly } from '../components/item-list-readonly'
+import { Conditions } from '../components/conditions'
 
 h
 
-interface ListProps {
-    matches: {
-        username: string
-    }
-}
-
-export function List({ matches }: Readonly<ListProps>) {
-    const { username } = matches
+export function List() {
+    const { params } = useRoute()
+    const { username } = params
     const myUser = useUser()
-    const [fetchError, setFetchError] = useState<FetchError>()
     const myList = myUser?.username === username
     const [listUser, setListUser] = useState<User>()
-
-    const [isFriend, setIsFriend] = useState(false)
-    useEffect(() => {
+    const [friends] = friend.useList()
+    const isFriend = useMemo(() => {
         if (myUser === null) {
-            setIsFriend(false)
-        } else {
-            friend
-                .list()
-                .then(friends =>
-                    setIsFriend(
-                        friends.find(f => f.friend_username === username) !==
-                            undefined,
-                    ),
-                )
+            return false
         }
-    }, [username, myUser])
+        return friends?.find(f => f.friend_username === username) !== undefined
+    }, [friends, myUser, username])
+    const openModal = useOpenModal()
 
     useEffect(() => {
         user.get(username).then(u => setListUser(u))
@@ -45,72 +32,53 @@ export function List({ matches }: Readonly<ListProps>) {
 
     const addFriend = useCallback(() => {
         if (myUser !== null) {
-            friend.create({ username: username })
-            setIsFriend(true)
+            friend.create({ friend_username: username })
         } else {
-            openModal(LoginModal, {
-                message: 'You must log in to add a friend.',
-            }).then(userCreated => {
-                if (userCreated) {
-                    friend.create({ username: username })
-                    setIsFriend(true)
-                }
-            })
+            openModal('/login?message=You must log in to add a friend')
         }
-    }, [username, myUser, setIsFriend])
+    }, [myUser, username, openModal])
 
     const removeFriend = useCallback(() => {
-        friend.delete({ username: username })
-        setIsFriend(false)
-    }, [username, setIsFriend])
+        friend.delete({ friend_username: username })
+    }, [username])
 
-    if (fetchError !== undefined) {
-        return <ErrorFetchError err={fetchError} />
+    const [items, err] = item.useList({ user: username })
+    const [userItems] = userItem.useList({ user: username })
+    if (err) {
+        return <ErrorFetchError err={err} />
     }
 
     return (
-        <Fragment>
-            <h1>
-                {myList
-                    ? 'My Wishlist'
-                    : `${listUser?.name ?? username}'s Wishlist`}
-            </h1>
-            {!myList && (
-                <Fragment>
-                    {isFriend ? (
-                        <button onClick={removeFriend}>Remove Friend</button>
-                    ) : (
-                        <Fragment>
-                            <p>
-                                Adding a friend will let you keep track of who
-                                else is thinking about getting items.
-                            </p>
-                            <button class='primary' onClick={addFriend}>
-                                Add Friend
-                            </button>
-                        </Fragment>
-                    )}
-                    {myUser !== null && (
-                        <Fragment>
-                            <p>
-                                Click the 👁️ if you are thinking of buying the
-                                item and the 🛍️ if you have already purchased
-                                it.
-                            </p>
-                            <p>
-                                Clicking on the item will show more how many
-                                people are thinking of buying the item as well
-                                as any related links or descriptions.
-                            </p>
-                        </Fragment>
-                    )}
+        <Conditions>
+            <h1 v-if={myList}>My Wishlist</h1>
+            <Fragment v-else>
+                <h1>{listUser?.name ?? username}'s Wishlist</h1>
+                <button v-if={isFriend} onClick={removeFriend}>
+                    Remove Friend
+                </button>
+                <Fragment v-else>
+                    <p>
+                        Adding a friend will let you keep track of who else is
+                        thinking about getting items.
+                    </p>
+                    <button class='primary' onClick={addFriend}>
+                        Add Friend
+                    </button>
                 </Fragment>
-            )}
-            <ItemList
-                username={username}
-                readonly={!myList}
-                onFetchError={setFetchError}
-            />
-        </Fragment>
+            </Fragment>
+            <ItemList items={items} userItems={userItems} readonly={!myList} />
+        </Conditions>
     )
+}
+
+interface ItemListProps {
+    items: Item[] | undefined
+    userItems: UserItem[] | undefined
+    readonly: boolean
+}
+function ItemList({ items, userItems, readonly }: ItemListProps) {
+    if (readonly) {
+        return <ItemListReadonly items={items} userItems={userItems} />
+    }
+    return <ItemListEdit items={items} />
 }

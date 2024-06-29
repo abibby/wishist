@@ -20,7 +20,7 @@ async function main() {
             <style>
                 circle {
                     stroke: none;
-                    fill: rgba(255,255,255, 0.5);
+                    fill: rgba(255,255,255,0.25);
                 }
             </style>` +
         starts

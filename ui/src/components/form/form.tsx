@@ -5,7 +5,7 @@ import styles from './form.module.css'
 
 export const FormContext = createContext<FetchError | undefined>(undefined)
 
-export interface FormProps {
+export interface FormProps extends JSX.HTMLAttributes<HTMLFormElement> {
     onSubmit(): Promise<void> | void
     onCleanup?: (err: Error | undefined) => void
 }
@@ -14,6 +14,7 @@ export function Form({
     onSubmit,
     onCleanup,
     children,
+    ...props
 }: RenderableProps<FormProps>) {
     const [fetchError, setFetchError] = useState<FetchError>()
     const [errMsg, setErrMsg] = useState<string>()
@@ -50,7 +51,7 @@ export function Form({
 
     return (
         <FormContext.Provider value={fetchError}>
-            <form onSubmit={submit}>
+            <form {...props} onSubmit={submit}>
                 {errElem}
                 {children}
             </form>

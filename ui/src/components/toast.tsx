@@ -1,9 +1,5 @@
 import { Event, EventTarget } from '../events'
-import { h } from 'preact'
-import { useEffect, useState } from 'preact/hooks'
 import styles from './toast.module.css'
-
-h
 
 let lastID = 0
 type ToastData = {
@@ -52,33 +48,27 @@ export async function openToast(msg: string): Promise<void> {
     })
 }
 
-export function ToastController() {
-    const [toasts, setToasts] = useState<ToastData[]>([])
+// Not using preact to prevent an infinite loop if there is an issue setting up
+// preact
+const toastWrapper = document.createElement('div')
+toastWrapper.classList.add(styles.controller)
+document.body.appendChild(toastWrapper)
 
-    useEffect(() => {
-        function onopen(e: OpenEvent) {
-            setToasts(toasts => toasts.concat([e.data]))
-        }
-        function onclose(e: CloseEvent) {
-            setToasts(toasts => toasts.filter(t => t.id !== e.id))
-        }
-
-        toastEvents.addEventListener('open', onopen)
-        toastEvents.addEventListener('close', onclose)
-        return () => {
-            toastEvents.removeEventListener('open', onopen)
-            toastEvents.removeEventListener('close', onclose)
-        }
-    }, [])
-    return (
-        <div class={styles.controller}>
-            {toasts.map(t => (
-                <div class={styles.toast}>
-                    {t.message.split('\n').map(line => (
-                        <p>{line}</p>
-                    ))}
-                </div>
-            ))}
-        </div>
-    )
-}
+toastEvents.addEventListener('open', e => {
+    const { message, id } = e.data
+    const toast = document.createElement('div')
+    toast.dataset.id = String(id)
+    toast.innerHTML = `<div class="${styles.toast}">
+        ${message.split('\n').map(line => `<p>${line}</p>`)}
+    </div>`
+    toast.addEventListener('click', () => {
+        toastEvents.dispatchEvent(new CloseEvent(id))
+    })
+    toastWrapper.appendChild(toast)
+})
+toastEvents.addEventListener('close', e => {
+    const toasts = toastWrapper.querySelectorAll(`[data-id="${e.id}"]`)
+    for (const toast of toasts) {
+        toastWrapper.removeChild(toast)
+    }
+})
