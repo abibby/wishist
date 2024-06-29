@@ -1,5 +1,6 @@
-import { computed, signal } from '@preact/signals-core'
+import { signal } from '@preact/signals-core'
 import { useSignalValue } from './signal'
+import { useCallback } from 'preact/hooks'
 
 export type Outcome = 'accepted' | 'dismissed'
 export interface UserChoice {
@@ -33,27 +34,30 @@ export interface BeforeInstallPromptEvent extends Event {
     prompt(): Promise<UserChoice>
 }
 
-const installEvent = signal<BeforeInstallPromptEvent | undefined>(undefined)
+let installEvent: BeforeInstallPromptEvent | undefined
+const installEventReady = signal(false)
 
 window.addEventListener('beforeinstallprompt', (e: Event) => {
     e.preventDefault()
 
     if (isBeforeInstallPromptEvent(e)) {
-        installEvent.value = e
+        installEventReady.value = true
+        installEvent = e
     }
 })
 
-const comp = computed((): [() => Promise<UserChoice>, boolean] => [
-    installEvent.value?.prompt ?? noopInstall,
-    installEvent.value !== undefined,
-])
-
 export function useInstallPrompt(): [() => Promise<UserChoice>, boolean] {
-    return useSignalValue(comp)
-}
+    const ready = useSignalValue(installEventReady)
 
-async function noopInstall(): Promise<UserChoice> {
-    return { outcome: 'dismissed', platform: '' }
+    const install = useCallback(async (): Promise<UserChoice> => {
+        if (installEvent) {
+            installEvent.prompt()
+            return installEvent.userChoice
+        }
+        return { outcome: 'dismissed', platform: '' }
+    }, [])
+
+    return [install, ready]
 }
 
 function isBeforeInstallPromptEvent(v: Event): v is BeforeInstallPromptEvent {
