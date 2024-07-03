@@ -1,32 +1,13 @@
 import { apiFetch } from './internal'
 
-export interface User {
+export type User = {
     id: number
     name: string
     username: string
 }
 
-export async function user(): Promise<User> {
-    return await apiFetch('/user', {})
-}
-
-export interface CreateUserRequest {
-    name: string
-    email: string
-    username: string
-    password: string
-}
-
-export async function create(request: CreateUserRequest): Promise<User> {
-    return await apiFetch(
-        '/user',
-        {},
-        {
-            method: 'POST',
-            body: JSON.stringify(request),
-            withoutToken: true,
-        },
-    )
+export async function currentUser(): Promise<User> {
+    return await apiFetch('/user/current', {})
 }
 
 export interface ForgotPasswordRequest {
@@ -79,8 +60,4 @@ export async function changePassword(
             body: JSON.stringify(request),
         },
     )
-}
-
-export async function get(username: string): Promise<User> {
-    return await apiFetch('/user/' + encodeURIComponent(username), {})
 }

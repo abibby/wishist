@@ -55,7 +55,7 @@ export function ModalController({ children }: RenderableProps<unknown>) {
 
                             newURL.searchParams.append(MODAL_QUERY, modal.uri)
                         }
-                        loc.route(newURL.toString())
+                        loc.route(newURL.toString(), true)
                     },
                     closing: false,
                 })
@@ -154,7 +154,7 @@ export function useOpenModal(): (modalURI: string) => void {
         uri => {
             const url = new URL(location.href)
             url.searchParams.append(MODAL_QUERY, uri)
-            route(url.toString())
+            route(url.toString(), true)
         },
         [route],
     )

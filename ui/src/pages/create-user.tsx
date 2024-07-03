@@ -2,7 +2,7 @@ import { Fragment, h } from 'preact'
 import { useCallback, useState } from 'preact/hooks'
 import { Input } from '../components/form/input'
 import { FetchError } from '../api/internal'
-import { user } from '../api'
+import { userAPI } from '../api'
 import { Form } from '../components/form/form'
 import { bind } from '@zwzn/spicy'
 import { useLocation } from 'preact-iso'
@@ -32,7 +32,7 @@ export function CreateUser() {
             })
         }
         setRunning(true)
-        await user.create({
+        await userAPI.create({
             name: name,
             email: email,
             username: username,

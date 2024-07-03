@@ -2,9 +2,9 @@ import { Event, EventTarget } from './events'
 import { createStore, delMany, get, set, setMany } from 'idb-keyval'
 import { useEffect, useState } from 'preact/hooks'
 import jwt from './jwt'
-import { User, user } from './api/user'
+import { User, currentUser } from './api/user'
 import { FetchError } from './api/internal'
-import * as authAPI from './api/auth'
+import { authAPI } from './api'
 
 const authStore = createStore('auth-tokens', 'auth-tokens')
 const tokenKey = 'token'
@@ -14,20 +14,17 @@ const userKey = 'user'
 type ChangeEventMap = {
     change: Event<'change'>
 }
-const changes = new EventTarget<ChangeEventMap, 'strict'>()
+export const authChanges = new EventTarget<ChangeEventMap, 'strict'>()
 
 let _token: string | undefined
 let _user: User | undefined
 let _userPromise: Promise<User> | undefined
 
 export async function getUser(): Promise<User | null> {
-    const token = await getToken()
-    if (token === null) {
-        return null
-    }
     if (_user !== undefined) {
         return _user
     }
+
     try {
         let u = await get<User | undefined>(userKey, authStore)
         if (u != undefined) {
@@ -35,7 +32,7 @@ export async function getUser(): Promise<User | null> {
             return u
         }
         if (_userPromise === undefined) {
-            _userPromise = user()
+            _userPromise = currentUser()
         }
         u = await _userPromise
         _userPromise = undefined
@@ -79,7 +76,7 @@ export async function getToken(): Promise<string | null> {
                 ],
                 authStore,
             )
-            changes.dispatchEvent(new Event('change'))
+            authChanges.dispatchEvent(new Event('change'))
         }
 
         return token ?? null
@@ -119,7 +116,7 @@ export async function login(
     } catch (e) {
         console.error('failed to save token', e)
     }
-    changes.dispatchEvent(new Event('change'))
+    authChanges.dispatchEvent(new Event('change'))
     return true
 }
 
@@ -131,7 +128,7 @@ export async function logout() {
     } catch (e) {
         console.error(e)
     }
-    changes.dispatchEvent(new Event('change'))
+    authChanges.dispatchEvent(new Event('change'))
 }
 
 export async function userID(): Promise<number | undefined> {
@@ -156,11 +153,11 @@ export function useUser(): User | null {
         const change = async () => {
             setUser(await getUser())
         }
-        changes.addEventListener('change', change)
+        authChanges.addEventListener('change', change)
         change()
 
         return () => {
-            changes.removeEventListener('change', change)
+            authChanges.removeEventListener('change', change)
         }
     }, [setUser])
     return user

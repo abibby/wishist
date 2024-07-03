@@ -1,21 +1,28 @@
 package db
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/database/builder"
 	"github.com/abibby/salusa/database/model"
 )
 
+//go:generate spice generate:migration
 type User struct {
 	model.BaseModel
 	ID       int    `db:"id,autoincrement,primary" json:"id"`
 	Name     string `db:"name"                     json:"name"`
-	Username string `db:"username"                 json:"username"`
+	Username string `db:"username,unique"          json:"username"`
 	Email    string `db:"email"                    json:"-"`
 	Password []byte `db:"password"                 json:"-"`
 	Lookup   string `db:"lookup"                   json:"-"`
 	Verified bool   `db:"verified"                 json:"-"`
+}
+
+func UserQuery(ctx context.Context) *builder.ModelBuilder[*User] {
+	return builder.From[*User]().WithContext(ctx)
 }
 
 var _ auth.User = (*User)(nil)

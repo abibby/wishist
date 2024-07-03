@@ -1,9 +1,10 @@
+import { db } from '../database'
 import { NoArgs, buildRestModel } from './rest'
-import { User as _User } from './user'
+import { User } from './user'
 
-export type User = _User
+export type { User }
 
-export interface Item {
+export type Item = {
     id: number
     user_id: number
     name: string
@@ -13,56 +14,58 @@ export interface Item {
     purchased_count?: number
 }
 
-export const item = buildRestModel<
+export const itemAPI = buildRestModel<
     Item,
-    { user: string } | { id: string | number },
+    'id',
+    { user_id: number } | { id: number },
     Omit<Item, 'id' | 'user_id'>,
     Omit<Item, 'user_id'>
->('/item', ['id'], (m, params) => {
-    if ('user' in params) {
-        // return params.user === m.user_id
-        return true
-    }
-    if ('id' in params) {
-        return params.id === m.id
-    }
-    return false
-})
+>('/item', 'id', db.items)
 
-export interface Friend {
-    user_id: number
+export type Friend = {
     friend_id: number
     friend_name: string
     friend_username: string
 }
 
-export interface FriendCreateRequest {
-    friend_username: string
-}
-export interface FriendDeleteRequest {
-    friend_username: string
-}
-
-export const friend = buildRestModel<
+export const friendAPI = buildRestModel<
     Friend,
+    'friend_id',
     NoArgs,
-    FriendCreateRequest,
+    Pick<Friend, 'friend_id'>,
     never,
-    FriendDeleteRequest
->('/friend', ['friend_username'], () => true)
+    Pick<Friend, 'friend_id'>
+>('/friend', 'friend_id', db.friends)
 
-export interface UserItem {
-    user_id: number
+export type UserItem = {
+    item_user_id: number
     item_id: number
     type: 'thinking' | 'purchased'
 }
 
-export const userItem = buildRestModel<
+export const userItemAPI = buildRestModel<
     UserItem,
-    { user: string } | { item_id: string | number },
-    Omit<UserItem, 'user_id'>,
-    Omit<UserItem, 'user_id'>,
+    'item_id',
+    { item_user_id: number } | { item_id: number },
+    Omit<UserItem, 'item_user_id'>,
+    Omit<UserItem, 'item_user_id'>,
     Pick<UserItem, 'item_id'>
->('/user-item', ['item_id'], () => true)
+>('/user-item', 'item_id', db.userItems)
 
-export * as user from './user'
+export interface CreateUserRequest {
+    name: string
+    email: string
+    username: string
+    password: string
+}
+
+export const userAPI = buildRestModel<
+    User,
+    'id',
+    { username: string },
+    CreateUserRequest,
+    never,
+    never
+>('/user', 'id', db.users)
+
+export * as authAPI from './auth'

@@ -1,6 +1,6 @@
 import { Fragment, h } from 'preact'
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
-import { Item, User, UserItem, friend, item, user, userItem } from '../api'
+import { useCallback, useMemo } from 'preact/hooks'
+import { User, friendAPI, itemAPI, userAPI, userItemAPI } from '../api'
 import { useUser } from '../auth'
 import { ItemListEdit } from '../components/item-list-edit'
 import { useOpenModal } from '../components/modal'
@@ -15,70 +15,91 @@ export function List() {
     const { params } = useRoute()
     const { username } = params
     const myUser = useUser()
-    const myList = myUser?.username === username
-    const [listUser, setListUser] = useState<User>()
-    const [friends] = friend.useList()
+
+    const [listUser, fetchError] = userAPI.useListFirst({ username: username })
+
+    if (fetchError !== undefined) {
+        return <ErrorFetchError err={fetchError} />
+    }
+    if (listUser === undefined) {
+        return <div>loading...</div>
+    }
+
+    if (myUser?.id === listUser.id) {
+        return <MyList listUser={listUser} />
+    }
+    return <OtherList listUser={listUser} activeUser={myUser} />
+}
+
+interface MyListProps {
+    listUser: User
+}
+
+function MyList({ listUser }: MyListProps) {
+    const [items, err] = itemAPI.useList({ user_id: listUser.id })
+    if (err) {
+        return <ErrorFetchError err={err} />
+    }
+
+    return (
+        <Fragment>
+            <h1>My Wishlist</h1>
+            <ItemListEdit items={items} />
+        </Fragment>
+    )
+}
+
+interface OtherListProps {
+    listUser: User
+    activeUser: User | null
+}
+
+function OtherList({ listUser, activeUser }: OtherListProps) {
+    const openModal = useOpenModal()
+    const loggedIn = activeUser !== null
+
+    const [friends] = friendAPI.useList()
     const isFriend = useMemo(() => {
-        if (myUser === null) {
+        if (!loggedIn) {
             return false
         }
-        return friends?.find(f => f.friend_username === username) !== undefined
-    }, [friends, myUser, username])
-    const openModal = useOpenModal()
-
-    useEffect(() => {
-        user.get(username).then(u => setListUser(u))
-    }, [username])
+        return !!friends?.find(f => f.friend_id === listUser.id)
+    }, [friends, listUser.id, loggedIn])
 
     const addFriend = useCallback(() => {
-        if (myUser !== null) {
-            friend.create({ friend_username: username })
+        if (loggedIn) {
+            friendAPI.create({ friend_id: listUser.id })
         } else {
             openModal('/login?message=You must log in to add a friend')
         }
-    }, [myUser, username, openModal])
+    }, [listUser.id, loggedIn, openModal])
 
     const removeFriend = useCallback(() => {
-        friend.delete({ friend_username: username })
-    }, [username])
+        friendAPI.delete({ friend_id: listUser.id })
+    }, [listUser.id])
 
-    const [items, err] = item.useList({ user: username })
-    const [userItems] = userItem.useList({ user: username })
+    const [items, err] = itemAPI.useList({ user_id: listUser.id })
+    const [userItems] = userItemAPI.useList({ item_user_id: listUser.id })
     if (err) {
         return <ErrorFetchError err={err} />
     }
 
     return (
         <Conditions>
-            <h1 v-if={myList}>My Wishlist</h1>
+            <h1>{listUser.name}'s Wishlist</h1>
+            <button v-if={isFriend} onClick={removeFriend}>
+                Remove Friend
+            </button>
             <Fragment v-else>
-                <h1>{listUser?.name ?? username}'s Wishlist</h1>
-                <button v-if={isFriend} onClick={removeFriend}>
-                    Remove Friend
+                <p>
+                    Adding a friend will let you keep track of who else is
+                    thinking about getting items.
+                </p>
+                <button class='primary' onClick={addFriend}>
+                    Add Friend
                 </button>
-                <Fragment v-else>
-                    <p>
-                        Adding a friend will let you keep track of who else is
-                        thinking about getting items.
-                    </p>
-                    <button class='primary' onClick={addFriend}>
-                        Add Friend
-                    </button>
-                </Fragment>
             </Fragment>
-            <ItemList items={items} userItems={userItems} readonly={!myList} />
+            <ItemListReadonly items={items} userItems={userItems} />
         </Conditions>
     )
-}
-
-interface ItemListProps {
-    items: Item[] | undefined
-    userItems: UserItem[] | undefined
-    readonly: boolean
-}
-function ItemList({ items, userItems, readonly }: ItemListProps) {
-    if (readonly) {
-        return <ItemListReadonly items={items} userItems={userItems} />
-    }
-    return <ItemListEdit items={items} />
 }

@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import debounce from 'lodash.debounce'
 import { h } from 'preact'
 import { useCallback, useState } from 'preact/hooks'
-import { item, Item } from '../api'
+import { itemAPI, Item } from '../api'
 import styles from './item-list.module.css'
 import { useFlash } from '../hooks/use-flash'
 import { useOpenModal } from './modal'
@@ -12,10 +12,10 @@ import { Spinner } from './spinner'
 
 h
 
-const debouncedItemUpdate: typeof item.update = debounce(
-    item.update,
+const debouncedItemUpdate: typeof itemAPI.update = debounce(
+    itemAPI.update,
     500,
-) as typeof item.update
+) as typeof itemAPI.update
 
 export interface ItemListEditProps {
     items: Item[] | undefined
@@ -31,7 +31,7 @@ export function ItemListEdit({ items }: ItemListEditProps) {
             return
         }
         setAdding(true)
-        await item.create({
+        await itemAPI.create({
             name: newItem,
             description: '',
             url: '',

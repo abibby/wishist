@@ -22,6 +22,7 @@ import (
 	"github.com/abibby/wishist/config"
 	"github.com/abibby/wishist/controller"
 	"github.com/abibby/wishist/db"
+	"github.com/abibby/wishist/db/migrations"
 	"github.com/abibby/wishist/ui"
 )
 
@@ -59,13 +60,13 @@ func main() {
 
 	err := config.Init()
 	if err != nil {
-		slog.Error("failed initialize config ", err)
+		slog.Error("failed initialize config", "error", err)
 		os.Exit(1)
 	}
 
 	err = view.Register(emails, "**/*.html")(ctx)
 	if err != nil {
-		slog.Error("failed register emails ", err)
+		slog.Error("failed register emails", "error", err)
 		os.Exit(1)
 	}
 
@@ -73,13 +74,7 @@ func main() {
 		return config.Config
 	})
 	// must be before the db.Open because of dumb di stuff
-	_ = salusadi.Register[*db.User](nil)(ctx)
-
-	err = db.Migrate()
-	if err != nil {
-		slog.Error("failed to migrate database", "error", err)
-		os.Exit(1)
-	}
+	_ = salusadi.Register[*db.User](migrations.Use())(ctx)
 
 	auth.SetAppKey(config.AppKey)
 
@@ -89,7 +84,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	mime.AddExtensionType(".webmanifest", "application/manifest+json")
+	err = mime.AddExtensionType(".webmanifest", "application/manifest+json")
+	if err != nil {
+		slog.Error("failed to add .webmanifest mimetype", "error", err)
+		os.Exit(1)
+	}
 
 	r := router.New()
 
@@ -105,7 +104,6 @@ func main() {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := time.Now()
 			sr := NewStatusRecorder(w)
-
 			h.ServeHTTP(sr, r)
 
 			slog.Info("request",
@@ -130,13 +128,15 @@ func main() {
 			}
 		}, "reset-password")
 
+		r.Get("/login", http.RedirectHandler("/?m=/login", http.StatusFound)).Name("login")
+
 		r.Get("/item", controller.ItemList)
-		r.Get("/user/{username}", controller.GetUser)
+		r.Get("/user", controller.UserList)
 
 		r.Group("", func(r *router.Router) {
 			r.Use(auth.LoggedIn())
 
-			r.Get("/user", controller.GetCurrentUser)
+			r.Get("/user/current", controller.GetCurrentUser)
 
 			r.Group("/item", func(r *router.Router) {
 				r.Post("", controller.ItemCreate)

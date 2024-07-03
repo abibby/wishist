@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { FetchError, apiFetch } from './internal'
 import { Event, EventTarget } from '../events'
+import { EntityTable, IDType } from 'dexie'
+import { authChanges } from '../auth'
 
 class ModelEvent<T> extends Event {
     constructor(type: string, public readonly models: T[]) {
@@ -9,49 +11,86 @@ class ModelEvent<T> extends Event {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function idsMatch(a: any, b: any, pkeys: string[]): boolean {
-    if (pkeys.length === 0) {
-        return false
+function idsMatch(a: any, b: any, pkey: string): boolean {
+    return pkey in a && pkey in b && a[pkey] === b[pkey]
+}
+
+function match<T extends Record<string, unknown>>(
+    model: T,
+    filter?: Partial<T>,
+): boolean {
+    if (filter === undefined) {
+        return true
     }
-    for (const pkey of pkeys) {
-        if (!(pkey in a && pkey in b) || a[pkey] !== b[pkey]) {
+    for (const [key, value] of Object.entries(filter)) {
+        if (model[key] !== value) {
             return false
         }
     }
     return true
 }
 
+function firstOrAll<T>(v: T[]): T | T[] {
+    if (v.length === 1) {
+        return v[0]
+    }
+    return v
+}
+
 export type NoArgs = { __no_args__: symbol }
 export function buildRestModel<
-    T extends Record<keyof unknown, unknown>,
+    T extends Record<string, unknown>,
+    K extends keyof T & string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TListRequest extends Record<string, any> | NoArgs = NoArgs,
+    TListRequest extends Partial<T> | NoArgs = NoArgs,
     TCreateRequest = T extends { id: unknown } ? Omit<T, 'id'> : T,
     TUpdateRequest = T,
     TDeleteRequest = T extends { id: unknown } ? Pick<T, 'id'> : T,
->(
-    url: string,
-    pkeys: string[],
-    match: (
-        model: T,
-        ...request: TListRequest extends NoArgs ? [] : [TListRequest]
-    ) => boolean,
-) {
+>(url: string, pkey: K, table: EntityTable<T, K>) {
     const buss = new EventTarget<Record<string, ModelEvent<T>>>()
+
+    async function put(e: ModelEvent<T>): Promise<void> {
+        await table.bulkPut(e.models)
+    }
+    async function remove(e: ModelEvent<T>): Promise<void> {
+        await table.bulkDelete(e.models.map(m => m[pkey] as IDType<T, K>))
+    }
+
+    buss.addEventListener('update', put)
+    buss.addEventListener('create', put)
+    buss.addEventListener('delete', remove)
+
     return {
+        useListFirst(
+            ...request: TListRequest extends NoArgs ? [] : [TListRequest]
+        ): [T | undefined, FetchError | undefined] {
+            const [models, fetchError] = this.useList(...request)
+            return [models?.[0], fetchError]
+        },
         useList(
             ...request: TListRequest extends NoArgs ? [] : [TListRequest]
         ): [T[] | undefined, FetchError | undefined] {
+            const [auth, setAuth] = useState(0)
             const req = useMemo(() => {
                 return request
                 // eslint-disable-next-line react-hooks/exhaustive-deps
             }, [JSON.stringify(request)])
 
+            useEffect(() => {
+                function authChange() {
+                    setAuth(a => a + 1)
+                }
+                authChanges.addEventListener('change', authChange)
+                return () =>
+                    authChanges.removeEventListener('change', authChange)
+            })
+
             const matchRef = useRef<(model: T) => boolean>(() => false)
             const [result, setResult] = useState<T[]>()
             const [err, setErr] = useState<FetchError>()
             useEffect(() => {
-                matchRef.current = (model: T) => match(model, ...req)
+                const filters = req[0]
+                matchRef.current = (model: T) => match(model, filters)
                 this.list(...req)
                     .then(models => {
                         setResult(models)
@@ -66,7 +105,23 @@ export function buildRestModel<
                             throw e
                         }
                     })
-            }, [req])
+
+                if (filters) {
+                    table
+                        .where(firstOrAll(Object.keys(filters)))
+                        .equals(firstOrAll(Object.values(filters)))
+                        .toArray()
+                        .then(models => {
+                            setResult(models)
+                            setErr(undefined)
+                        })
+                } else {
+                    table.toArray().then(models => {
+                        setResult(models)
+                        setErr(undefined)
+                    })
+                }
+            }, [req, auth])
 
             useEffect(() => {
                 const create = (e: ModelEvent<T>) => {
@@ -76,7 +131,7 @@ export function buildRestModel<
                     setResult(r =>
                         r?.map(r => {
                             for (const model of e.models) {
-                                if (idsMatch(r, model, pkeys)) {
+                                if (idsMatch(r, model, pkey)) {
                                     return model
                                 }
                             }
@@ -88,7 +143,7 @@ export function buildRestModel<
                     setResult(r =>
                         r?.filter(r => {
                             for (const model of e.models) {
-                                if (idsMatch(r, model, pkeys)) {
+                                if (idsMatch(r, model, pkey)) {
                                     return false
                                 }
                             }

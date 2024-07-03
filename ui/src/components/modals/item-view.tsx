@@ -1,7 +1,7 @@
 import { Fragment, h } from 'preact'
 import { Modal, ModalActions } from '../modal'
 import { useRoute } from 'preact-iso'
-import { UserItem, item as itemAPI, userItem } from '../../api'
+import { UserItem, itemAPI, userItemAPI } from '../../api'
 import classNames from 'classnames'
 import styles from './item-view.module.css'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
@@ -23,8 +23,8 @@ export function ItemViewModal() {
     const { params } = useRoute()
     const { id } = params
 
-    const [items, err] = itemAPI.useList({ id: id })
-    const [userItems] = userItem.useList({ item_id: id })
+    const [items, err] = itemAPI.useList({ id: Number(id) })
+    const [userItems] = userItemAPI.useList({ item_id: Number(id) })
     const item = items?.[0] ?? emptyItem
     const ui = userItems?.[0]
     const isThinking = ui?.type === 'thinking'
@@ -33,7 +33,7 @@ export function ItemViewModal() {
     const setType = useCallback(
         async (type: UserItem['type']) => {
             if (ui?.type === type) {
-                await userItem.delete({ item_id: Number(id) })
+                await userItemAPI.delete({ item_id: Number(id) })
                 return
             }
             const uid = await userID()
@@ -46,9 +46,9 @@ export function ItemViewModal() {
                 type: type,
             }
             if (ui?.type !== undefined) {
-                await userItem.update(newUserItem)
+                await userItemAPI.update(newUserItem)
             } else {
-                await userItem.create(newUserItem)
+                await userItemAPI.create(newUserItem)
             }
         },
         [id, ui?.type],
