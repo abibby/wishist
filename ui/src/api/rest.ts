@@ -65,6 +65,15 @@ export function buildRestModel<
             ...request: TListRequest extends NoArgs ? [] : [TListRequest]
         ): [T | undefined, FetchError | undefined] {
             const [models, fetchError] = this.useList(...request)
+            if (models && models.length === 0) {
+                return [
+                    undefined,
+                    new FetchError('404 Not Found', 404, {
+                        error: 'Not Found',
+                        status: 404,
+                    }),
+                ]
+            }
             return [models?.[0], fetchError]
         },
         useList(
