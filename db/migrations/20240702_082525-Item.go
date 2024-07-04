@@ -14,8 +14,6 @@ func init() {
 			table.String("name")
 			table.String("description")
 			table.String("url")
-			table.Int("thinking_count").Nullable()
-			table.Int("purchased_count").Nullable()
 		}),
 		Down: schema.DropIfExists("items"),
 	})

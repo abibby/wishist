@@ -16,8 +16,8 @@ type Item struct {
 	Name           string     `db:"name"                     json:"name"`
 	Description    string     `db:"description"              json:"description"`
 	URL            string     `db:"url"                      json:"url"`
-	ThinkingCount  *nulls.Int `db:"thinking_count"           json:"thinking_count,omitempty"`
-	PurchasedCount *nulls.Int `db:"purchased_count"          json:"purchased_count,omitempty"`
+	ThinkingCount  *nulls.Int `db:"thinking_count,readonly"  json:"thinking_count,omitempty"`
+	PurchasedCount *nulls.Int `db:"purchased_count,readonly" json:"purchased_count,omitempty"`
 }
 
 func ItemQuery(ctx context.Context) *builder.ModelBuilder[*Item] {
