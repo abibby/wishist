@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
-import { FetchError, apiFetch } from './internal'
+import { apiFetch } from './internal'
+import { FetchError } from './fetch-error'
 import { Event, EventTarget } from '../events'
 import { EntityTable, IDType } from 'dexie'
 import { authChanges } from '../auth'
@@ -37,11 +38,12 @@ function firstOrAll<T>(v: T[]): T | T[] {
     return v
 }
 
+type UseListStatus = 'loading' | 'cache' | 'network'
+
 export type NoArgs = { __no_args__: symbol }
 export function buildRestModel<
     T extends Record<string, unknown>,
     K extends keyof T & string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     TListRequest extends Partial<T> | NoArgs = NoArgs,
     TCreateRequest = T extends { id: unknown } ? Omit<T, 'id'> : T,
     TUpdateRequest = T,
@@ -63,22 +65,23 @@ export function buildRestModel<
     return {
         useListFirst(
             ...request: TListRequest extends NoArgs ? [] : [TListRequest]
-        ): [T | undefined, FetchError | undefined] {
-            const [models, fetchError] = this.useList(...request)
-            if (models && models.length === 0) {
+        ): [T | undefined, FetchError | undefined, UseListStatus] {
+            const [models, fetchError, status] = this.useList(...request)
+            if (status === 'network' && models && models.length === 0) {
                 return [
                     undefined,
                     new FetchError('404 Not Found', 404, {
                         error: 'Not Found',
                         status: 404,
                     }),
+                    status,
                 ]
             }
-            return [models?.[0], fetchError]
+            return [models?.[0], fetchError, status]
         },
         useList(
             ...request: TListRequest extends NoArgs ? [] : [TListRequest]
-        ): [T[] | undefined, FetchError | undefined] {
+        ): [T[] | undefined, FetchError | undefined, UseListStatus] {
             const [auth, setAuth] = useState(0)
             const req = useMemo(() => {
                 return request
@@ -95,62 +98,77 @@ export function buildRestModel<
             })
 
             const matchRef = useRef<(model: T) => boolean>(() => false)
-            const [result, setResult] = useState<T[]>()
-            const [err, setErr] = useState<FetchError>()
+            const [result, setResult] = useState<
+                [T[] | undefined, FetchError | undefined, UseListStatus]
+            >([undefined, undefined, 'loading'])
             useEffect(() => {
                 const filters = req[0]
                 matchRef.current = (model: T) => match(model, filters)
-                this.list(...req)
-                    .then(models => {
-                        setResult(models)
-                        setErr(undefined)
-                    })
-                    .catch(e => {
-                        setResult(undefined)
+
+                // Network fetch
+                ;(async () => {
+                    try {
+                        const models = await this.list(...req)
+                        setResult([models, undefined, 'network'])
+                    } catch (e) {
                         if (e instanceof FetchError) {
-                            setErr(e)
+                            setResult(([value, err, status]) => {
+                                if (value !== undefined) {
+                                    return [value, err, status]
+                                }
+                                return [undefined, e, 'network']
+                            })
                         } else {
-                            setErr(undefined)
                             throw e
                         }
-                    })
+                    }
+                })()
 
-                if (filters) {
-                    table
-                        .where(firstOrAll(Object.keys(filters)))
-                        .equals(firstOrAll(Object.values(filters)))
-                        .toArray()
-                        .then(models => {
-                            setResult(models)
-                            setErr(undefined)
-                        })
-                } else {
-                    table.toArray().then(models => {
-                        setResult(models)
-                        setErr(undefined)
+                // Cache fetch
+                ;(async () => {
+                    let models: T[]
+                    if (filters) {
+                        models = await table
+                            .where(firstOrAll(Object.keys(filters)))
+                            .equals(firstOrAll(Object.values(filters)))
+                            .toArray()
+                    } else {
+                        models = await table.toArray()
+                    }
+                    setResult(([value, err, status]) => {
+                        if (value !== undefined && status === 'network') {
+                            return [value, err, status]
+                        }
+                        return [models, undefined, 'cache']
                     })
-                }
+                })()
             }, [req, auth])
 
             useEffect(() => {
                 const create = (e: ModelEvent<T>) => {
-                    setResult(r => r?.concat(e.models.filter(matchRef.current)))
+                    setResult(([models, err, state]) => [
+                        models?.concat(e.models.filter(matchRef.current)),
+                        err,
+                        state,
+                    ])
                 }
                 const update = (e: ModelEvent<T>) => {
-                    setResult(r =>
-                        r?.map(r => {
-                            for (const model of e.models) {
-                                if (idsMatch(r, model, pkey)) {
+                    setResult(([models, err, state]) => [
+                        models?.map(model => {
+                            for (const newModel of e.models) {
+                                if (idsMatch(model, newModel, pkey)) {
                                     return model
                                 }
                             }
-                            return r
+                            return model
                         }),
-                    )
+                        err,
+                        state,
+                    ])
                 }
                 const del = (e: ModelEvent<T>) => {
-                    setResult(r =>
-                        r?.filter(r => {
+                    setResult(([models, err, state]) => [
+                        models?.filter(r => {
                             for (const model of e.models) {
                                 if (idsMatch(r, model, pkey)) {
                                     return false
@@ -158,7 +176,9 @@ export function buildRestModel<
                             }
                             return true
                         }),
-                    )
+                        err,
+                        state,
+                    ])
                 }
                 buss.addEventListener('create', create)
                 buss.addEventListener('update', update)
@@ -169,7 +189,7 @@ export function buildRestModel<
                     buss.removeEventListener('delete', del)
                 }
             }, [])
-            return [result, err]
+            return result
         },
         async list(
             ...request: TListRequest extends NoArgs ? [] : [TListRequest]

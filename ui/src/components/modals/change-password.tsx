@@ -2,7 +2,7 @@ import { h } from 'preact'
 import { Modal, ModalActions, useCloseModal } from '../modal'
 import { useCallback, useState } from 'preact/hooks'
 import { Input } from '../form/input'
-import { FetchError } from '../../api/internal'
+import { FetchError } from '../../api'
 import { changePassword } from '../../api/user'
 
 h

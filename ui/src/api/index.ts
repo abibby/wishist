@@ -1,8 +1,10 @@
 import { db } from '../database'
+import { FetchError } from './fetch-error'
 import { NoArgs, buildRestModel } from './rest'
 import { User } from './user'
 
 export type { User }
+export { FetchError }
 
 export type Item = {
     id: number

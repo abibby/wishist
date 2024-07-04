@@ -1,5 +1,5 @@
 import { Fragment, h } from 'preact'
-import { FetchError } from '../api/internal'
+import { FetchError } from '../api'
 
 h
 
