@@ -114,14 +114,6 @@ export async function logout() {
     authChanges.dispatchEvent(new Event('change'))
 }
 
-export async function userID(): Promise<number | undefined> {
-    const token = await getToken()
-    if (token === null) {
-        return undefined
-    }
-    return Number(jwt.parse(token).claims.sub)
-}
-
 export function useUser(): [User | null, boolean] {
     const user = useSignalValue(userSignal)
     return [user ?? null, user !== undefined]

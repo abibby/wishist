@@ -73,10 +73,8 @@ type AddItemResponse *db.Item
 
 var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error) {
 	item := &db.Item{}
-	uid, ok := userID(r.Ctx)
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Ctx)
+
 	item.UserID = uid
 	item.Name = r.Name
 	item.Description = r.Description

@@ -6,7 +6,6 @@ import classNames from 'classnames'
 import styles from './item-view.module.css'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
 import { useCallback } from 'preact/hooks'
-import { userID } from '../../auth'
 import { bind } from '@zwzn/spicy'
 
 h
@@ -36,12 +35,8 @@ export function ItemViewModal() {
                 await userItemAPI.delete({ item_id: Number(id) })
                 return
             }
-            const uid = await userID()
-            if (uid == undefined) {
-                throw new Error('Must be logged in to update purchase state')
-            }
+
             const newUserItem = {
-                user_id: uid,
                 item_id: Number(id),
                 type: type,
             }
@@ -129,13 +124,15 @@ function ItemLink({ url }: { url: string }) {
     )
 }
 function formatCount(you: boolean, count: number): string {
-    if (you && count === 0) {
+    if (you) {
         if (count === 0) {
             return 'Only you'
-        } else {
-            return 'You + ' + count
         }
+        return 'You + ' + count
     }
 
+    if (count === 0) {
+        return 'No one'
+    }
     return String(count)
 }

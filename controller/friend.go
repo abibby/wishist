@@ -17,10 +17,7 @@ type ListFriendsResponse []*db.Friend
 
 var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 	friends := []*db.Friend{}
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		return tx.Select(
 			&friends,
@@ -48,10 +45,7 @@ type AddFriendRequest struct {
 type AddFriendResponse *db.Friend
 
 var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Request.Context())
 
 	friend := &db.User{}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
@@ -84,10 +78,7 @@ type RemoveFriendResponse struct {
 }
 
 var FriendDelete = request.Handler(func(r *RemoveFriendRequest) (any, error) {
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM friends WHERE user_id=? AND friend_id=?", uid, r.FriendID)
 		return err

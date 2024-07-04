@@ -24,10 +24,7 @@ type ListUserItemsResponse []*db.UserItem
 var UserItemList = request.Handler(func(r *ListUserItemsRequest) (any, error) {
 	userItems := []*db.UserItem{}
 
-	uid, ok := userID(r.Ctx)
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Ctx)
 	if r.UserID == 0 && r.ItemID == 0 {
 		return nil, request.NewHTTPError(fmt.Errorf("must have user or item_id"), 422)
 	}
@@ -77,10 +74,7 @@ type UserItemCreateRequest struct {
 type UserItemCreateResponse *db.UserItem
 
 var UserItemCreate = request.Handler(func(r *UserItemCreateRequest) (any, error) {
-	uid, ok := userID(r.Ctx)
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Ctx)
 
 	userItem := &db.UserItem{
 		UserID: uid,
@@ -117,10 +111,7 @@ type EditUserItemRequest struct {
 type EditUserItemResponse *db.UserItem
 
 var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (any, error) {
-	uid, ok := userID(r.Ctx)
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Ctx)
 
 	var userItem *db.UserItem
 	err := r.Update(func(tx *sqlx.Tx) error {
@@ -165,10 +156,7 @@ type RemoveUserItemResponse struct {
 }
 
 var UserItemDelete = request.Handler(func(r *RemoveUserItemRequest) (any, error) {
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM user_items WHERE user_id=? AND item_id=?", uid, r.ItemID)
 		return err

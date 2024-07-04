@@ -2,15 +2,18 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/request"
 )
 
 func mustUserID(ctx context.Context) int {
 	uid, ok := userID(ctx)
 	if !ok {
-		panic("no user id")
+		panic(request.NewHTTPError(fmt.Errorf(http.StatusText(401)), 401))
 	}
 	return uid
 }
