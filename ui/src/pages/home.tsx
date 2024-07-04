@@ -9,7 +9,7 @@ import { ErrorFetchError } from './error-fetch-error'
 h
 
 export function Home() {
-    const user = useUser()
+    const [user] = useUser()
     const [friends, err] = friendAPI.useList()
 
     if (user === null) {

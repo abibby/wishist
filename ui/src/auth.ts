@@ -1,10 +1,11 @@
 import { Event, EventTarget } from './events'
-import { createStore, delMany, get, set, setMany } from 'idb-keyval'
-import { useEffect, useState } from 'preact/hooks'
+import { createStore, delMany, get, setMany } from 'idb-keyval'
 import jwt from './jwt'
 import { User, currentUser } from './api/user'
 import { FetchError } from './api/internal'
 import { authAPI } from './api'
+import { signal } from '@preact/signals-core'
+import { useSignalValue } from './hooks/signal'
 
 const authStore = createStore('auth-tokens', 'auth-tokens')
 const tokenKey = 'token'
@@ -16,38 +17,21 @@ type ChangeEventMap = {
 }
 export const authChanges = new EventTarget<ChangeEventMap, 'strict'>()
 
-let _token: string | undefined
-let _user: User | undefined
-let _userPromise: Promise<User> | undefined
-
-export async function getUser(): Promise<User | null> {
-    if (_user !== undefined) {
-        return _user
-    }
-
+authChanges.addEventListener('change', async () => {
     try {
-        let u = await get<User | undefined>(userKey, authStore)
-        if (u != undefined) {
-            _user = u
-            return u
-        }
-        if (_userPromise === undefined) {
-            _userPromise = currentUser()
-        }
-        u = await _userPromise
-        _userPromise = undefined
-        _user = u
-        await set(userKey, u, authStore)
-        return u
+        userSignal.value = await currentUser()
     } catch (e) {
         if (e instanceof FetchError && e.status === 401) {
-            // fallthrough
-        } else {
-            console.warn(e)
+            userSignal.value = null
+            return
         }
-        return null
+        throw e
     }
-}
+})
+
+let _token: string | undefined
+
+const userSignal = signal<User | null | undefined>(undefined)
 
 export async function getToken(): Promise<string | null> {
     if (_token !== undefined) {
@@ -122,7 +106,6 @@ export async function login(
 
 export async function logout() {
     _token = undefined
-    _user = undefined
     try {
         await delMany([tokenKey, refreshKey, userKey], authStore)
     } catch (e) {
@@ -139,26 +122,7 @@ export async function userID(): Promise<number | undefined> {
     return Number(jwt.parse(token).claims.sub)
 }
 
-export async function username(): Promise<string | undefined> {
-    const user = await getUser()
-    if (user === null) {
-        return undefined
-    }
-    return user.username
-}
-
-export function useUser(): User | null {
-    const [user, setUser] = useState<User | null>(null)
-    useEffect(() => {
-        const change = async () => {
-            setUser(await getUser())
-        }
-        authChanges.addEventListener('change', change)
-        change()
-
-        return () => {
-            authChanges.removeEventListener('change', change)
-        }
-    }, [setUser])
-    return user
+export function useUser(): [User | null, boolean] {
+    const user = useSignalValue(userSignal)
+    return [user ?? null, user !== undefined]
 }

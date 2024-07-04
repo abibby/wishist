@@ -14,7 +14,7 @@ h
 export function List() {
     const { params } = useRoute()
     const { username } = params
-    const myUser = useUser()
+    const [activeUser] = useUser()
 
     const [listUser, fetchError] = userAPI.useListFirst({ username: username })
 
@@ -25,17 +25,17 @@ export function List() {
         return <div>loading...</div>
     }
 
-    if (myUser?.id === listUser.id) {
-        return <MyList listUser={listUser} />
+    if (activeUser?.id === listUser.id) {
+        return <ActiveUserList listUser={listUser} />
     }
-    return <OtherList listUser={listUser} activeUser={myUser} />
+    return <OtherUserList listUser={listUser} activeUser={activeUser} />
 }
 
 interface MyListProps {
     listUser: User
 }
 
-function MyList({ listUser }: MyListProps) {
+function ActiveUserList({ listUser }: MyListProps) {
     const [items, err] = itemAPI.useList({ user_id: listUser.id })
     if (err) {
         return <ErrorFetchError err={err} />
@@ -54,7 +54,7 @@ interface OtherListProps {
     activeUser: User | null
 }
 
-function OtherList({ listUser, activeUser }: OtherListProps) {
+function OtherUserList({ listUser, activeUser }: OtherListProps) {
     const openModal = useOpenModal()
     const loggedIn = activeUser !== null
 
