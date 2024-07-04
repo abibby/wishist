@@ -1,133 +1,150 @@
 package controller
 
 import (
-	"database/sql"
-	"errors"
+	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/abibby/salusa/database"
+	"github.com/abibby/salusa/database/model"
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
 )
 
 type ListUserItemsRequest struct {
-	User    string `query:"user"`
-	ItemID  string `query:"item_id"`
-	Request *http.Request
+	UserID int `query:"item_user_id"`
+	ItemID int `query:"item_id"`
+
+	Read database.Read   `inject:""`
+	Ctx  context.Context `inject:""`
 }
 type ListUserItemsResponse []*db.UserItem
 
 var UserItemList = request.Handler(func(r *ListUserItemsRequest) (any, error) {
-	items := []*db.UserItem{}
-	errNoUsers := fmt.Errorf("Not Found")
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
-	if r.User == "" && r.ItemID == "" {
+	userItems := []*db.UserItem{}
+
+	uid := mustUserID(r.Ctx)
+	if r.UserID == 0 && r.ItemID == 0 {
 		return nil, request.NewHTTPError(fmt.Errorf("must have user or item_id"), 422)
 	}
-	var err error
-	if r.ItemID != "" {
-		err = db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-			return tx.Select(
-				&items,
-				`select
-					user_items.*
-				from user_items
-				join items on user_items.item_id=items.id
-				where
-					user_items.user_id = ?
-					and items.user_id != ?
-					and items.id = ?`,
-				uid, uid, r.ItemID,
-			)
-		})
-	} else {
-		err = db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-			u := &db.User{}
-			err := tx.Get(u, "select * from users where username=?", r.User)
-			if errors.Is(err, sql.ErrNoRows) {
-				return errNoUsers
-			} else if err != nil {
-				return err
-			}
 
-			if u.ID == uid {
-				return nil
-			}
-			return tx.Select(
-				&items,
-				`select
-					user_items.*
-				from user_items
-				join items on user_items.item_id=items.id
-				where
-					user_items.user_id = ?
-					and items.user_id = ?`,
-				uid, u.ID,
-			)
-		})
+	if r.UserID == uid {
+		return userItems, nil
 	}
-	if err == errNoUsers {
-		return nil, request.NewHTTPError(err, 404)
-	} else if err != nil {
+
+	err := r.Read(func(tx *sqlx.Tx) error {
+		q := db.UserItemQuery(r.Ctx).
+			Select("user_items.*", "items.user_id as item_user_id").
+			Join("items", "user_items.item_id", "=", "items.id").
+			Where("user_items.user_id", "=", uid).
+			Where("items.user_id", "!=", uid)
+
+		if r.UserID != 0 {
+			q = q.Where("items.user_id", "=", r.UserID)
+		}
+		if r.ItemID != 0 {
+			q = q.Where("item_id", "=", r.ItemID)
+		}
+
+		ui, err := q.Get(tx)
+		if err != nil {
+			return err
+		}
+		userItems = ui
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
-	return ListUserItemsResponse(items), nil
+
+	for _, ui := range userItems {
+		ui.ItemUserID = r.UserID
+	}
+	return ListUserItemsResponse(userItems), nil
 })
 
 type UserItemCreateRequest struct {
-	ItemID  int    `json:"item_id" validate:"required"`
-	Type    string `json:"type"    validate:"required|in:thinking,purchased"`
-	Request *http.Request
+	ItemID int    `json:"item_id" validate:"required"`
+	Type   string `json:"type"    validate:"required|in:thinking,purchased"`
+
+	Update database.Update `inject:""`
+	Ctx    context.Context `inject:""`
 }
 type UserItemCreateResponse *db.UserItem
 
 var UserItemCreate = request.Handler(func(r *UserItemCreateRequest) (any, error) {
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
+	uid := mustUserID(r.Ctx)
+
+	userItem := &db.UserItem{
+		UserID: uid,
+		ItemID: r.ItemID,
+		Type:   r.Type,
 	}
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		_, err := tx.Exec("INSERT INTO user_items (user_id,item_id,type) VALUES (?, ?, ?)", uid, r.ItemID, r.Type)
-		return err
+	err := r.Update(func(tx *sqlx.Tx) error {
+		item, err := db.ItemQuery(r.Ctx).Find(tx, r.ItemID)
+		if err != nil {
+			return err
+		}
+
+		if item == nil {
+			return request.NewHTTPError(fmt.Errorf("no item"), http.StatusUnprocessableEntity)
+		}
+
+		userItem.ItemUserID = item.UserID
+
+		return model.SaveContext(r.Ctx, tx, userItem)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return UserItemCreateResponse(&db.UserItem{
-		UserID: uid,
-		ItemID: r.ItemID,
-		Type:   r.Type,
-	}), nil
+	return UserItemCreateResponse(userItem), nil
 })
 
 type EditUserItemRequest struct {
-	ItemID  int    `json:"item_id" validate:"required"`
-	Type    string `json:"type"    validate:"required|in:thinking,purchased"`
-	Request *http.Request
+	ItemID int    `json:"item_id" validate:"required"`
+	Type   string `json:"type"    validate:"required|in:thinking,purchased"`
+
+	Update database.Update `inject:""`
+	Ctx    context.Context `inject:""`
 }
 type EditUserItemResponse *db.UserItem
 
 var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (any, error) {
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		_, err := tx.Exec("UPDATE user_items SET type=? WHERE user_id=? and item_id=?", r.Type, uid, r.ItemID)
-		return err
+	uid := mustUserID(r.Ctx)
+
+	var userItem *db.UserItem
+	err := r.Update(func(tx *sqlx.Tx) error {
+		item, err := db.ItemQuery(r.Ctx).Find(tx, r.ItemID)
+		if err != nil {
+			return err
+		}
+
+		if item == nil {
+			return request.NewHTTPError(fmt.Errorf("no item"), http.StatusUnprocessableEntity)
+		}
+
+		userItem, err = db.UserItemQuery(r.Ctx).
+			Where("item_id", "=", r.ItemID).
+			Where("user_id", "=", uid).
+			First(tx)
+		if err != nil {
+			return err
+		}
+
+		if userItem == nil {
+			return request.NewHTTPError(fmt.Errorf("no user item"), http.StatusUnprocessableEntity)
+		}
+
+		userItem.Type = r.Type
+		userItem.ItemUserID = item.UserID
+
+		return model.SaveContext(r.Ctx, tx, userItem)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return EditUserItemResponse(&db.UserItem{
-		UserID: uid,
-		ItemID: r.ItemID,
-		Type:   r.Type,
-	}), nil
+	return EditUserItemResponse(userItem), nil
 })
 
 type RemoveUserItemRequest struct {
@@ -139,10 +156,7 @@ type RemoveUserItemResponse struct {
 }
 
 var UserItemDelete = request.Handler(func(r *RemoveUserItemRequest) (any, error) {
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM user_items WHERE user_id=? AND item_id=?", uid, r.ItemID)
 		return err

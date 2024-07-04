@@ -39,7 +39,7 @@ interface ReadonlyRowProps {
 
 function ReadonlyRow({ item, userItem: ui }: Readonly<ReadonlyRowProps>) {
     const openModal = useOpenModal()
-    const user = useUser()
+    const [user] = useUser()
 
     const isThinking = ui?.type === 'thinking'
     const isPurchased = ui?.type === 'purchased'

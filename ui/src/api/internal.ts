@@ -22,7 +22,7 @@ export class FetchError extends Error {
 
 export async function apiFetch<T>(
     path: string,
-    query: Record<string, string> | null = null,
+    query: Record<string, unknown> | null = null,
     init?: RequestInit & AuthRequestInit,
 ): Promise<T> {
     if (init?.withoutToken !== true) {
@@ -43,7 +43,11 @@ export async function apiFetch<T>(
         input = '/api' + input
     }
     if (query !== null) {
-        input += '?' + new URLSearchParams(query).toString()
+        input +=
+            '?' +
+            new URLSearchParams(
+                Object.entries(query).map(([k, v]) => [k, String(v)]),
+            ).toString()
     }
 
     let response: Response

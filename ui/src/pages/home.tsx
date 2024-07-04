@@ -1,22 +1,16 @@
 import { Fragment, h } from 'preact'
-import { useEffect, useState } from 'preact/hooks'
-import { Friend, friend } from '../api'
+import { friendAPI } from '../api'
 import { useUser } from '../auth'
 import classNames from 'classnames'
 import { ButtonList } from '../components/button-list'
 import styles from './home.module.css'
+import { ErrorFetchError } from './error-fetch-error'
 
 h
 
 export function Home() {
-    const [friends, setFriends] = useState<Friend[]>()
-    const user = useUser()
-
-    useEffect(() => {
-        if (user !== null) {
-            friend.list().then(f => setFriends(f))
-        }
-    }, [user])
+    const [user] = useUser()
+    const [friends, err] = friendAPI.useList()
 
     if (user === null) {
         return (
@@ -25,6 +19,10 @@ export function Home() {
                 <p>Log in to view friends</p>
             </Fragment>
         )
+    }
+
+    if (err !== undefined) {
+        return <ErrorFetchError err={err} />
     }
 
     return (

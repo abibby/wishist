@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'preact/hooks'
 import { useRoute } from 'preact-iso'
 import { Input } from '../form/input'
 import { TextArea } from '../form/textarea'
-import { item as itemAPI } from '../../api'
+import { itemAPI } from '../../api'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
 
 h
@@ -20,7 +20,7 @@ export function ItemEditModal() {
     const [url, setURL] = useState('')
     const [description, setDescription] = useState('')
 
-    const [items, err] = itemAPI.useList({ id: id })
+    const [items, err] = itemAPI.useList({ id: Number(id) })
     const item = items?.[0]
 
     useEffect(() => {

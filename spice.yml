@@ -1,0 +1,4 @@
+model:
+  dir: "db"
+migration:
+  dir: "db/migrations"

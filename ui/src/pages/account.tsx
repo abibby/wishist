@@ -1,5 +1,5 @@
 import { Fragment, h } from 'preact'
-import { getUser, logout } from '../auth'
+import { logout, useUser } from '../auth'
 import { useCallback, useEffect } from 'preact/hooks'
 import { useLocation } from 'preact-iso'
 import { useOpenModal } from '../components/modal'
@@ -12,7 +12,7 @@ export function Account() {
     const { route } = useLocation()
     const [install, canInstall] = useInstallPrompt()
     const openModal = useOpenModal()
-
+    const [user, userLoading] = useUser()
     const changePasswordClick = useCallback(async () => {
         openModal('/change-password')
     }, [openModal])
@@ -22,12 +22,10 @@ export function Account() {
     }, [route])
 
     useEffect(() => {
-        getUser().then(u => {
-            if (u === null) {
-                route('/', true)
-            }
-        })
-    }, [route])
+        if (!userLoading && user === null) {
+            route('/', true)
+        }
+    }, [userLoading, route, user])
 
     return (
         <Fragment>

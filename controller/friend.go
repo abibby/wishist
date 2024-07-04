@@ -17,10 +17,7 @@ type ListFriendsResponse []*db.Friend
 
 var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 	friends := []*db.Friend{}
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		return tx.Select(
 			&friends,
@@ -41,31 +38,27 @@ var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 })
 
 type AddFriendRequest struct {
-	FriendUsername string `json:"friend_username" validate:"required"`
-	Request        *http.Request
+	FriendID int `json:"friend_id" validate:"required"`
+
+	Request *http.Request
 }
 type AddFriendResponse *db.Friend
 
 var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
-	errFriendNotFound := fmt.Errorf("friend not found")
+	uid := mustUserID(r.Request.Context())
+
 	friend := &db.User{}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		err := tx.Get(friend, "select * from users where username=?", r.FriendUsername)
+		err := tx.Get(friend, "select * from users where id=?", r.FriendID)
 		if err == sql.ErrNoRows {
-			return errFriendNotFound
+			return request.NewHTTPError(fmt.Errorf("friend not found"), 422)
 		} else if err != nil {
 			return err
 		}
 		_, err = tx.Exec("INSERT INTO friends (user_id,friend_id) VALUES (?, ?)", uid, friend.ID)
 		return err
 	})
-	if err == errFriendNotFound {
-		return nil, request.NewHTTPError(err, 422)
-	} else if err != nil {
+	if err != nil {
 		return nil, err
 	}
 	return AddFriendResponse(&db.Friend{
@@ -77,20 +70,17 @@ var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 })
 
 type RemoveFriendRequest struct {
-	FriendUsername string `json:"friend_username" validate:"required"`
-	Request        *http.Request
+	FriendID int `json:"friend_id" validate:"required"`
+	Request  *http.Request
 }
 type RemoveFriendResponse struct {
 	Success bool `json:"success"`
 }
 
 var FriendDelete = request.Handler(func(r *RemoveFriendRequest) (any, error) {
-	uid, ok := userID(r.Request.Context())
-	if !ok {
-		return nil, fmt.Errorf("user not logged in")
-	}
+	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		_, err := tx.Exec("DELETE FROM friends WHERE user_id=? AND friend_id=(select id from users where username=?)", uid, r.FriendUsername)
+		_, err := tx.Exec("DELETE FROM friends WHERE user_id=? AND friend_id=?", uid, r.FriendID)
 		return err
 	})
 	if err != nil {

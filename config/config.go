@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/abibby/salusa/database/dialects"
+	"github.com/abibby/salusa/database/dialects/sqlite"
 	"github.com/abibby/salusa/email"
 	"github.com/abibby/salusa/kernel"
 	"github.com/joho/godotenv"
@@ -16,6 +18,7 @@ import (
 type Cfg interface {
 	kernel.KernelConfig
 	email.MailConfiger
+	dialects.DBConfiger
 }
 
 type config struct{}
@@ -93,4 +96,7 @@ func (c *config) GetBaseURL() string {
 }
 func (c *config) MailConfig() email.Config {
 	return Email
+}
+func (c *config) DBConfig() dialects.Config {
+	return sqlite.NewConfig(DBPath)
 }

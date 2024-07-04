@@ -7,7 +7,7 @@ import styles from './default.module.css'
 h
 
 export function Default({ children }: RenderableProps<unknown>) {
-    const user = useUser()
+    const [user] = useUser()
     const openModal = useOpenModal()
 
     const login = useCallback(async () => {
