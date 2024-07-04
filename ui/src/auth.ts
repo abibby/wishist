@@ -2,8 +2,7 @@ import { Event, EventTarget } from './events'
 import { createStore, delMany, get, setMany } from 'idb-keyval'
 import jwt from './jwt'
 import { User, currentUser } from './api/user'
-import { FetchError } from './api/internal'
-import { authAPI } from './api'
+import { FetchError, authAPI } from './api'
 import { signal } from '@preact/signals-core'
 import { useSignalValue } from './hooks/signal'
 
@@ -15,6 +14,8 @@ const userKey = 'user'
 type ChangeEventMap = {
     change: Event<'change'>
 }
+let _token: string | undefined
+const userSignal = signal<User | null | undefined>(undefined)
 export const authChanges = new EventTarget<ChangeEventMap, 'strict'>()
 
 authChanges.addEventListener('change', async () => {
@@ -28,10 +29,7 @@ authChanges.addEventListener('change', async () => {
         throw e
     }
 })
-
-let _token: string | undefined
-
-const userSignal = signal<User | null | undefined>(undefined)
+authChanges.dispatchEvent(new Event('change'))
 
 export async function getToken(): Promise<string | null> {
     if (_token !== undefined) {

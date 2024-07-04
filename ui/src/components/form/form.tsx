@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'preact/hooks'
-import { FetchError } from '../../api/internal'
+import { FetchError } from '../../api'
 import { JSX, RenderableProps, createContext } from 'preact'
 import styles from './form.module.css'
 

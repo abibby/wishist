@@ -1,4 +1,4 @@
-import { FetchError } from './api/internal'
+import { FetchError } from './api'
 import { openToast } from './components/toast'
 
 function handleError(err: unknown) {

@@ -2,7 +2,7 @@ import { Fragment, h } from 'preact'
 import { useCallback, useState } from 'preact/hooks'
 import { forgotPassword } from '../api/user'
 import { Input } from '../components/form/input'
-import { FetchError } from '../api/internal'
+import { FetchError } from '../api'
 import styles from './forgot-password.module.css'
 
 h
