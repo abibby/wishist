@@ -52,10 +52,12 @@ export function buildRestModel<
     const buss = new EventTarget<Record<string, ModelEvent<T>>>()
 
     async function put(e: ModelEvent<T>): Promise<void> {
-        await table.bulkPut(e.models)
+        await table.bulkPut(e.models).catch(console.warn)
     }
     async function remove(e: ModelEvent<T>): Promise<void> {
-        await table.bulkDelete(e.models.map(m => m[pkey] as IDType<T, K>))
+        await table
+            .bulkDelete(e.models.map(m => m[pkey] as IDType<T, K>))
+            .catch(console.warn)
     }
 
     buss.addEventListener('update', put)

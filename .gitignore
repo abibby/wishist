@@ -2,5 +2,9 @@ node_modules
 dist
 bin
 
+ui/test-results
+ui/playwright-report
+
 .env
 db.sqlite
+test-*.sqlite

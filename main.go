@@ -13,6 +13,7 @@ import (
 
 	"github.com/abibby/fileserver"
 	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/database/databasedi"
 	"github.com/abibby/salusa/di"
 	"github.com/abibby/salusa/kernel"
 	"github.com/abibby/salusa/request"
@@ -73,8 +74,13 @@ func main() {
 	di.RegisterSingleton(ctx, func() kernel.KernelConfig {
 		return config.Config
 	})
-	// must be before the db.Open because of dumb di stuff
+
 	_ = salusadi.Register[*db.User](migrations.Use())(ctx)
+	databasedi.RegisterTransactions(ctx, db.DBMtx)
+
+	di.RegisterSingleton(ctx, func() *slog.Logger {
+		return slog.Default()
+	})
 
 	auth.SetAppKey(config.AppKey)
 
