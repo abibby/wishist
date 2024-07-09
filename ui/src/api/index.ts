@@ -71,3 +71,4 @@ export const userAPI = buildRestModel<
 >('/user', 'id', db.users)
 
 export * as authAPI from './auth'
+export type { LoginRequest, LoginResponse } from './auth'

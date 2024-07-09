@@ -48,7 +48,7 @@ function ReadonlyRow({ item, userItem: ui }: Readonly<ReadonlyRowProps>) {
     return (
         <Conditions>
             <li
-                class={classNames(styles.item, {
+                class={classNames(styles.item, styles.readonly, {
                     [styles.thinking]:
                         (item.thinking_count ?? 0) > 0 || isThinking,
                     [styles.purchased]:

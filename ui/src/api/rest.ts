@@ -3,7 +3,7 @@ import { apiFetch } from './internal'
 import { FetchError } from './fetch-error'
 import { Event, EventTarget } from '../events'
 import { EntityTable, IDType } from 'dexie'
-import { authChanges } from '../auth'
+import { useUser } from '../auth'
 
 class ModelEvent<T> extends Event {
     constructor(type: string, public readonly models: T[]) {
@@ -64,7 +64,9 @@ export function buildRestModel<
 
     return {
         useListFirst(
-            ...request: TListRequest extends NoArgs ? [] : [TListRequest]
+            ...request: TListRequest extends NoArgs
+                ? []
+                : [request: TListRequest]
         ): [T | undefined, FetchError | undefined, UseListStatus] {
             const [models, fetchError, status] = this.useList(...request)
             if (status === 'network' && models && models.length === 0) {
@@ -80,22 +82,16 @@ export function buildRestModel<
             return [models?.[0], fetchError, status]
         },
         useList(
-            ...request: TListRequest extends NoArgs ? [] : [TListRequest]
+            ...request: TListRequest extends NoArgs
+                ? []
+                : [request: TListRequest]
         ): [T[] | undefined, FetchError | undefined, UseListStatus] {
-            const [auth, setAuth] = useState(0)
             const req = useMemo(() => {
                 return request
                 // eslint-disable-next-line react-hooks/exhaustive-deps
             }, [JSON.stringify(request)])
 
-            useEffect(() => {
-                function authChange() {
-                    setAuth(a => a + 1)
-                }
-                authChanges.addEventListener('change', authChange)
-                return () =>
-                    authChanges.removeEventListener('change', authChange)
-            })
+            const [user] = useUser()
 
             const matchRef = useRef<(model: T) => boolean>(() => false)
             const [result, setResult] = useState<
@@ -142,7 +138,7 @@ export function buildRestModel<
                         return [models, undefined, 'cache']
                     })
                 })()
-            }, [req, auth])
+            }, [req, user?.id])
 
             useEffect(() => {
                 const create = (e: ModelEvent<T>) => {

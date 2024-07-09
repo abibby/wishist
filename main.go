@@ -24,12 +24,19 @@ import (
 	"github.com/abibby/wishist/db"
 	"github.com/abibby/wishist/db/migrations"
 	"github.com/abibby/wishist/ui"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type CreateUserRequest struct {
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required|email"`
 	Name     string `json:"name" validate:"required"`
+}
+
+type Claims struct {
+	auth.Claims
+	Name     string `json:"name"`
+	Username string `json:"preferred_username"`
 }
 
 type StatusRecorder struct {
@@ -119,14 +126,23 @@ func main() {
 	r.Group("/api", func(r *router.Router) {
 		r.Use(auth.AttachUser())
 
-		auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
-			return &db.User{
-				Username: r.Username,
-				Email:    r.Email,
-				Name:     r.Name,
-				Password: []byte{},
-			}
-		}, "reset-password")
+		auth.RegisterRoutes(r, auth.NewBasicAuthController[*db.User](
+			auth.NewUser(func(r *CreateUserRequest) *db.User {
+				return &db.User{
+					Username: r.Username,
+					Email:    r.Email,
+					Name:     r.Name,
+					Password: []byte{},
+				}
+			}),
+			auth.AccessTokenOptions(func(u *db.User, claims *auth.Claims) jwt.Claims {
+				return &Claims{
+					Claims:   *claims,
+					Username: u.Username,
+					Name:     u.Name,
+				}
+			}),
+		))
 
 		r.Get("/login", http.RedirectHandler("/?m=/login", http.StatusFound)).Name("login")
 
