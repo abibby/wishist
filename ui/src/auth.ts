@@ -1,7 +1,6 @@
-import { Event, EventTarget } from './events'
 import { createStore, delMany, get, setMany } from 'idb-keyval'
 import jwt from './jwt'
-import { User, currentUser } from './api/user'
+import { User } from './api/user'
 import { FetchError, authAPI } from './api'
 import { signal } from '@preact/signals-core'
 import { useSignalValue } from './hooks/signal'
@@ -11,29 +10,11 @@ const tokenKey = 'token'
 const refreshKey = 'refresh'
 const userKey = 'user'
 
-type ChangeEventMap = {
-    change: Event<'change'>
-}
-let _token: string | undefined
-const userSignal = signal<User | null | undefined>(undefined)
-export const authChanges = new EventTarget<ChangeEventMap, 'strict'>()
-
-authChanges.addEventListener('change', async () => {
-    try {
-        userSignal.value = await currentUser()
-    } catch (e) {
-        if (e instanceof FetchError && e.status === 401) {
-            userSignal.value = null
-            return
-        }
-        throw e
-    }
-})
-authChanges.dispatchEvent(new Event('change'))
+const tokenSignal = signal<string | null | undefined>(undefined)
 
 export async function getToken(): Promise<string | null> {
-    if (_token !== undefined) {
-        return _token
+    if (tokenSignal.value !== undefined) {
+        return tokenSignal.value
     }
     try {
         let token = await get<string | undefined>(tokenKey, authStore)
@@ -49,7 +30,6 @@ export async function getToken(): Promise<string | null> {
             const result = await authAPI.refresh({ refresh: refresh })
 
             token = result.token
-            _token = result.token
 
             await setMany(
                 [
@@ -58,11 +38,15 @@ export async function getToken(): Promise<string | null> {
                 ],
                 authStore,
             )
-            authChanges.dispatchEvent(new Event('change'))
         }
+        tokenSignal.value = token
 
         return token ?? null
     } catch (e) {
+        if (e instanceof FetchError && e.status === 401) {
+            tokenSignal.value = null
+            return null
+        }
         console.error(e)
         return null
     }
@@ -77,15 +61,12 @@ function jwtExpired(token: string): boolean {
     return exp * 1000 < Date.now()
 }
 
-export async function login(
-    username: string,
-    password: string,
-): Promise<boolean> {
+export async function login(username: string, password: string): Promise<void> {
     const data = await authAPI.login({
         username: username,
         password: password,
     })
-    _token = data.token
+    tokenSignal.value = data.token
 
     try {
         await setMany(
@@ -98,21 +79,34 @@ export async function login(
     } catch (e) {
         console.error('failed to save token', e)
     }
-    authChanges.dispatchEvent(new Event('change'))
-    return true
 }
 
 export async function logout() {
-    _token = undefined
+    tokenSignal.value = null
     try {
         await delMany([tokenKey, refreshKey, userKey], authStore)
     } catch (e) {
         console.error(e)
     }
-    authChanges.dispatchEvent(new Event('change'))
 }
 
 export function useUser(): [User | null, boolean] {
-    const user = useSignalValue(userSignal)
-    return [user ?? null, user !== undefined]
+    const token = useSignalValue(tokenSignal)
+
+    if (!token) {
+        return [null, token !== undefined]
+    }
+
+    const claims = jwt.parse(token).claims
+
+    return [
+        {
+            id: Number(claims.sub),
+            username: claims.preferred_username,
+            name: claims.name,
+        },
+        false,
+    ]
 }
+
+getToken()

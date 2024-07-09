@@ -9,6 +9,7 @@ import { useFlash } from '../hooks/use-flash'
 import { useOpenModal } from './modal'
 import { Form } from './form/form'
 import { Spinner } from './spinner'
+import { openToast } from './toast'
 
 h
 
@@ -31,13 +32,21 @@ export function ItemListEdit({ items }: ItemListEditProps) {
             return
         }
         setAdding(true)
-        await itemAPI.create({
-            name: newItem,
-            description: '',
-            url: '',
-        })
+        try {
+            await itemAPI.create({
+                name: newItem,
+                description: '',
+                url: '',
+            })
+        } catch (e) {
+            console.warn(e)
+
+            openToast('Could not add item, try again later')
+            return
+        } finally {
+            setAdding(false)
+        }
         setNewItem('')
-        setAdding(false)
     }, [newItem, triggerFlashInput])
 
     if (items === undefined) {
@@ -79,9 +88,6 @@ interface RowProps {
 
 function Row({ item: item2 }: RowProps) {
     const openModal = useOpenModal()
-    // const remove = useCallback(async () => {
-    //     await item.delete({ id: item2.id })
-    // }, [item2.id])
 
     const nameChange = useCallback(
         (value: string) => {
@@ -110,7 +116,6 @@ function Row({ item: item2 }: RowProps) {
                     <button onClick={bind(`/item/${item2.id}/edit`, openModal)}>
                         +
                     </button>
-                    {/* <button onClick={remove}>x</button> */}
                 </div>
             </label>
         </li>

@@ -6,8 +6,9 @@ export type ErrorBody = {
 export class FetchError extends Error {
     constructor(
         message: string,
-        public status: number,
-        public body: ErrorBody,
+        public readonly status: number,
+        public readonly body: ErrorBody,
+        public readonly cause?: Error,
     ) {
         super(message)
     }
