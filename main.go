@@ -123,6 +123,12 @@ func main() {
 		})
 	})
 
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.TimeoutHandler(next, time.Second*30, "")
+		})
+	})
+
 	r.Group("/api", func(r *router.Router) {
 		r.Use(auth.AttachUser())
 
