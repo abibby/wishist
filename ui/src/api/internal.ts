@@ -1,4 +1,4 @@
-import { getToken } from '../auth'
+import { getToken, logout } from '../auth'
 import { FetchError } from './fetch-error'
 
 type AuthRequestInit = {
@@ -76,6 +76,9 @@ export async function apiFetch<T>(
 
         if (body.error) {
             message = body.error
+        }
+        if (response.status === 401) {
+            await logout()
         }
         throw new FetchError(message, response.status, body, cause)
     }

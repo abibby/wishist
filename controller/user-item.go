@@ -19,9 +19,8 @@ type ListUserItemsRequest struct {
 	Read database.Read   `inject:""`
 	Ctx  context.Context `inject:""`
 }
-type ListUserItemsResponse []*db.UserItem
 
-var UserItemList = request.Handler(func(r *ListUserItemsRequest) (any, error) {
+var UserItemList = request.Handler(func(r *ListUserItemsRequest) ([]*db.UserItem, error) {
 	userItems := []*db.UserItem{}
 
 	uid := mustUserID(r.Ctx)
@@ -61,7 +60,7 @@ var UserItemList = request.Handler(func(r *ListUserItemsRequest) (any, error) {
 	for _, ui := range userItems {
 		ui.ItemUserID = r.UserID
 	}
-	return ListUserItemsResponse(userItems), nil
+	return userItems, nil
 })
 
 type UserItemCreateRequest struct {
@@ -71,9 +70,10 @@ type UserItemCreateRequest struct {
 	Update database.Update `inject:""`
 	Ctx    context.Context `inject:""`
 }
+
 type UserItemCreateResponse *db.UserItem
 
-var UserItemCreate = request.Handler(func(r *UserItemCreateRequest) (any, error) {
+var UserItemCreate = request.Handler(func(r *UserItemCreateRequest) (UserItemCreateResponse, error) {
 	uid := mustUserID(r.Ctx)
 
 	userItem := &db.UserItem{
@@ -110,7 +110,7 @@ type EditUserItemRequest struct {
 }
 type EditUserItemResponse *db.UserItem
 
-var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (any, error) {
+var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (EditUserItemResponse, error) {
 	uid := mustUserID(r.Ctx)
 
 	var userItem *db.UserItem
@@ -155,7 +155,7 @@ type RemoveUserItemResponse struct {
 	Success bool `json:"success"`
 }
 
-var UserItemDelete = request.Handler(func(r *RemoveUserItemRequest) (any, error) {
+var UserItemDelete = request.Handler(func(r *RemoveUserItemRequest) (*RemoveUserItemResponse, error) {
 	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM user_items WHERE user_id=? AND item_id=?", uid, r.ItemID)

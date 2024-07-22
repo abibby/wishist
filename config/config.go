@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -11,12 +12,12 @@ import (
 	"github.com/abibby/salusa/database/dialects"
 	"github.com/abibby/salusa/database/dialects/sqlite"
 	"github.com/abibby/salusa/email"
-	"github.com/abibby/salusa/kernel"
+	"github.com/abibby/salusa/salusaconfig"
 	"github.com/joho/godotenv"
 )
 
 type Cfg interface {
-	kernel.KernelConfig
+	salusaconfig.Config
 	email.MailConfiger
 	dialects.DBConfiger
 }
@@ -64,7 +65,7 @@ var Email email.Config
 
 var Config Cfg = &config{}
 
-func Init() error {
+func Init(ctx context.Context) error {
 	err := godotenv.Load("./.env")
 	if errors.Is(err, fs.ErrNotExist) {
 	} else if err != nil {
@@ -86,6 +87,10 @@ func Init() error {
 	}
 
 	return nil
+}
+
+func Get() Cfg {
+	return Config
 }
 
 func (c *config) GetHTTPPort() int {

@@ -2,62 +2,12 @@ package main
 
 import (
 	"context"
-	"embed"
-	"fmt"
-	"log/slog"
-	"mime"
-	"net"
-	"net/http"
 	"os"
-	"time"
 
-	"github.com/abibby/fileserver"
-	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/clog"
 	"github.com/abibby/salusa/di"
-	"github.com/abibby/salusa/kernel"
-	"github.com/abibby/salusa/request"
-	"github.com/abibby/salusa/router"
-	"github.com/abibby/salusa/salusadi"
-	"github.com/abibby/salusa/view"
-	"github.com/abibby/wishist/config"
-	"github.com/abibby/wishist/controller"
-	"github.com/abibby/wishist/db"
-	"github.com/abibby/wishist/db/migrations"
-	"github.com/abibby/wishist/ui"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/abibby/wishist/app"
 )
-
-type CreateUserRequest struct {
-	Username string `json:"username" validate:"required"`
-	Email    string `json:"email" validate:"required|email"`
-	Name     string `json:"name" validate:"required"`
-}
-
-type Claims struct {
-	auth.Claims
-	Name     string `json:"name"`
-	Username string `json:"preferred_username"`
-}
-
-type StatusRecorder struct {
-	http.ResponseWriter
-	Status int
-}
-
-func NewStatusRecorder(w http.ResponseWriter) *StatusRecorder {
-	return &StatusRecorder{
-		Status:         200,
-		ResponseWriter: w,
-	}
-}
-
-func (w *StatusRecorder) WriteHeader(statusCode int) {
-	w.Status = statusCode
-	w.ResponseWriter.WriteHeader(statusCode)
-}
-
-//go:embed emails/*
-var emails embed.FS
 
 func main() {
 	ctx := di.ContextWithDependencyProvider(
@@ -65,134 +15,15 @@ func main() {
 		di.NewDependencyProvider(),
 	)
 
-	err := config.Init()
+	err := app.Kernel.Bootstrap(ctx)
 	if err != nil {
-		slog.Error("failed initialize config", "error", err)
+		clog.Use(ctx).Error("error bootstrapping", "error", err)
 		os.Exit(1)
 	}
 
-	err = view.Register(emails, "**/*.html")(ctx)
+	err = app.Kernel.Run(ctx)
 	if err != nil {
-		slog.Error("failed register emails", "error", err)
-		os.Exit(1)
-	}
-
-	di.RegisterSingleton(ctx, func() kernel.KernelConfig {
-		return config.Config
-	})
-	// must be before the db.Open because of dumb di stuff
-	_ = salusadi.Register[*db.User](migrations.Use())(ctx)
-
-	auth.SetAppKey(config.AppKey)
-
-	err = db.Open(ctx)
-	if err != nil {
-		slog.Error("failed to open database", "error", err)
-		os.Exit(1)
-	}
-
-	err = mime.AddExtensionType(".webmanifest", "application/manifest+json")
-	if err != nil {
-		slog.Error("failed to add .webmanifest mimetype", "error", err)
-		os.Exit(1)
-	}
-
-	r := router.New()
-
-	r.Register(ctx)
-
-	r.Use(request.HandleErrors(
-		func(err error) {
-			slog.Warn("request failed", "error", err)
-		},
-	))
-
-	r.Use(func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			s := time.Now()
-			sr := NewStatusRecorder(w)
-			h.ServeHTTP(sr, r)
-
-			slog.Info("request",
-				"remote_address", r.RemoteAddr,
-				"path", r.URL.String(),
-				"method", r.Method,
-				"time", time.Since(s),
-				"status", sr.Status,
-			)
-		})
-	})
-
-	r.Group("/api", func(r *router.Router) {
-		r.Use(auth.AttachUser())
-
-		auth.RegisterRoutes(r, auth.NewBasicAuthController[*db.User](
-			auth.NewUser(func(r *CreateUserRequest) *db.User {
-				return &db.User{
-					Username: r.Username,
-					Email:    r.Email,
-					Name:     r.Name,
-					Password: []byte{},
-				}
-			}),
-			auth.AccessTokenOptions(func(u *db.User, claims *auth.Claims) jwt.Claims {
-				return &Claims{
-					Claims:   *claims,
-					Username: u.Username,
-					Name:     u.Name,
-				}
-			}),
-		))
-
-		r.Get("/login", http.RedirectHandler("/?m=/login", http.StatusFound)).Name("login")
-
-		r.Get("/item", controller.ItemList)
-		r.Get("/user", controller.UserList)
-
-		r.Group("", func(r *router.Router) {
-			r.Use(auth.LoggedIn())
-
-			r.Get("/user/current", controller.GetCurrentUser)
-
-			r.Group("/item", func(r *router.Router) {
-				r.Post("", controller.ItemCreate)
-				r.Put("", controller.ItemUpdate)
-				r.Delete("", controller.ItemDelete)
-			})
-
-			r.Group("/friend", func(r *router.Router) {
-				r.Get("", controller.FriendList)
-				r.Post("", controller.FriendCreate)
-				r.Delete("", controller.FriendDelete)
-			})
-
-			r.Group("/user-item", func(r *router.Router) {
-				r.Get("", controller.UserItemList)
-				r.Post("", controller.UserItemCreate)
-				r.Put("", controller.UserItemUpdate)
-				r.Delete("", controller.UserItemDelete)
-			})
-
-		})
-		r.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(404)
-		}))
-	})
-	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
-
-	slog.Info("Listening on " + config.Config.GetBaseURL())
-
-	s := &http.Server{
-		Addr:    fmt.Sprintf(":%d", config.Port),
-		Handler: r,
-		BaseContext: func(l net.Listener) context.Context {
-			return ctx
-		},
-	}
-
-	err = s.ListenAndServe()
-	if err != nil {
-		slog.Error("http server failed", "error", err)
+		clog.Use(ctx).Error("error running", "error", err)
 		os.Exit(1)
 	}
 }

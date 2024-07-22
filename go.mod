@@ -4,13 +4,14 @@ go 1.22
 
 toolchain go1.22.1
 
-// replace github.com/abibby/salusa => /Users/abibby/github.com/abibby/salusa
+replace github.com/abibby/salusa => /Users/abibby/github.com/abibby/salusa
+
 // replace github.com/abibby/salusa => /home/adam/github.com/abibby/salusa
 
 require (
-	github.com/abibby/fileserver v0.0.0-20221208191705-087686654550
 	github.com/abibby/nulls v1.1.0
 	github.com/abibby/salusa v0.12.0
+	github.com/go-openapi/spec v0.21.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/gorilla/mux v1.8.1
@@ -23,10 +24,16 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-mail/mail v2.3.1+incompatible // indirect
+	github.com/go-openapi/jsonpointer v0.21.0 // indirect
+	github.com/go-openapi/jsonreference v0.21.0 // indirect
+	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
+	github.com/lmittmann/tint v1.0.5 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -39,6 +46,7 @@ require (
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20240304020402-f0dba7c97c2b // indirect
 	modernc.org/libc v1.54.2 // indirect
 	modernc.org/mathutil v1.6.0 // indirect

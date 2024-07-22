@@ -19,9 +19,8 @@ type ListItemsRequest struct {
 	Read database.Read   `inject:""`
 	Ctx  context.Context `inject:""`
 }
-type ListItemsResponse []*db.Item
 
-var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
+var ItemList = request.Handler(func(r *ListItemsRequest) ([]*db.Item, error) {
 	uid, loggedIn := userID(r.Ctx)
 
 	if r.UserID == 0 && r.ID == 0 {
@@ -58,7 +57,7 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 		return nil, err
 	}
 
-	return ListItemsResponse(items), nil
+	return items, nil
 })
 
 type AddItemRequest struct {
@@ -69,9 +68,8 @@ type AddItemRequest struct {
 	Update database.Update `inject:""`
 	Ctx    context.Context `inject:""`
 }
-type AddItemResponse *db.Item
 
-var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error) {
+var ItemCreate = request.Handler(func(r *AddItemRequest) (*db.Item, error) {
 	item := &db.Item{}
 	uid := mustUserID(r.Ctx)
 
@@ -86,7 +84,7 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error
 	if err != nil {
 		return nil, err
 	}
-	return AddItemResponse(item), nil
+	return item, nil
 })
 
 type EditItemRequest struct {
@@ -98,9 +96,8 @@ type EditItemRequest struct {
 	Update database.Update `inject:""`
 	Ctx    context.Context `inject:""`
 }
-type EditItemResponse *db.Item
 
-var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
+var ItemUpdate = request.Handler(func(r *EditItemRequest) (*db.Item, error) {
 	var item *db.Item
 	var err error
 
@@ -122,7 +119,7 @@ var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return EditItemResponse(item), nil
+	return item, nil
 })
 
 type RemoveItemRequest struct {
@@ -135,7 +132,7 @@ type RemoveItemResponse struct {
 	Success bool `json:"success"`
 }
 
-var ItemDelete = request.Handler(func(r *RemoveItemRequest) (any, error) {
+var ItemDelete = request.Handler(func(r *RemoveItemRequest) (*RemoveItemResponse, error) {
 
 	uid := mustUserID(r.Ctx)
 

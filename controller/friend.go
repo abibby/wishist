@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
@@ -11,14 +12,14 @@ import (
 )
 
 type ListFriendsRequest struct {
-	Request *http.Request
+	Ctx context.Context `inject:""`
 }
 type ListFriendsResponse []*db.Friend
 
-var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
+var FriendList = request.Handler(func(r *ListFriendsRequest) (ListFriendsResponse, error) {
 	friends := []*db.Friend{}
-	uid := mustUserID(r.Request.Context())
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	uid := mustUserID(r.Ctx)
+	err := db.Tx(r.Ctx, func(tx *sqlx.Tx) error {
 		return tx.Select(
 			&friends,
 			`select
@@ -44,7 +45,7 @@ type AddFriendRequest struct {
 }
 type AddFriendResponse *db.Friend
 
-var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
+var FriendCreate = request.Handler(func(r *AddFriendRequest) (AddFriendResponse, error) {
 	uid := mustUserID(r.Request.Context())
 
 	friend := &db.User{}
@@ -77,7 +78,7 @@ type RemoveFriendResponse struct {
 	Success bool `json:"success"`
 }
 
-var FriendDelete = request.Handler(func(r *RemoveFriendRequest) (any, error) {
+var FriendDelete = request.Handler(func(r *RemoveFriendRequest) (*RemoveFriendResponse, error) {
 	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM friends WHERE user_id=? AND friend_id=?", uid, r.FriendID)

@@ -19,14 +19,13 @@ var GetCurrentUser = request.Handler(func(r *GetCurrentUserRequest) (*GetCurrent
 })
 
 type UserListRequest struct {
-	Username string `query:"username"`
+	Username string `query:"username" validate:"required"`
 
 	Read database.Read   `inject:""`
 	Ctx  context.Context `inject:""`
 }
-type UserListResponse []*db.User
 
-var UserList = request.Handler(func(r *UserListRequest) (UserListResponse, error) {
+var UserList = request.Handler(func(r *UserListRequest) ([]*db.User, error) {
 	var users []*db.User
 	var err error
 	err = r.Read(func(tx *sqlx.Tx) error {
@@ -37,5 +36,5 @@ var UserList = request.Handler(func(r *UserListRequest) (UserListResponse, error
 		return nil, err
 	}
 
-	return UserListResponse(users), nil
+	return users, nil
 })
