@@ -51,5 +51,6 @@ var Kernel = kernel.New(
 			Title: "Wishist API",
 		}),
 		openapidoc.BasePath("/api"),
+		openapidoc.DefaultSecurityDefinition(),
 	),
 )
