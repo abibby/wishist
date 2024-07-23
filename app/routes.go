@@ -1,11 +1,13 @@
 package app
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/clog"
 	"github.com/abibby/salusa/fileserver"
 	"github.com/abibby/salusa/openapidoc"
 	"github.com/abibby/salusa/request"
@@ -14,6 +16,7 @@ import (
 	"github.com/abibby/wishist/db"
 	"github.com/abibby/wishist/ui"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
 
 type CreateUserRequest struct {
@@ -40,28 +43,43 @@ func NewStatusRecorder(w http.ResponseWriter) *StatusRecorder {
 	}
 }
 
+func (s *StatusRecorder) WriteHeader(statusCode int) {
+	s.Status = statusCode
+	s.ResponseWriter.WriteHeader(statusCode)
+}
+
 func InitRoutes(r *router.Router) {
-	r.Use(request.HandleErrors(
-		func(err error) {
-			slog.Warn("request failed", "error", err)
-		},
-	))
+	r.UseFunc(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := clog.With(r.Context(), slog.String("request_id", uuid.New().String()))
+			h.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
 
 	r.UseFunc(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := time.Now()
 			sr := NewStatusRecorder(w)
-			h.ServeHTTP(sr, r)
+			defer func() {
+				clog.Use(r.Context()).Info("request",
+					"remote_address", r.RemoteAddr,
+					"path", r.URL.String(),
+					"method", r.Method,
+					"time", time.Since(s),
+					"status", sr.Status,
+				)
+			}()
 
-			slog.Info("request",
-				"remote_address", r.RemoteAddr,
-				"path", r.URL.String(),
-				"method", r.Method,
-				"time", time.Since(s),
-				"status", sr.Status,
-			)
+			h.ServeHTTP(sr, r)
 		})
 	})
+
+	r.Use(request.HandleErrors(
+		func(ctx context.Context, err error) {
+			clog.Use(ctx).Warn("request failed", "err", err)
+		},
+	))
+
 	r.Group("/api", func(r *router.Router) {
 		r.Use(auth.AttachUser())
 
@@ -113,10 +131,10 @@ func InitRoutes(r *router.Router) {
 			})
 		})
 
+		r.Handle("/docs", openapidoc.SwaggerUI())
 		r.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(404)
 		}))
 	})
-	r.Handle("/docs", openapidoc.SwaggerUI())
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
 }

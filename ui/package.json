@@ -11,8 +11,7 @@
         "build": "vite build",
         "typecheck": "tsc --noEmit",
         "lint": "eslint ./src",
-        "lint-fix": "eslint ./src --fix",
-        "api:generate": "docker run --network=host --volume \"$PWD/src/api-gen:/cwd\" --workdir=/cwd swaggerapi/swagger-codegen-cli-v3 generate -l javascript -i http://host.docker.internal:32148/docs/swagger.json"
+        "lint-fix": "eslint ./src --fix"
     },
     "keywords": [],
     "author": "",
