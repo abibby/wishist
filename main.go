@@ -15,9 +15,9 @@ import (
 	"github.com/abibby/salusa/auth"
 	"github.com/abibby/salusa/database/databasedi"
 	"github.com/abibby/salusa/di"
-	"github.com/abibby/salusa/kernel"
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/salusa/router"
+	"github.com/abibby/salusa/salusaconfig"
 	"github.com/abibby/salusa/salusadi"
 	"github.com/abibby/salusa/view"
 	"github.com/abibby/wishist/config"
@@ -25,12 +25,19 @@ import (
 	"github.com/abibby/wishist/db"
 	"github.com/abibby/wishist/db/migrations"
 	"github.com/abibby/wishist/ui"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type CreateUserRequest struct {
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required|email"`
 	Name     string `json:"name" validate:"required"`
+}
+
+type Claims struct {
+	auth.Claims
+	Name     string `json:"name"`
+	Username string `json:"preferred_username"`
 }
 
 type StatusRecorder struct {
@@ -71,7 +78,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	di.RegisterSingleton(ctx, func() kernel.KernelConfig {
+	di.RegisterSingleton(ctx, func() salusaconfig.Config {
 		return config.Config
 	})
 
@@ -101,12 +108,13 @@ func main() {
 	r.Register(ctx)
 
 	r.Use(request.HandleErrors(
-		func(err error) {
+		func(ctx context.Context, err error) http.Handler {
 			slog.Warn("request failed", "error", err)
+			return nil
 		},
 	))
 
-	r.Use(func(h http.Handler) http.Handler {
+	r.Use(router.MiddlewareFunc(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := time.Now()
 			sr := NewStatusRecorder(w)
@@ -120,19 +128,28 @@ func main() {
 				"status", sr.Status,
 			)
 		})
-	})
+	}))
 
 	r.Group("/api", func(r *router.Router) {
 		r.Use(auth.AttachUser())
 
-		auth.RegisterRoutes(r, func(r *CreateUserRequest) *db.User {
-			return &db.User{
-				Username: r.Username,
-				Email:    r.Email,
-				Name:     r.Name,
-				Password: []byte{},
-			}
-		}, "reset-password")
+		auth.RegisterRoutes(r, auth.NewBasicAuthController[*db.User](
+			auth.NewUser(func(r *CreateUserRequest) *db.User {
+				return &db.User{
+					Username: r.Username,
+					Email:    r.Email,
+					Name:     r.Name,
+					Password: []byte{},
+				}
+			}),
+			auth.AccessTokenOptions(func(u *db.User, claims *auth.Claims) jwt.Claims {
+				return &Claims{
+					Claims:   *claims,
+					Username: u.Username,
+					Name:     u.Name,
+				}
+			}),
+		))
 
 		r.Get("/login", http.RedirectHandler("/?m=/login", http.StatusFound)).Name("login")
 

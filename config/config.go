@@ -11,12 +11,12 @@ import (
 	"github.com/abibby/salusa/database/dialects"
 	"github.com/abibby/salusa/database/dialects/sqlite"
 	"github.com/abibby/salusa/email"
-	"github.com/abibby/salusa/kernel"
+	"github.com/abibby/salusa/salusaconfig"
 	"github.com/joho/godotenv"
 )
 
 type Cfg interface {
-	kernel.KernelConfig
+	salusaconfig.Config
 	email.MailConfiger
 	dialects.DBConfiger
 }

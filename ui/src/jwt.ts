@@ -7,10 +7,13 @@ export interface Claims {
     iss?: string // Issuer Claim
     sub: string // Subject Claim
     aud?: string // Audience Claim
-    exp?: number // Expiration Time Claim
-    nbf?: number // Not Before Claim
-    iat?: number // Issued At Claim
+    exp: number // Expiration Time Claim
+    nbf: number // Not Before Claim
+    iat: number // Issued At Claim
     jti?: string // JWT ID Claim
+    scope: string
+    preferred_username: string
+    name: string
 }
 
 export interface JWT {

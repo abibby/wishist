@@ -36,13 +36,16 @@ export async function apiFetch<T>(
     }
 
     let response: Response
+    let cause: Error | undefined
     try {
         response = await fetch(input, init)
     } catch (e) {
         let body: { error: string }
         if (e instanceof Error) {
+            cause = e
             body = { error: e.message }
         } else {
+            cause = new Error('unknown error')
             body = { error: 'unknown error' }
         }
         response = new Response(JSON.stringify(body), {
@@ -55,6 +58,11 @@ export async function apiFetch<T>(
     try {
         body = await response.json()
     } catch (e) {
+        if (e instanceof Error) {
+            cause = e
+        } else {
+            cause = new Error('unknown error')
+        }
         if (response.ok && e instanceof Error) {
             body = { error: e.message }
         } else {
@@ -69,7 +77,7 @@ export async function apiFetch<T>(
         if (body.error) {
             message = body.error
         }
-        throw new FetchError(message, response.status, body)
+        throw new FetchError(message, response.status, body, cause)
     }
     return body
 }
