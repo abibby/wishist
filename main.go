@@ -13,6 +13,7 @@ import (
 
 	"github.com/abibby/fileserver"
 	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/clog"
 	"github.com/abibby/salusa/database/databasedi"
 	"github.com/abibby/salusa/di"
 	"github.com/abibby/salusa/request"
@@ -29,6 +30,7 @@ import (
 )
 
 type CreateUserRequest struct {
+	auth.UserCreateRequest
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required|email"`
 	Name     string `json:"name" validate:"required"`
@@ -83,7 +85,7 @@ func main() {
 	})
 
 	_ = salusadi.Register[*db.User](migrations.Use())(ctx)
-	databasedi.RegisterTransactions(ctx, db.DBMtx)
+	databasedi.RegisterTransactions(db.DBMtx)(ctx)
 
 	di.RegisterSingleton(ctx, func() *slog.Logger {
 		return slog.Default()
@@ -107,9 +109,10 @@ func main() {
 
 	r.Register(ctx)
 
+	r.Use(request.DIMiddleware())
 	r.Use(request.HandleErrors(
 		func(ctx context.Context, err error) http.Handler {
-			slog.Warn("request failed", "error", err)
+			clog.Use(ctx).Warn("request failed", "error", err)
 			return nil
 		},
 	))
@@ -120,7 +123,7 @@ func main() {
 			sr := NewStatusRecorder(w)
 			h.ServeHTTP(sr, r)
 
-			slog.Info("request",
+			clog.Use(r.Context()).Info("request",
 				"remote_address", r.RemoteAddr,
 				"path", r.URL.String(),
 				"method", r.Method,
@@ -134,13 +137,13 @@ func main() {
 		r.Use(auth.AttachUser())
 
 		auth.RegisterRoutes(r, auth.NewBasicAuthController[*db.User](
-			auth.NewUser(func(r *CreateUserRequest) *db.User {
-				return &db.User{
+			auth.CreateUser(func(r *CreateUserRequest, c *auth.BasicAuthController[*db.User]) (*auth.UserCreateResponse[*db.User], error) {
+				return c.RunUserCreate(&db.User{
 					Username: r.Username,
 					Email:    r.Email,
 					Name:     r.Name,
 					Password: []byte{},
-				}
+				}, &r.UserCreateRequest)
 			}),
 			auth.AccessTokenOptions(func(u *db.User, claims *auth.Claims) jwt.Claims {
 				return &Claims{

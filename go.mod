@@ -4,7 +4,7 @@ go 1.22
 
 toolchain go1.22.1
 
-// replace github.com/abibby/salusa => /Users/abibby/github.com/abibby/salusa
+replace github.com/abibby/salusa => /Users/abibby/github.com/abibby/salusa
 
 // replace github.com/abibby/salusa => /home/adam/github.com/abibby/salusa
 
