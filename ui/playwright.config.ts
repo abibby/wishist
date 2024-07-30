@@ -19,7 +19,7 @@ export default defineConfig({
     // Reporter to use
     reporter: 'html',
 
-    timeout: 3000,
+    // timeout: 3000,
 
     use: {
         // Base URL to use in actions like `await page.goto('/')`.
