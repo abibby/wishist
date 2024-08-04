@@ -78,7 +78,7 @@ jobs:
       - name: Install dependencies
         run: npm --prefix ui ci
       - name: Run your tests
-        run: npx --prefix ui run test
+        run: npm --prefix ui run test
         env:
           HOME: /root
           CI: "true"
