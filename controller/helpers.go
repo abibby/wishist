@@ -11,7 +11,7 @@ import (
 func mustUserID(ctx context.Context) int {
 	uid, ok := userID(ctx)
 	if !ok {
-		panic(request.NewDefaultHTTPError(401))
+		panic(request.ErrStatusUnauthorized)
 	}
 	return uid
 }

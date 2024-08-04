@@ -3,6 +3,8 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
     // Look for test files in the "tests" directory, relative to this configuration file.
     testDir: '__tests__',
+    snapshotPathTemplate:
+        '{testDir}/__screenshots__/{testFilePath}/{arg}-{projectName}{ext}',
 
     // Run all tests in parallel.
     fullyParallel: true,
@@ -11,7 +13,8 @@ export default defineConfig({
     forbidOnly: !!process.env.CI,
 
     // Retry on CI only.
-    retries: process.env.CI ? 2 : 0,
+    // retries: process.env.CI ? 2 : 0,
+    retries: 0,
 
     // Opt out of parallel tests on CI.
     workers: process.env.CI ? 1 : undefined,
@@ -41,7 +44,7 @@ export default defineConfig({
     ],
     // Run your local dev server before starting the tests.
     webServer: {
-        command: 'make run-test',
+        command: process.env.WISHIST_EXECUTABLE || 'make run-test',
         cwd: '..',
         url: 'http://127.0.0.1:32148',
         reuseExistingServer: !process.env.CI,

@@ -18,11 +18,16 @@ export const test = baseTest.extend<
     authenticatedPage: async ({ context, userTokens }, use) => {
         const newPage = await context.newPage()
         await newPage.goto('/')
-        await newPage.evaluate(tokens => {
+
+        await newPage.evaluate(async tokens => {
+            await new Promise<void>(resolve => setTimeout(() => resolve(), 100))
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            window.testSetAuthTokens(tokens)
+            await window.testSetAuthTokens(tokens)
         }, userTokens)
+
+        await new Promise<void>(resolve => setTimeout(() => resolve(), 100))
+
         await use(newPage)
     },
 

@@ -3,25 +3,15 @@
 name: Build
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+# events but only for the main branch
 on:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build-go:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-
-      - run: mkdir ui/dist && touch ui/dist/index.html
-      - run: go build
   # This workflow contains a single job called "build"
   build-js:
     # The type of runner that the job will run on
@@ -39,3 +29,56 @@ jobs:
       - run: npm --prefix ui run typecheck
       - run: npm --prefix ui run lint
       - run: npm --prefix ui run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ui-dist
+          path: ui/dist/*
+
+  # This workflow contains a single job called "build"
+  build-go:
+    needs: build-js
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ui-dist
+
+      - run: go build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: executable
+          path: wishist
+
+  playwright:
+    name: "Playwright Tests"
+    needs: build-go
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.45.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: executable
+
+      - name: Install dependencies
+        run: npm ci
+      - name: Run your tests
+        run: npx playwright test
+        env:
+          HOME: /root
+          CI: "true"
+          WISHIST_EXECUTABLE: "./wishist"

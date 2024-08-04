@@ -52,7 +52,6 @@ async function refreshAuthTokens(): Promise<string | null> {
 
 async function setAuthTokens(data: LoginResponse): Promise<void> {
     tokenSignal.value = data.token
-
     await setMany(
         [
             [tokenKey, data.token],

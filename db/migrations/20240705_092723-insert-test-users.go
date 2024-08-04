@@ -20,7 +20,7 @@ func init() {
 		Up: schema.Run(func(ctx context.Context, tx database.DB) error {
 			for i := 0; i < 30; i++ {
 				u := &db.User{
-					Name:     fmt.Sprintf("User %d Name", i),
+					Name:     "Full Name",
 					Username: fmt.Sprintf("user%d", i),
 					Email:    fmt.Sprintf("user%d@example.com", i),
 					Password: []byte{},

@@ -4,10 +4,8 @@ github.com/abibby/fileserver v0.0.0-20221208191705-087686654550 h1:UsWK0321m+Vxa
 github.com/abibby/fileserver v0.0.0-20221208191705-087686654550/go.mod h1:xHBGw2P5B6OigP/ehSFN0L0SVNJSuGnllCrkfZBEX4s=
 github.com/abibby/nulls v1.1.0 h1:uGxt4HRs6XHqO0mnqfUZcDNiiVzN8sH66daUd5g0EIE=
 github.com/abibby/nulls v1.1.0/go.mod h1:Nm6/cK/PYDg+RwGRv5/nAXGJZfu4nGHFp201Dg1HKWQ=
-github.com/abibby/salusa v0.13.1 h1:ePDyzUwjt060aduZfA7LaqRmtQxB5gSuceuHMwDiGJw=
-github.com/abibby/salusa v0.13.1/go.mod h1:zc8Sm9tHz3zRnhK5eFX+gKjwMIlcCxo9Wqn0ruY+4FA=
-github.com/abibby/salusa v0.14.0 h1:I5f9LmLTXgKQrh0GECbyWQD5BAYGF3Yn4xpe78r3mBQ=
-github.com/abibby/salusa v0.14.0/go.mod h1:zc8Sm9tHz3zRnhK5eFX+gKjwMIlcCxo9Wqn0ruY+4FA=
+github.com/abibby/salusa v0.15.0 h1:OfFN7w5V0mvYZcOgvqLkA8xl8e0kjdxik5Vruj4JhYQ=
+github.com/abibby/salusa v0.15.0/go.mod h1:zc8Sm9tHz3zRnhK5eFX+gKjwMIlcCxo9Wqn0ruY+4FA=
 github.com/bradleyjkemp/cupaloy v2.3.0+incompatible h1:UafIjBvWQmS9i/xRg+CamMrnLTKNzo+bdmT/oH34c2Y=
 github.com/bradleyjkemp/cupaloy v2.3.0+incompatible/go.mod h1:Au1Xw1sgaJ5iSFktEhYsS0dbQiS1B0/XMXl+42y9Ilk=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
