@@ -75,6 +75,8 @@ jobs:
         with:
           name: executable
 
+      - run: chmod +x ./wishist
+
       - name: Install dependencies
         run: npm --prefix ui ci
       - name: Run your tests
