@@ -85,3 +85,10 @@ jobs:
           HOME: /root
           CI: "true"
           WISHIST_EXECUTABLE: "./wishist"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            ui/playwright-report/*
+            ui/test-results/*
