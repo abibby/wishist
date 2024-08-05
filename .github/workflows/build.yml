@@ -52,7 +52,7 @@ jobs:
           name: ui-dist
           path: ui/dist
 
-      - run: go build
+      - run: go build -tags test
 
       - uses: actions/upload-artifact@v4
         with:
