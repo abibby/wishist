@@ -11,7 +11,7 @@ import (
 )
 
 var db *sqlx.DB
-var dbMtx = &sync.Mutex{}
+var DBMtx = &sync.Mutex{}
 
 func Open(ctx context.Context) error {
 	var err error
@@ -23,8 +23,8 @@ func Open(ctx context.Context) error {
 }
 
 func Tx(ctx context.Context, cb func(tx *sqlx.Tx) error) error {
-	dbMtx.Lock()
-	defer dbMtx.Unlock()
+	DBMtx.Lock()
+	defer DBMtx.Unlock()
 
 	tx, err := db.BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {

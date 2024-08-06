@@ -1,7 +1,7 @@
 import { createStore, delMany, get, setMany } from 'idb-keyval'
 import jwt from './jwt'
 import { User } from './api/user'
-import { FetchError, authAPI } from './api'
+import { FetchError, LoginResponse, authAPI } from './api'
 import { signal } from '@preact/signals-core'
 import { useSignalValue } from './hooks/signal'
 
@@ -13,31 +13,10 @@ const userKey = 'user'
 const tokenSignal = signal<string | null | undefined>(undefined)
 
 export async function getToken(): Promise<string | null> {
-    if (tokenSignal.value !== undefined) {
-        return tokenSignal.value
-    }
     try {
-        let token = await get<string | undefined>(tokenKey, authStore)
-        if (token !== undefined && jwtExpired(token)) {
-            token = undefined
-        }
-        if (token === undefined) {
-            const refresh = await get<string | undefined>(refreshKey, authStore)
-            if (refresh === undefined || jwtExpired(refresh)) {
-                return null
-            }
-
-            const result = await authAPI.refresh({ refresh: refresh })
-
-            token = result.token
-
-            await setMany(
-                [
-                    [tokenKey, result.token],
-                    [refreshKey, result.refresh],
-                ],
-                authStore,
-            )
+        let token = await getLocalAuthToken()
+        if (token !== null && jwtExpired(token)) {
+            token = await refreshAuthTokens()
         }
         tokenSignal.value = token
 
@@ -50,6 +29,36 @@ export async function getToken(): Promise<string | null> {
         console.error(e)
         return null
     }
+}
+
+async function getLocalAuthToken(): Promise<string | null> {
+    let token = tokenSignal.value
+    if (token === undefined) {
+        token = await get<string | undefined>(tokenKey, authStore)
+    }
+    return token ?? null
+}
+
+async function refreshAuthTokens(): Promise<string | null> {
+    const refresh = await get<string | undefined>(refreshKey, authStore)
+    if (refresh === undefined || jwtExpired(refresh)) {
+        return null
+    }
+
+    const result = await authAPI.refresh({ refresh: refresh })
+    setAuthTokens(result)
+    return result.token
+}
+
+async function setAuthTokens(data: LoginResponse): Promise<void> {
+    tokenSignal.value = data.token
+    await setMany(
+        [
+            [tokenKey, data.token],
+            [refreshKey, data.refresh],
+        ],
+        authStore,
+    )
 }
 
 function jwtExpired(token: string): boolean {
@@ -110,3 +119,7 @@ export function useUser(): [User | null, boolean] {
 }
 
 getToken()
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+window.testSetAuthTokens = setAuthTokens

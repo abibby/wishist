@@ -1,9 +1,9 @@
 package controller
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"net/http"
 
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
@@ -11,14 +11,14 @@ import (
 )
 
 type ListFriendsRequest struct {
-	Request *http.Request
+	Ctx context.Context `inject:""`
 }
 type ListFriendsResponse []*db.Friend
 
 var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 	friends := []*db.Friend{}
-	uid := mustUserID(r.Request.Context())
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	uid := mustUserID(r.Ctx)
+	err := db.Tx(r.Ctx, func(tx *sqlx.Tx) error {
 		return tx.Select(
 			&friends,
 			`select
@@ -40,15 +40,15 @@ var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 type AddFriendRequest struct {
 	FriendID int `json:"friend_id" validate:"required"`
 
-	Request *http.Request
+	Ctx context.Context `inject:""`
 }
 type AddFriendResponse *db.Friend
 
 var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
-	uid := mustUserID(r.Request.Context())
+	uid := mustUserID(r.Ctx)
 
 	friend := &db.User{}
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	err := db.Tx(r.Ctx, func(tx *sqlx.Tx) error {
 		err := tx.Get(friend, "select * from users where id=?", r.FriendID)
 		if err == sql.ErrNoRows {
 			return request.NewHTTPError(fmt.Errorf("friend not found"), 422)
@@ -70,16 +70,16 @@ var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 })
 
 type RemoveFriendRequest struct {
-	FriendID int `json:"friend_id" validate:"required"`
-	Request  *http.Request
+	FriendID int             `json:"friend_id" validate:"required"`
+	Ctx      context.Context `inject:""`
 }
 type RemoveFriendResponse struct {
 	Success bool `json:"success"`
 }
 
 var FriendDelete = request.Handler(func(r *RemoveFriendRequest) (any, error) {
-	uid := mustUserID(r.Request.Context())
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	uid := mustUserID(r.Ctx)
+	err := db.Tx(r.Ctx, func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM friends WHERE user_id=? AND friend_id=?", uid, r.FriendID)
 		return err
 	})
