@@ -52,10 +52,12 @@ export function buildRestModel<
     const buss = new EventTarget<Record<string, ModelEvent<T>>>()
 
     async function put(e: ModelEvent<T>): Promise<void> {
-        await table.bulkPut(e.models)
+        await table.bulkPut(e.models).catch(console.warn)
     }
     async function remove(e: ModelEvent<T>): Promise<void> {
-        await table.bulkDelete(e.models.map(m => m[pkey] as IDType<T, K>))
+        await table
+            .bulkDelete(e.models.map(m => m[pkey] as IDType<T, K>))
+            .catch(console.warn)
     }
 
     buss.addEventListener('update', put)
@@ -102,7 +104,7 @@ export function buildRestModel<
                 matchRef.current = (model: T) => match(model, filters)
 
                 // Network fetch
-                ;(async () => {
+                void (async () => {
                     try {
                         const models = await this.list(...req)
                         setResult([models, undefined, 'network'])
@@ -121,7 +123,7 @@ export function buildRestModel<
                 })()
 
                 // Cache fetch
-                ;(async () => {
+                void (async () => {
                     let models: T[]
                     if (filters) {
                         models = await table

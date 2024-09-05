@@ -46,6 +46,7 @@ func (u *User) SaltedPassword(password string) []byte {
 func (u *User) UsernameColumns() []string {
 	return []string{"email", "username"}
 }
+
 func (u *User) GetEmail() string {
 	return u.Email
 }
@@ -57,7 +58,6 @@ func (u *User) IsVerified() bool {
 }
 func (u *User) SetVerified(v bool) {
 	u.Verified = v
-
 }
 func (u *User) LookupTokenColumn() string {
 	return "lookup"

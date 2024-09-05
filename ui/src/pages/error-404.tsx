@@ -1,7 +1,5 @@
 import { Fragment, h } from 'preact'
 
-h
-
 export function Error404() {
     return (
         <Fragment>

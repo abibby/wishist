@@ -19,8 +19,6 @@ import { ChangePasswordModal } from './components/modals/change-password'
 import { ItemEditModal } from './components/modals/item-edit'
 import { ItemViewModal } from './components/modals/item-view'
 
-h
-
 function Routes() {
     return (
         <Router>
@@ -66,4 +64,5 @@ function Main() {
     )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 render(<Main />, document.getElementById('app')!)

@@ -148,16 +148,17 @@ var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (any, error) {
 })
 
 type RemoveUserItemRequest struct {
-	ItemID  int `json:"item_id" validate:"required"`
-	Request *http.Request
+	ItemID int `json:"item_id" validate:"required"`
+
+	Ctx context.Context `inject:""`
 }
 type RemoveUserItemResponse struct {
 	Success bool `json:"success"`
 }
 
 var UserItemDelete = request.Handler(func(r *RemoveUserItemRequest) (any, error) {
-	uid := mustUserID(r.Request.Context())
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	uid := mustUserID(r.Ctx)
+	err := db.Tx(r.Ctx, func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM user_items WHERE user_id=? AND item_id=?", uid, r.ItemID)
 		return err
 	})

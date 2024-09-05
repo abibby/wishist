@@ -8,8 +8,6 @@ import { ErrorFetchError } from '../../pages/error-fetch-error'
 import { useCallback } from 'preact/hooks'
 import { bind } from '@zwzn/spicy'
 
-h
-
 const emptyItem = {
     name: '',
     url: '',
@@ -67,8 +65,8 @@ export function ItemViewModal() {
                 <div
                     class={classNames(styles.popupDescription, styles.divider)}
                 >
-                    {item.description.split('\n').map(line => (
-                        <p>{line}</p>
+                    {item.description.split('\n').map((line, i) => (
+                        <p key={i}>{line}</p>
                     ))}
                 </div>
             )}
@@ -118,7 +116,7 @@ function ItemLink({ url }: { url: string }) {
         return <Fragment>{url}</Fragment>
     }
     return (
-        <a href={url} target='_blank'>
+        <a href={url} target='_blank' rel='noreferrer'>
             {host}
         </a>
     )

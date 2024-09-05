@@ -1,0 +1,11 @@
+version: "3"
+services:
+  playwright-tests:
+    build:
+      context: .
+      dockerfile: playwright.Dockerfile
+    image: playwright-tests
+    volumes:
+      - ./ui:/app
+    ports:
+      - "9323:9323"

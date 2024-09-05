@@ -39,4 +39,4 @@ function gaussianRandom(mean = 0, stdev = 1) {
     return z * stdev + mean
 }
 
-main()
+void main()

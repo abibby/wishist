@@ -9,8 +9,6 @@ import { useRoute } from 'preact-iso'
 import { ItemListReadonly } from '../components/item-list-readonly'
 import { Conditions } from '../components/conditions'
 
-h
-
 export function List() {
     const { params } = useRoute()
     const { username } = params
@@ -66,16 +64,16 @@ function OtherUserList({ listUser, activeUser }: OtherListProps) {
         return !!friends?.find(f => f.friend_id === listUser.id)
     }, [friends, listUser.id, loggedIn])
 
-    const addFriend = useCallback(() => {
+    const addFriend = useCallback(async () => {
         if (loggedIn) {
-            friendAPI.create({ friend_id: listUser.id })
+            await friendAPI.create({ friend_id: listUser.id })
         } else {
-            openModal('/login?message=You must log in to add a friend')
+            await openModal('/login?message=You must log in to add a friend')
         }
     }, [listUser.id, loggedIn, openModal])
 
-    const removeFriend = useCallback(() => {
-        friendAPI.delete({ friend_id: listUser.id })
+    const removeFriend = useCallback(async () => {
+        await friendAPI.delete({ friend_id: listUser.id })
     }, [listUser.id])
 
     const [items, err] = itemAPI.useList({ user_id: listUser.id })
@@ -86,7 +84,7 @@ function OtherUserList({ listUser, activeUser }: OtherListProps) {
 
     return (
         <Conditions>
-            <h1>{listUser.name}'s Wishlist</h1>
+            <h1>{listUser.name}&apos;s Wishlist</h1>
             <button v-if={isFriend} onClick={removeFriend}>
                 Remove Friend
             </button>

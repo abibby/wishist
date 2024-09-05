@@ -12,6 +12,7 @@ export default defineConfig(({ mode }): UserConfig => {
     const isProd = mode === 'production'
 
     return {
+        envPrefix: 'WISHIST_',
         plugins: [
             preact(),
             VitePWA({

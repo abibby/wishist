@@ -5,8 +5,6 @@ import { useCallback } from 'preact/hooks'
 import { openToast } from './toast'
 import { Outcome, useInstallPrompt } from '../hooks/use-install-prompt'
 
-h
-
 export function FloatingInstallPrompt() {
     const [baseInstall, canInstall] = useInstallPrompt()
     const [state, setState, stateReady] = usePersistentState<'ready' | Outcome>(
@@ -16,7 +14,7 @@ export function FloatingInstallPrompt() {
 
     const install = useCallback(async () => {
         const choice = await baseInstall()
-        setState(choice.outcome)
+        await setState(choice.outcome)
         if (choice.outcome === 'dismissed') {
             await openToast(
                 'Install canceled. You can install from the Account page at any time',
@@ -24,8 +22,8 @@ export function FloatingInstallPrompt() {
         }
     }, [baseInstall, setState])
 
-    const dismiss = useCallback(() => {
-        setState('dismissed')
+    const dismiss = useCallback(async () => {
+        await setState('dismissed')
     }, [setState])
 
     if (!stateReady || !canInstall || state !== 'ready') {

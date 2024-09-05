@@ -21,3 +21,9 @@
 .toast p {
     margin: 0;
 }
+
+.close {
+    float: right;
+    background: none;
+    line-height: 10px;
+}

@@ -51,7 +51,7 @@ export function useInstallPrompt(): [() => Promise<UserChoice>, boolean] {
 
     const install = useCallback(async (): Promise<UserChoice> => {
         if (installEvent) {
-            installEvent.prompt()
+            await installEvent.prompt()
             return installEvent.userChoice
         }
         return { outcome: 'dismissed', platform: '' }

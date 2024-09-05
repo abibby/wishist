@@ -4,21 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/abibby/salusa/database/dialects"
+	"github.com/abibby/salusa/clog"
+	"github.com/abibby/salusa/clog/loki"
+	"github.com/abibby/salusa/database"
 	"github.com/abibby/salusa/database/dialects/sqlite"
 	"github.com/abibby/salusa/email"
-	"github.com/abibby/salusa/kernel"
+	"github.com/abibby/salusa/salusaconfig"
 	"github.com/joho/godotenv"
 )
 
 type Cfg interface {
-	kernel.KernelConfig
+	salusaconfig.Config
 	email.MailConfiger
-	dialects.DBConfiger
+	database.DBConfiger
+	clog.LoggerConfiger
 }
 
 type config struct{}
@@ -54,13 +58,16 @@ func envInt(key string, def int) int {
 	return value
 }
 
-var AppKey []byte
-var DBPath string
-var BaseURL string
-var Port int
-var Verbose bool
+var (
+	AppKey       []byte
+	dbPath       string
+	baseURL      string
+	port         int
+	verbose      bool
+	loggerConfig clog.Config
+)
 
-var Email email.Config
+var emailConfig email.Config
 
 var Config Cfg = &config{}
 
@@ -71,13 +78,13 @@ func Init() error {
 		return err
 	}
 	AppKey = []byte(mustEnv("APP_KEY"))
-	DBPath = env("DB_PATH", "./db.sqlite")
-	Port = envInt("PORT", 32148)
-	BaseURL = env("BASE_URL", fmt.Sprintf("http://localhost:%d", Port))
+	dbPath = env("DB_PATH", "./db.sqlite")
+	port = envInt("PORT", 32148)
+	baseURL = env("BASE_URL", fmt.Sprintf("http://localhost:%d", port))
 
-	Verbose = envBool("VERBOSE", false)
+	verbose = envBool("VERBOSE", false)
 
-	Email = &email.SMTPConfig{
+	emailConfig = &email.SMTPConfig{
 		From:     env("MAIL_FROM", "wishist@example.com"),
 		Host:     env("MAIL_HOST", "sandbox.smtp.mailtrap.io"),
 		Port:     envInt("MAIL_PORT", 2525),
@@ -85,18 +92,40 @@ func Init() error {
 		Password: env("MAIL_PASSWORD", "pass"),
 	}
 
+	level := slog.LevelInfo
+	if verbose {
+		level = slog.LevelDebug
+	}
+
+	switch env("LOGGER", "") {
+	case "loki":
+		fmt.Println("using loki logging")
+		loggerConfig = &loki.Config{
+			Level:    level,
+			URL:      env("LOKI_URL", ""),
+			TenantID: env("LOKI_TENANT_ID", "wishist"),
+		}
+	default:
+		loggerConfig = clog.NewDefaultConfig(level)
+
+	}
+
 	return nil
 }
 
 func (c *config) GetHTTPPort() int {
-	return Port
+	return port
 }
 func (c *config) GetBaseURL() string {
-	return BaseURL
+	return baseURL
 }
 func (c *config) MailConfig() email.Config {
-	return Email
+	return emailConfig
 }
-func (c *config) DBConfig() dialects.Config {
-	return sqlite.NewConfig(DBPath)
+func (c *config) DBConfig() database.Config {
+	return sqlite.NewConfig(dbPath)
+}
+
+func (c *config) LoggerConfig() clog.Config {
+	return loggerConfig
 }

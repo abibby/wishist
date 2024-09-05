@@ -13,31 +13,10 @@ const userKey = 'user'
 const tokenSignal = signal<string | null | undefined>(undefined)
 
 export async function getToken(): Promise<string | null> {
-    if (tokenSignal.value !== undefined) {
-        return tokenSignal.value
-    }
     try {
-        let token = await get<string | undefined>(tokenKey, authStore)
-        if (token !== undefined && jwtExpired(token)) {
-            token = undefined
-        }
-        if (token === undefined) {
-            const refresh = await get<string | undefined>(refreshKey, authStore)
-            if (refresh === undefined || jwtExpired(refresh)) {
-                return null
-            }
-
-            const result = await authAPI.refresh({ refresh: refresh })
-
-            token = result.token
-
-            await setMany(
-                [
-                    [tokenKey, result.token],
-                    [refreshKey, result.refresh],
-                ],
-                authStore,
-            )
+        let token = await getLocalAuthToken()
+        if (token !== null && jwtExpired(token)) {
+            token = await refreshAuthTokens()
         }
         tokenSignal.value = token
 
@@ -50,6 +29,32 @@ export async function getToken(): Promise<string | null> {
         console.error(e)
         return null
     }
+}
+
+async function getLocalAuthToken(): Promise<string | null> {
+    let token = tokenSignal.value
+    if (token === undefined) {
+        token = await get<string | undefined>(tokenKey, authStore)
+    }
+    return token ?? null
+}
+
+async function refreshAuthTokens(): Promise<string | null> {
+    const refresh = await get<string | undefined>(refreshKey, authStore)
+    if (refresh === undefined || jwtExpired(refresh)) {
+        return null
+    }
+
+    const result = await authAPI.refresh({ refresh: refresh })
+    tokenSignal.value = result.token
+    await setMany(
+        [
+            [tokenKey, result.token],
+            [refreshKey, result.refresh],
+        ],
+        authStore,
+    )
+    return result.token
 }
 
 function jwtExpired(token: string): boolean {
@@ -109,4 +114,9 @@ export function useUser(): [User | null, boolean] {
     ]
 }
 
-getToken()
+if ('testAuthTokens' in window) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    tokenSignal.value = window.testAuthTokens.token
+}
+void getToken()

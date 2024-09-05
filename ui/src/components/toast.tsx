@@ -2,10 +2,12 @@ import { Event, EventTarget } from '../events'
 import styles from './toast.module.css'
 
 let lastID = 0
-type ToastData = {
+type ToastOptions = {
+    durationMs: number
+}
+type ToastData = ToastOptions & {
     id: number
     message: string
-    durationMs: number
 }
 
 class OpenEvent extends Event<'open'> {
@@ -25,17 +27,18 @@ type ToastEventMap = {
 }
 const toastEvents = new EventTarget<ToastEventMap, 'strict'>()
 
-export async function openToast(msg: string): Promise<void> {
+export async function openToast(
+    msg: string,
+    options: Partial<ToastOptions> = {},
+): Promise<void> {
     return new Promise(resolve => {
         const data: ToastData = {
             id: lastID++,
             message: msg,
             durationMs: 5000,
+            ...options,
         }
         toastEvents.dispatchEvent(new OpenEvent(data))
-        setTimeout(() => {
-            toastEvents.dispatchEvent(new CloseEvent(data.id))
-        }, data.durationMs)
 
         function onclose(e: CloseEvent) {
             if (e.id !== data.id) {
@@ -55,16 +58,30 @@ toastWrapper.classList.add(styles.controller)
 document.body.appendChild(toastWrapper)
 
 toastEvents.addEventListener('open', e => {
-    const { message, id } = e.data
+    const { message, id, durationMs } = e.data
     const toast = document.createElement('div')
     toast.dataset.id = String(id)
-    toast.innerHTML = `<div class="${styles.toast}">
-        ${message.split('\n').map(line => `<p>${line}</p>`)}
-    </div>`
-    toast.addEventListener('click', () => {
+    toast.classList.add(styles.toast)
+    toast.innerHTML = message
+        .split('\n')
+        .map(line => `<p>${line}</p>`)
+        .join('')
+    const closeBtn = document.createElement('button')
+
+    closeBtn.innerText = 'x'
+    closeBtn.classList.add(styles.close)
+
+    closeBtn.addEventListener('click', () => {
         toastEvents.dispatchEvent(new CloseEvent(id))
     })
+    toast.prepend(closeBtn)
     toastWrapper.appendChild(toast)
+
+    if (durationMs > 0) {
+        setTimeout(() => {
+            toastEvents.dispatchEvent(new CloseEvent(id))
+        }, durationMs)
+    }
 })
 toastEvents.addEventListener('close', e => {
     const toasts = toastWrapper.querySelectorAll(`[data-id="${e.id}"]`)
