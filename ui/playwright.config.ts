@@ -4,26 +4,20 @@ export default defineConfig({
     // Look for test files in the "tests" directory, relative to this configuration file.
     testDir: '__tests__',
     snapshotPathTemplate:
-        '{testDir}/__screenshots__/{testFilePath}/{arg}-{projectName}{ext}',
+        '{testDir}/__screenshots__/{platform}/{testFilePath}/{arg}-{projectName}{ext}',
 
     // Run all tests in parallel.
-    fullyParallel: true,
+    fullyParallel: false,
 
     // Fail the build on CI if you accidentally left test.only in the source code.
     forbidOnly: !!process.env.CI,
-
-    expect: {
-        toHaveScreenshot: {
-            maxDiffPixelRatio: 0.03,
-        },
-    },
 
     // Retry on CI only.
     // retries: process.env.CI ? 2 : 0,
     retries: 0,
 
     // Opt out of parallel tests on CI.
-    workers: process.env.CI ? 1 : undefined,
+    workers: 1,
 
     // Reporter to use
     reporter: 'html',
@@ -56,12 +50,14 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
         env: {
             APP_KEY: 'test-secret',
+            PORT: '32148',
             MAIL_FROM: '',
             MAIL_HOST: '',
             MAIL_PORT: '',
             MAIL_USERNAME: '',
             MAIL_PASSWORD: '',
-            DB_PATH: `./test-${Date.now()}.sqlite`,
+            // DB_PATH: `./test-${Date.now()}.sqlite`,
+            DB_PATH: ':memory:',
         },
     },
 })

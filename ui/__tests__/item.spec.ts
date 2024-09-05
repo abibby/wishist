@@ -3,6 +3,8 @@ import { test, expect } from '../playwright/fixtures'
 test('add item', async ({ authenticatedPage: page, account }) => {
     await page.goto('/list/' + account.username)
 
+    await page.getByRole('textbox').waitFor({ state: 'visible' })
+
     await expect(page).toHaveScreenshot()
 
     await page.getByRole('textbox').click()

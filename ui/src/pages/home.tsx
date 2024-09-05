@@ -6,8 +6,6 @@ import { ButtonList } from '../components/button-list'
 import styles from './home.module.css'
 import { ErrorFetchError } from './error-fetch-error'
 
-h
-
 export function Home() {
     const [user] = useUser()
     const [friends, err] = friendAPI.useList()

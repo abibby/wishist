@@ -7,7 +7,8 @@ all: npm
 	$(GC) build -o bin/wishlist
 
 run-test: npm
-	DB_PATH="test-`date`.sqlite" $(GC) run -tags test .
+	# DB_PATH="test-`date`.sqlite" $(GC) run -tags test .
+	DB_PATH=":memory:" $(GC) run -tags test .
 
 run-dev-test:
 	DB_PATH="test-`date`.sqlite" $(GC) run -tags test -tags dev .

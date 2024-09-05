@@ -6,8 +6,6 @@ import { useOpenModal } from '../components/modal'
 import { ButtonList } from '../components/button-list'
 import { useInstallPrompt } from '../hooks/use-install-prompt'
 
-h
-
 export function Account() {
     const { route } = useLocation()
     const [install, canInstall] = useInstallPrompt()

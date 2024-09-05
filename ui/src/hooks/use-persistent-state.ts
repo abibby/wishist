@@ -10,7 +10,7 @@ export function usePersistentState<T>(
     const [value, setValue] = useState<T>(defaultValue)
     const [loaded, setLoaded] = useState(false)
     useEffect(() => {
-        get(name, store).then(v => {
+        void get(name, store).then(v => {
             setLoaded(true)
             if (v === undefined) {
                 return

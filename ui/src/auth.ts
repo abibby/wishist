@@ -1,7 +1,7 @@
 import { createStore, delMany, get, setMany } from 'idb-keyval'
 import jwt from './jwt'
 import { User } from './api/user'
-import { FetchError, LoginResponse, authAPI } from './api'
+import { FetchError, authAPI } from './api'
 import { signal } from '@preact/signals-core'
 import { useSignalValue } from './hooks/signal'
 
@@ -46,19 +46,15 @@ async function refreshAuthTokens(): Promise<string | null> {
     }
 
     const result = await authAPI.refresh({ refresh: refresh })
-    setAuthTokens(result)
-    return result.token
-}
-
-async function setAuthTokens(data: LoginResponse): Promise<void> {
-    tokenSignal.value = data.token
+    tokenSignal.value = result.token
     await setMany(
         [
-            [tokenKey, data.token],
-            [refreshKey, data.refresh],
+            [tokenKey, result.token],
+            [refreshKey, result.refresh],
         ],
         authStore,
     )
+    return result.token
 }
 
 function jwtExpired(token: string): boolean {
@@ -118,8 +114,9 @@ export function useUser(): [User | null, boolean] {
     ]
 }
 
-getToken()
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-window.testSetAuthTokens = setAuthTokens
+if ('testAuthTokens' in window) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    tokenSignal.value = window.testAuthTokens.token
+}
+void getToken()

@@ -4,6 +4,8 @@ test('create user', async ({ page }) => {
     const projectName = test.info().project.name
     const projectNameSlug = projectName.replace(/\s+/g, '-').toLowerCase()
 
+    await page.getByLabel('Username').waitFor({ state: 'visible' })
+
     await page.goto('/create-user')
 
     await expect(page).toHaveScreenshot()
@@ -24,13 +26,16 @@ test('create user', async ({ page }) => {
 test('login', async ({ page, account }) => {
     await page.goto('/')
 
+    await page
+        .getByRole('button', { name: 'login' })
+        .waitFor({ state: 'visible' })
+
     await expect(page).toHaveScreenshot()
 
     await page.getByRole('button', { name: 'login' }).click()
 
     await expect(page).toHaveScreenshot()
 
-    await page.getByLabel('Username').fill(account.username)
     await page.getByLabel('Password').fill(account.password)
     await page
         .getByRole('button', { name: 'Login', exact: true })

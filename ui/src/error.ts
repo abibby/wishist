@@ -1,23 +1,26 @@
 import { FetchError } from './api'
 import { openToast } from './components/toast'
 
-function handleError(err: unknown) {
+async function handleError(err: unknown): Promise<void> {
+    await openToast(errorMessage(err), {
+        durationMs: -1,
+    })
+}
+function errorMessage(err: unknown): string {
     if (err instanceof FetchError && err.body.fields !== undefined) {
-        openToast(
-            Object.entries(err.body.fields)
-                .flatMap(([, errors]) => errors)
-                .join('\n'),
-        )
+        return Object.entries(err.body.fields)
+            .flatMap(([, errors]) => errors)
+            .join('\n')
     } else if (err instanceof Error) {
-        openToast(err.message)
+        return err.message
     } else {
-        openToast('unknown error')
+        return 'unknown error'
     }
 }
 
 window.addEventListener('error', e => {
-    handleError(e.error)
+    void handleError(e.error)
 })
 window.addEventListener('unhandledrejection', e => {
-    handleError(e.reason)
+    void handleError(e.reason)
 })

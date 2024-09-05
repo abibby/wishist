@@ -7,6 +7,9 @@ RUN npm ci
 
 # RUN ls && exit 1
 COPY ./ui/ ./
+
+ENV WISHIST_PLAYWRIGHT=true
+
 RUN npm run build
 
 FROM golang:1.22 as go-build
@@ -36,9 +39,6 @@ RUN npm ci
 
 # Install Playwright browser binaries with all dependencies.
 RUN npx playwright install --with-deps
-
-# Copy the rest of your application code into the container.
-COPY ./ui .
 
 COPY --from=go-build /wishist /wishist
 

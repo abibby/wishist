@@ -11,8 +11,6 @@ import { Form } from './form/form'
 import { Spinner } from './spinner'
 import { openToast } from './toast'
 
-h
-
 const debouncedItemUpdate: typeof itemAPI.update = debounce(
     itemAPI.update,
     500,
@@ -41,7 +39,7 @@ export function ItemListEdit({ items }: ItemListEditProps) {
         } catch (e) {
             console.warn(e)
 
-            openToast('Could not add item, try again later')
+            void openToast('Could not add item, try again later')
             return
         } finally {
             setAdding(false)
@@ -90,7 +88,7 @@ function Row({ item: item2 }: RowProps) {
     const openModal = useOpenModal()
 
     const nameChange = useCallback(
-        (value: string) => {
+        async (value: string) => {
             if (value === '') {
                 return
             }
@@ -98,7 +96,7 @@ function Row({ item: item2 }: RowProps) {
                 ...item2,
                 name: value,
             }
-            debouncedItemUpdate(newItem)
+            await debouncedItemUpdate(newItem)
         },
         [item2],
     )

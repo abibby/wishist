@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable no-empty-pattern */
 import { Page, test as baseTest } from '@playwright/test'
 import fs from 'fs'
@@ -15,25 +16,19 @@ export const test = baseTest.extend<
     },
     NonNullable<unknown>
 >({
-    authenticatedPage: async ({ context, userTokens }, use) => {
-        const newPage = await context.newPage()
-        await newPage.goto('/')
-
-        await newPage.evaluate(async tokens => {
-            await new Promise<void>(resolve => setTimeout(() => resolve(), 100))
+    authenticatedPage: async ({ page, userTokens }, use) => {
+        await page.addInitScript(tokens => {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            await window.testSetAuthTokens(tokens)
+            window.testAuthTokens = tokens
         }, userTokens)
 
-        await new Promise<void>(resolve => setTimeout(() => resolve(), 100))
-
-        await use(newPage)
+        await use(page)
     },
 
     account: async ({}, use) => {
         const id = index()
-        use({
+        await use({
             username: `user${id}`,
             password: `pass${id}`,
         })
@@ -58,8 +53,12 @@ export const test = baseTest.extend<
         } else {
             resp = JSON.parse(fs.readFileSync(fileName).toString())
         }
-        use(resp)
+        await use(resp)
     },
+})
+
+test.beforeEach(async () => {
+    await fetch(url('/test/reset-database'))
 })
 
 function index(): number {

@@ -9,8 +9,6 @@ import { Conditions } from './conditions'
 import { Eye } from './icons/eye'
 import { Bag } from './icons/bag'
 
-h
-
 interface ItemListReadonlyProps {
     items: Item[] | undefined
     userItems: UserItem[] | undefined

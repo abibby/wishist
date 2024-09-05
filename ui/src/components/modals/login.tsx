@@ -6,8 +6,6 @@ import { login } from '../../auth'
 import { Form } from '../form/form'
 import { Input } from '../form/input'
 
-h
-
 export function LoginModal() {
     const { query } = useRoute()
     const { message } = query

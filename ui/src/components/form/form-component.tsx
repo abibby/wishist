@@ -3,8 +3,6 @@ import styles from './form-component.module.css'
 import { FormContext } from './form'
 import { useContext, useLayoutEffect, useRef } from 'preact/hooks'
 
-h
-
 export interface FormComponentProps {
     title: string
     name?: string

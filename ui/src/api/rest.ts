@@ -104,7 +104,7 @@ export function buildRestModel<
                 matchRef.current = (model: T) => match(model, filters)
 
                 // Network fetch
-                ;(async () => {
+                void (async () => {
                     try {
                         const models = await this.list(...req)
                         setResult([models, undefined, 'network'])
@@ -123,7 +123,7 @@ export function buildRestModel<
                 })()
 
                 // Cache fetch
-                ;(async () => {
+                void (async () => {
                     let models: T[]
                     if (filters) {
                         models = await table
