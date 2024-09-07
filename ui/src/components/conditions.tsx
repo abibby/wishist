@@ -7,8 +7,6 @@ import {
     h,
 } from 'preact'
 
-h
-
 export function Conditions(props: RenderableProps<unknown>) {
     return <Fragment>{filterChildren(props.children)}</Fragment>
 }

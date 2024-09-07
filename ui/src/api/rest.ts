@@ -192,6 +192,7 @@ export function buildRestModel<
         ): Promise<T[]> {
             const models = await apiFetch<T[]>(url, request[0] ?? null)
             buss.dispatchEvent(new ModelEvent('update', models))
+
             return models
         },
         async create(request: TCreateRequest): Promise<T> {

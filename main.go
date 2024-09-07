@@ -14,9 +14,9 @@ import (
 	"github.com/abibby/fileserver"
 	"github.com/abibby/salusa/auth"
 	"github.com/abibby/salusa/di"
-	"github.com/abibby/salusa/kernel"
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/salusa/router"
+	"github.com/abibby/salusa/salusaconfig"
 	"github.com/abibby/salusa/salusadi"
 	"github.com/abibby/salusa/view"
 	"github.com/abibby/wishist/config"
@@ -28,6 +28,8 @@ import (
 )
 
 type CreateUserRequest struct {
+	auth.UserCreateRequest
+
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required|email"`
 	Name     string `json:"name" validate:"required"`
@@ -77,7 +79,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	di.RegisterSingleton(ctx, func() kernel.KernelConfig {
+	di.RegisterSingleton(ctx, func() salusaconfig.Config {
 		return config.Config
 	})
 	// must be before the db.Open because of dumb di stuff
@@ -102,12 +104,13 @@ func main() {
 	r.Register(ctx)
 
 	r.Use(request.HandleErrors(
-		func(err error) {
+		func(ctx context.Context, err error) http.Handler {
 			slog.Warn("request failed", "error", err)
+			return nil
 		},
 	))
 
-	r.Use(func(h http.Handler) http.Handler {
+	r.Use(router.MiddlewareFunc(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := time.Now()
 			sr := NewStatusRecorder(w)
@@ -121,20 +124,28 @@ func main() {
 				"status", sr.Status,
 			)
 		})
-	})
+	}))
 
 	r.Group("/api", func(r *router.Router) {
 		r.Use(auth.AttachUser())
 
 		auth.RegisterRoutes(r, auth.NewBasicAuthController[*db.User](
-			auth.NewUser(func(r *CreateUserRequest) *db.User {
-				return &db.User{
+			auth.CreateUser(func(r *CreateUserRequest, c *auth.BasicAuthController[*db.User]) (*auth.UserCreateResponse[*db.User], error) {
+				return c.RunUserCreate(&db.User{
 					Username: r.Username,
 					Email:    r.Email,
 					Name:     r.Name,
 					Password: []byte{},
-				}
+				}, &r.UserCreateRequest)
 			}),
+			// auth.CreateUser(func(r *CreateUserRequest, c *auth.BasicAuthController[*db.User]) *db.User {
+			// 	return &db.User{
+			// 		Username: r.Username,
+			// 		Email:    r.Email,
+			// 		Name:     r.Name,
+			// 		Password: []byte{},
+			// 	}
+			// }),
 			auth.AccessTokenOptions(func(u *db.User, claims *auth.Claims) jwt.Claims {
 				return &Claims{
 					Claims:   *claims,
@@ -179,6 +190,11 @@ func main() {
 		}))
 	})
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
+
+	err = r.Validate(ctx)
+	if err != nil {
+		slog.Error("router validation failed", "err", err)
+	}
 
 	slog.Info("Listening on " + config.Config.GetBaseURL())
 

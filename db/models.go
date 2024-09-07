@@ -6,11 +6,14 @@ import (
 	"github.com/abibby/nulls"
 	"github.com/abibby/salusa/database/builder"
 	"github.com/abibby/salusa/database/model"
+	"github.com/abibby/salusa/database/model/mixins"
 )
 
 //go:generate spice generate:migration
 type Item struct {
 	model.BaseModel
+	mixins.Timestamps
+	mixins.SoftDelete
 	ID             int        `db:"id,autoincrement,primary" json:"id"`
 	UserID         int        `db:"user_id"                  json:"user_id"`
 	Name           string     `db:"name"                     json:"name"`
@@ -27,6 +30,8 @@ func ItemQuery(ctx context.Context) *builder.ModelBuilder[*Item] {
 //go:generate spice generate:migration
 type UserItem struct {
 	model.BaseModel
+	mixins.Timestamps
+	mixins.SoftDelete
 	UserID     int    `db:"user_id,primary"       json:"-"`
 	ItemID     int    `db:"item_id,primary"       json:"item_id"`
 	Type       string `db:"type"                  json:"type"`
@@ -40,6 +45,8 @@ func UserItemQuery(ctx context.Context) *builder.ModelBuilder[*UserItem] {
 //go:generate spice generate:migration
 type Friend struct {
 	model.BaseModel
+	mixins.Timestamps
+	mixins.SoftDelete
 	UserID         int    `db:"user_id,primary"          json:"-"`
 	FriendID       int    `db:"friend_id,primary"        json:"friend_id"`
 	FriendName     string `db:"friend_name,readonly"     json:"friend_name"`

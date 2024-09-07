@@ -4,8 +4,6 @@ import { useUser } from '../auth'
 import { useOpenModal } from '../components/modal'
 import styles from './default.module.css'
 
-h
-
 export function Default({ children }: RenderableProps<unknown>) {
     const [user] = useUser()
     const openModal = useOpenModal()

@@ -1,8 +1,6 @@
 import { Fragment, h } from 'preact'
 import { FetchError } from '../api'
 
-h
-
 export type ErrorFetchErrorProps = {
     err: FetchError
 }

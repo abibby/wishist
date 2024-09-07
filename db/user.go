@@ -7,11 +7,14 @@ import (
 	"github.com/abibby/salusa/auth"
 	"github.com/abibby/salusa/database/builder"
 	"github.com/abibby/salusa/database/model"
+	"github.com/abibby/salusa/database/model/mixins"
 )
 
 //go:generate spice generate:migration
 type User struct {
 	model.BaseModel
+	mixins.Timestamps
+	mixins.SoftDelete
 	ID       int    `db:"id,autoincrement,primary" json:"id"`
 	Name     string `db:"name"                     json:"name"`
 	Username string `db:"username,unique"          json:"username"`

@@ -5,8 +5,6 @@ import { Input } from '../form/input'
 import { FetchError } from '../../api'
 import { changePassword } from '../../api/user'
 
-h
-
 export function ChangePasswordModal() {
     const close = useCloseModal()
     const [currentPassword, setCurrentPassword] = useState('')

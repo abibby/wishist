@@ -1,7 +1,5 @@
 import { h } from 'preact'
 
-h
-
 export function Bag() {
     return (
         <svg
