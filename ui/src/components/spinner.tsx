@@ -1,5 +1,6 @@
 import classNames from 'classnames'
 import styles from './spinner.module.css'
+import { h } from 'preact'
 
 interface SpinnerProps {
     class?: string

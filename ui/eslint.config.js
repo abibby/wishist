@@ -24,7 +24,7 @@ export default tseslint.config(
                     caughtErrors: 'all',
                     caughtErrorsIgnorePattern: '^_',
                     destructuredArrayIgnorePattern: '^_',
-                    varsIgnorePattern: '^_|^h$',
+                    varsIgnorePattern: '^_|^h$|^Fragment$',
                     ignoreRestSiblings: true,
                 },
             ],

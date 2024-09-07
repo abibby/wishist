@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'preact/hooks'
 import { FetchError } from '../../api'
-import { JSX, RenderableProps, createContext } from 'preact'
+import { JSX, RenderableProps, createContext, h } from 'preact'
 import styles from './form.module.css'
 
 export const FormContext = createContext<FetchError | undefined>(undefined)

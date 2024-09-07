@@ -1,4 +1,4 @@
-import { h } from 'preact'
+import { h, Fragment } from 'preact'
 import styles from './install-prompt.module.css'
 import { usePersistentState } from '../hooks/use-persistent-state'
 import { useCallback } from 'preact/hooks'
