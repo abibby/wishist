@@ -11,8 +11,6 @@ import { Form } from './form/form'
 import { Spinner } from './spinner'
 import { openToast } from './toast'
 
-h
-
 const debouncedItemUpdate: typeof itemAPI.update = debounce(
     itemAPI.update,
     500,

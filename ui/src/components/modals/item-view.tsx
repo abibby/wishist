@@ -8,8 +8,6 @@ import { ErrorFetchError } from '../../pages/error-fetch-error'
 import { useCallback } from 'preact/hooks'
 import { bind } from '@zwzn/spicy'
 
-h
-
 const emptyItem = {
     name: '',
     url: '',

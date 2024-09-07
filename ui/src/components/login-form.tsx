@@ -5,8 +5,6 @@ import { Input } from './form/input'
 import { ModalActions } from './modal'
 import { Form } from './form/form'
 
-h
-
 interface LoginFormProps {
     onLogin: () => void
 }

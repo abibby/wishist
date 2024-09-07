@@ -3,8 +3,6 @@ import { h } from 'preact'
 import { FormComponent, FormComponentProps } from './form-component'
 import styles from './form-component.module.css'
 
-h
-
 export type InputType = 'text' | 'number' | 'password'
 
 export interface InputProps extends FormComponentProps {

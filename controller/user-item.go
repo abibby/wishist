@@ -148,8 +148,8 @@ var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (any, error) {
 })
 
 type RemoveUserItemRequest struct {
-	ItemID  int `json:"item_id" validate:"required"`
-	Request *http.Request
+	ItemID  int           `json:"item_id" validate:"required"`
+	Request *http.Request `inject:""`
 }
 type RemoveUserItemResponse struct {
 	Success bool `json:"success"`

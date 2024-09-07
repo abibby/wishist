@@ -18,8 +18,7 @@ import { LoginModal } from './components/modals/login'
 import { ChangePasswordModal } from './components/modals/change-password'
 import { ItemEditModal } from './components/modals/item-edit'
 import { ItemViewModal } from './components/modals/item-view'
-
-h
+import './restore'
 
 function Routes() {
     return (

@@ -3,8 +3,6 @@ import { h } from 'preact'
 import { FormComponent, FormComponentProps } from './form-component'
 import styles from './form-component.module.css'
 
-h
-
 export interface TextAreaProps extends FormComponentProps {
     value: string
     onInput: (value: string, event: Event) => void

@@ -4,8 +4,6 @@ import styles from './modal.module.css'
 import { LocationHook, LocationProvider, useLocation } from 'preact-iso'
 import classNames from 'classnames'
 
-h
-
 const MODAL_QUERY = 'm'
 
 let modalUUID = 0

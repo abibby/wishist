@@ -10,16 +10,12 @@ export async function apiFetch<T>(
     query: Record<string, unknown> | null = null,
     init?: RequestInit & AuthRequestInit,
 ): Promise<T> {
+    init = addHeader(init, 'Accept', 'application/json')
+    init = addHeader(init, 'Content-Type', 'application/json')
     if (init?.withoutToken !== true) {
         const token = await getToken()
         if (token !== null) {
-            init = {
-                ...init,
-                headers: {
-                    ...init?.headers,
-                    Authorization: 'Bearer ' + token,
-                },
-            }
+            init = addHeader(init, 'Authorization', 'Bearer ' + token)
         }
     }
 
@@ -80,4 +76,28 @@ export async function apiFetch<T>(
         throw new FetchError(message, response.status, body, cause)
     }
     return body
+}
+
+function addHeader(
+    init: RequestInit | undefined,
+    name: string,
+    value: string,
+): RequestInit {
+    if (init === undefined) {
+        init = {}
+    }
+    let headers = init.headers
+    if (headers === undefined) {
+        headers = {}
+    }
+    if (headers instanceof Array) {
+        headers.push([name, value])
+    } else if (headers instanceof Headers) {
+        headers.append(name, value)
+    } else {
+        headers[name] = value
+    }
+    init.headers = headers
+
+    return init
 }

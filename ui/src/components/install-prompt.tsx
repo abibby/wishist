@@ -5,8 +5,6 @@ import { useCallback } from 'preact/hooks'
 import { openToast } from './toast'
 import { Outcome, useInstallPrompt } from '../hooks/use-install-prompt'
 
-h
-
 export function FloatingInstallPrompt() {
     const [baseInstall, canInstall] = useInstallPrompt()
     const [state, setState, stateReady] = usePersistentState<'ready' | Outcome>(

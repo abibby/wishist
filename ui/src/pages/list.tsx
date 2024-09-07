@@ -9,8 +9,6 @@ import { useRoute } from 'preact-iso'
 import { ItemListReadonly } from '../components/item-list-readonly'
 import { Conditions } from '../components/conditions'
 
-h
-
 export function List() {
     const { params } = useRoute()
     const { username } = params

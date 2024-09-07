@@ -11,7 +11,7 @@ import (
 )
 
 type ListFriendsRequest struct {
-	Request *http.Request
+	Request *http.Request `inject:""`
 }
 type ListFriendsResponse []*db.Friend
 
@@ -40,7 +40,7 @@ var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 type AddFriendRequest struct {
 	FriendID int `json:"friend_id" validate:"required"`
 
-	Request *http.Request
+	Request *http.Request `inject:""`
 }
 type AddFriendResponse *db.Friend
 
@@ -70,8 +70,8 @@ var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 })
 
 type RemoveFriendRequest struct {
-	FriendID int `json:"friend_id" validate:"required"`
-	Request  *http.Request
+	FriendID int           `json:"friend_id" validate:"required"`
+	Request  *http.Request `inject:""`
 }
 type RemoveFriendResponse struct {
 	Success bool `json:"success"`

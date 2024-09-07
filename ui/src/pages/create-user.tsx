@@ -6,8 +6,6 @@ import { Form } from '../components/form/form'
 import { bind } from '@zwzn/spicy'
 import { useLocation } from 'preact-iso'
 
-h
-
 export function CreateUser() {
     const { route } = useLocation()
     const [name, setName] = useState('')

@@ -2,7 +2,7 @@ import { createStore, delMany, get, setMany } from 'idb-keyval'
 import jwt from './jwt'
 import { User } from './api/user'
 import { FetchError, authAPI } from './api'
-import { signal } from '@preact/signals-core'
+import { computed, signal } from '@preact/signals-core'
 import { useSignalValue } from './hooks/signal'
 
 const authStore = createStore('auth-tokens', 'auth-tokens')
@@ -110,3 +110,13 @@ export function useUser(): [User | null, boolean] {
 }
 
 getToken()
+
+export const claimsSignal = computed(() => {
+    if (tokenSignal.value === null) {
+        return null
+    }
+    if (tokenSignal.value === undefined) {
+        return undefined
+    }
+    return jwt.parse(tokenSignal.value).claims
+})

@@ -3,4 +3,5 @@ dist
 bin
 
 .env
-db.sqlite
+*.sqlite
+.DS_Store

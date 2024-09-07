@@ -5,8 +5,6 @@ import { Input } from '../components/form/input'
 import { FetchError } from '../api'
 import styles from './forgot-password.module.css'
 
-h
-
 export function ForgotPassword() {
     const [email, setEmail] = useState('')
     const [error, setError] = useState<string>()

@@ -8,8 +8,6 @@ import { TextArea } from '../form/textarea'
 import { itemAPI } from '../../api'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
 
-h
-
 export function ItemEditModal() {
     const { params } = useRoute()
     const { id } = params

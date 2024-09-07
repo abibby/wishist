@@ -7,8 +7,6 @@ import styles from './reset-password.module.css'
 import { useOpenModal } from '../components/modal'
 import { useLocation } from 'preact-iso'
 
-h
-
 export function ResetPassword() {
     const [password1, setPassword1] = useState('')
     const [password2, setPassword2] = useState('')
