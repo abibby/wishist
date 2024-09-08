@@ -7,7 +7,7 @@ import (
 
 	"github.com/abibby/salusa/di"
 	"github.com/jmoiron/sqlx"
-	_ "modernc.org/sqlite"
+	// _ "modernc.org/sqlite"
 )
 
 var db *sqlx.DB

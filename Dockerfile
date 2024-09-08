@@ -9,27 +9,28 @@ RUN npm ci
 COPY ./ui/ ./
 RUN npm run build
 
-FROM golang:1.22 as go-build
+# Now copy it into our base image.
+FROM alpine:latest AS certs
+RUN apk add --no-cache ca-certificates && \
+    update-ca-certificates
 
-WORKDIR /go/src/github.com/abibby/wishist
 
-COPY go.mod go.sum ./
+FROM golang:1-alpine AS go-build
+RUN apk add --no-cache build-base
+WORKDIR /build
+COPY go.mod .
+COPY go.sum .
 RUN go mod download
 
 COPY . .
 COPY --from=ui-build /wishist-ui/dist ui/dist
 
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /wishist
+RUN GOOS=linux GOARCH=amd64 go build -ldflags='-s -w' -trimpath -o /dist/wishist
+RUN ldd /dist/wishist | tr -s [:blank:] '\n' | grep ^/ | xargs -I % install -D % /dist/%
+RUN ln -s ld-musl-x86_64.so.1 /dist/lib/libc.musl-x86_64.so.1
 
-# Now copy it into our base image.
-FROM alpine
 
-RUN apk update && \
-    apk add ca-certificates && \
-    update-ca-certificates
-
-COPY --from=go-build /wishist /wishist
-
-EXPOSE 3335/tcp
-
-CMD ["/wishist"]
+FROM scratch
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=go-build /dist /
+ENTRYPOINT ["/wishist"]
