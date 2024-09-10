@@ -26,6 +26,7 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
                 onInput={setUser}
                 tabIndex={1}
                 autoFocus
+                autoCapitalize={false}
             />
             <Input
                 title='Password'

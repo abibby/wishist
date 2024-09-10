@@ -7,6 +7,7 @@ import { Input } from '../form/input'
 import { TextArea } from '../form/textarea'
 import { itemAPI } from '../../api'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
+import { Spinner } from '../spinner'
 
 export function ItemEditModal() {
     const { params } = useRoute()
@@ -17,6 +18,7 @@ export function ItemEditModal() {
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
     const [description, setDescription] = useState('')
+    const [saving, setSaving] = useState(false)
 
     const [items, err] = itemAPI.useList({ id: Number(id) })
     const item = items?.[0]
@@ -31,6 +33,7 @@ export function ItemEditModal() {
         if (item === undefined) {
             return
         }
+        setSaving(true)
 
         const newItem = {
             ...item,
@@ -38,14 +41,22 @@ export function ItemEditModal() {
             url: url,
             description: description,
         }
-
-        await itemAPI.update(newItem)
-        closeModal()
+        try {
+            await itemAPI.update(newItem)
+            closeModal()
+        } finally {
+            setSaving(false)
+        }
     }, [item, name, url, description, closeModal])
 
     const remove = useCallback(async () => {
-        await itemAPI.delete({ id: Number(id) })
-        closeModal()
+        setSaving(true)
+        try {
+            await itemAPI.delete({ id: Number(id) })
+            closeModal()
+        } finally {
+            setSaving(false)
+        }
     }, [id, closeModal])
 
     if (err) {
@@ -72,10 +83,16 @@ export function ItemEditModal() {
                     name='description'
                 />
                 <ModalActions>
-                    <button class='danger-hover' type='button' onClick={remove}>
+                    {saving && <Spinner />}
+                    <button
+                        class='danger-hover'
+                        type='button'
+                        onClick={remove}
+                        disabled={saving}
+                    >
                         Delete
                     </button>
-                    <button class='light' type='submit'>
+                    <button class='light' type='submit' disabled={saving}>
                         Save
                     </button>
                 </ModalActions>

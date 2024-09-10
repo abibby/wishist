@@ -1,54 +1,39 @@
-.wrapper {
-    --size: 1em;
-    --gap: 0.4em;
-    --padding: 0.5em;
-
-    width: calc(var(--size) * 3 + var(--gap) * 2 + var(--padding) * 2);
-    padding: 0 var(--padding);
-}
-
-.loader,
-.loader:before,
-.loader:after {
+.spinner {
     display: inline-block;
-    border-radius: 50%;
-    width: var(--size);
-    height: var(--size);
-    animation-fill-mode: both;
-    animation: bblFadInOut 1.8s infinite ease-in-out;
-}
-.loader {
-    font-size: inherit;
-    position: relative;
-    text-indent: -9999em;
-    transform: translate3d(
-        calc(var(--size) + var(--gap)),
-        calc(-1 * var(--size)),
-        0
-    );
-    animation-delay: -0.16s;
-}
-.loader:before,
-.loader:after {
-    content: '';
-    position: absolute;
-    top: 0;
-}
-.loader:before {
-    left: calc(-1 * (var(--size) + var(--gap)));
-    animation-delay: -0.32s;
-}
-.loader:after {
-    left: calc(var(--size) + var(--gap));
+    width: 1.5em;
+    height: 1.5em;
 }
 
-@keyframes bblFadInOut {
-    0%,
-    80%,
-    100% {
-        box-shadow: 0 var(--size) 0 -1.3em;
+.rainbow {
+    background: conic-gradient(in hsl longer hue, red 0 0);
+    mask-image: url(../../assets/icons/circle.svg);
+    mask-size: 100%;
+    animation: loadingRotate 1s linear infinite;
+}
+
+@keyframes loadingRotate {
+    from {
+        transform: rotate(0deg);
     }
-    40% {
-        box-shadow: 0 var(--size) 0 0;
+    to {
+        transform: rotate(360deg);
     }
+}
+
+.pageSpinner {
+    position: fixed;
+    display: flex;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 2em;
+    background-color: rgba(0, 0, 0, 50%);
+    justify-content: center;
+    z-index: 200;
+}
+
+.pageSpinner > .spinner {
+    position: absolute;
+    top: 20%;
 }

@@ -108,6 +108,10 @@ export function ModalController({ children }: RenderableProps<unknown>) {
     )
 }
 
+export function useModal(): ModalContext {
+    return useContext(modalContext)
+}
+
 export interface ModalProps {
     title: string
     class?: string
@@ -118,7 +122,7 @@ export function Modal({
     children,
     class: className,
 }: RenderableProps<ModalProps>) {
-    const modal = useContext(modalContext)
+    const modal = useModal()
     return (
         <Fragment>
             <div
@@ -158,7 +162,7 @@ export function useOpenModal(): (modalURI: string) => void {
     )
 }
 export function useCloseModal(): () => void {
-    const modal = useContext(modalContext)
+    const modal = useModal()
     return useCallback(() => {
         modal.close()
     }, [modal])

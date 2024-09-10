@@ -2,26 +2,22 @@ import { bind, bindValue } from '@zwzn/spicy'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
 import { h } from 'preact'
-import { useCallback, useState } from 'preact/hooks'
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
 import { itemAPI, Item } from '../api'
 import styles from './item-list.module.css'
 import { useFlash } from '../hooks/use-flash'
 import { useOpenModal } from './modal'
 import { Form } from './form/form'
-import { Spinner } from './spinner'
+import { PageSpinner, Spinner } from './spinner'
 import { openToast } from './toast'
-
-const debouncedItemUpdate: typeof itemAPI.update = debounce(
-    itemAPI.update,
-    500,
-) as typeof itemAPI.update
+import { sleep } from '../utils'
 
 export interface ItemListEditProps {
     items: Item[] | undefined
 }
 export function ItemListEdit({ items }: ItemListEditProps) {
     const [newItem, setNewItem] = useState('')
-    const [adding, setAdding] = useState(false)
+    const [saving, setSaving] = useState(false)
 
     const [flashInput, triggerFlashInput] = useFlash()
     const addItem = useCallback(async () => {
@@ -29,7 +25,7 @@ export function ItemListEdit({ items }: ItemListEditProps) {
             triggerFlashInput()
             return
         }
-        setAdding(true)
+        setSaving(true)
         try {
             await itemAPI.create({
                 name: newItem,
@@ -42,13 +38,13 @@ export function ItemListEdit({ items }: ItemListEditProps) {
             openToast('Could not add item, try again later')
             return
         } finally {
-            setAdding(false)
+            setSaving(false)
         }
         setNewItem('')
     }, [newItem, triggerFlashInput])
 
     if (items === undefined) {
-        return <div>loading...</div>
+        return <PageSpinner />
     }
 
     return (
@@ -68,10 +64,11 @@ export function ItemListEdit({ items }: ItemListEditProps) {
                         type='text'
                         value={newItem}
                         onInput={bindValue(setNewItem)}
-                        disabled={adding}
+                        disabled={saving}
+                        autocomplete='off'
                     />
-                    {adding && <Spinner class={styles.loading} />}
-                    <button class='light' disabled={adding}>
+                    {saving && <Spinner />}
+                    <button class='light' disabled={saving}>
                         Add
                     </button>
                 </Form>
@@ -84,21 +81,43 @@ interface RowProps {
     item: Item
 }
 
-function Row({ item: item2 }: RowProps) {
+function Row({ item }: RowProps) {
     const openModal = useOpenModal()
+    const [saving, setSaving] = useState<
+        'ready' | 'waiting' | 'saving' | 'saved' | 'failed'
+    >('ready')
+    const [name, setName] = useState(item.name)
+    const debouncedItemUpdate = useMemo(() => {
+        return debounce(async (request: Omit<Item, 'user_id'>) => {
+            setSaving('saving')
+            try {
+                await itemAPI.update(request)
+                setSaving('saved')
+                await sleep(500)
+                setSaving('ready')
+            } catch {
+                setSaving('failed')
+            }
+        }, 500)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [item.id])
+
+    useEffect(() => setName(item.name), [item.name])
 
     const nameChange = useCallback(
         (value: string) => {
+            setName(value)
             if (value === '') {
                 return
             }
+            setSaving('waiting')
             const newItem = {
-                ...item2,
+                ...item,
                 name: value,
             }
             debouncedItemUpdate(newItem)
         },
-        [item2],
+        [debouncedItemUpdate, item],
     )
     return (
         <li>
@@ -106,12 +125,19 @@ function Row({ item: item2 }: RowProps) {
                 <input
                     class={styles.name}
                     type='text'
-                    value={item2.name}
+                    value={name}
+                    name='title'
                     onInput={bindValue(nameChange)}
+                    autocomplete='off'
                 />
-
+                {saving !== 'ready' && (
+                    <Spinner
+                        done={saving === 'saved'}
+                        failed={saving === 'failed'}
+                    />
+                )}
                 <div class={styles.actions}>
-                    <button onClick={bind(`/item/${item2.id}/edit`, openModal)}>
+                    <button onClick={bind(`/item/${item.id}/edit`, openModal)}>
                         +
                     </button>
                 </div>

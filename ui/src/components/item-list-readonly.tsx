@@ -6,8 +6,8 @@ import { useUser } from '../auth'
 import styles from './item-list.module.css'
 import { useOpenModal } from './modal'
 import { Conditions } from './conditions'
-import { Eye } from './icons/eye'
-import { Bag } from './icons/bag'
+import { Eye, ShoppingBag } from 'preact-feather'
+import { PageSpinner } from './spinner'
 
 interface ItemListReadonlyProps {
     items: Item[] | undefined
@@ -15,7 +15,7 @@ interface ItemListReadonlyProps {
 }
 export function ItemListReadonly({ items, userItems }: ItemListReadonlyProps) {
     if (items === undefined) {
-        return <div>loading...</div>
+        return <PageSpinner />
     }
     return (
         <ul class={styles.list}>
@@ -62,7 +62,7 @@ function ReadonlyRow({ item, userItem: ui }: Readonly<ReadonlyRowProps>) {
                 </span>
                 <div v-if={user} class={styles.icon}>
                     <Eye v-if={isThinking} />
-                    <Bag v-else-if={isPurchased} />
+                    <ShoppingBag v-else-if={isPurchased} />
                 </div>
             </li>
         </Conditions>

@@ -19,6 +19,7 @@ import { ChangePasswordModal } from './components/modals/change-password'
 import { ItemEditModal } from './components/modals/item-edit'
 import { ItemViewModal } from './components/modals/item-view'
 import './restore'
+import { InstallModal } from './components/modals/install'
 
 function Routes() {
     return (
@@ -44,6 +45,7 @@ function Modals() {
             <ChangePasswordModal path='/change-password' />
             <ItemEditModal path='/item/:id/edit' />
             <ItemViewModal path='/item/:id' />
+            <InstallModal path='/install' />
             <DefaultModal default />
         </Router>
     )

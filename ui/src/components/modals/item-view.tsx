@@ -5,8 +5,10 @@ import { UserItem, itemAPI, userItemAPI } from '../../api'
 import classNames from 'classnames'
 import styles from './item-view.module.css'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
-import { useCallback } from 'preact/hooks'
+import { useCallback, useState } from 'preact/hooks'
 import { bind } from '@zwzn/spicy'
+import { Spinner } from '../spinner'
+import { sleep } from '../../utils'
 
 const emptyItem = {
     name: '',
@@ -20,6 +22,10 @@ export function ItemViewModal() {
     const { params } = useRoute()
     const { id } = params
 
+    const [saving, setSaving] = useState<
+        'ready' | 'saving' | 'saved' | 'failed'
+    >('ready')
+
     const [items, err] = itemAPI.useList({ id: Number(id) })
     const [userItems] = userItemAPI.useList({ item_id: Number(id) })
     const item = items?.[0] ?? emptyItem
@@ -29,19 +35,26 @@ export function ItemViewModal() {
 
     const setType = useCallback(
         async (type: UserItem['type']) => {
-            if (ui?.type === type) {
-                await userItemAPI.delete({ item_id: Number(id) })
-                return
-            }
+            try {
+                setSaving('saving')
+                if (ui?.type === type) {
+                    await userItemAPI.delete({ item_id: Number(id) })
+                } else {
+                    const newUserItem = {
+                        item_id: Number(id),
+                        type: type,
+                    }
+                    if (ui?.type !== undefined) {
+                        await userItemAPI.update(newUserItem)
+                    } else {
+                        await userItemAPI.create(newUserItem)
+                    }
+                }
 
-            const newUserItem = {
-                item_id: Number(id),
-                type: type,
-            }
-            if (ui?.type !== undefined) {
-                await userItemAPI.update(newUserItem)
-            } else {
-                await userItemAPI.create(newUserItem)
+                setSaving('saved')
+                await sleep(500)
+            } finally {
+                setSaving('ready')
             }
         },
         [id, ui?.type],
@@ -85,6 +98,12 @@ export function ItemViewModal() {
             )}
 
             <ModalActions>
+                {saving !== 'ready' && (
+                    <Spinner
+                        done={saving === 'saved'}
+                        failed={saving === 'failed'}
+                    />
+                )}
                 <button
                     class={classNames({ primary: isThinking })}
                     onClick={bind('thinking', setType)}

@@ -1,6 +1,7 @@
 import { signal } from '@preact/signals-core'
 import { useSignalValue } from './signal'
 import { useCallback } from 'preact/hooks'
+import { useOpenModal } from '../components/modal'
 
 export type Outcome = 'accepted' | 'dismissed'
 export interface UserChoice {
@@ -46,16 +47,27 @@ window.addEventListener('beforeinstallprompt', (e: Event) => {
     }
 })
 
+const iOS = ['iPhone', 'iPad', 'iPod'].includes(navigator.platform)
+
+if (iOS && window.matchMedia('(display-mode: browser)').matches) {
+    installEventReady.value = true
+}
+
 export function useInstallPrompt(): [() => Promise<UserChoice>, boolean] {
     const ready = useSignalValue(installEventReady)
+    const openModal = useOpenModal()
 
     const install = useCallback(async (): Promise<UserChoice> => {
+        if (iOS) {
+            openModal('/install')
+            return { outcome: 'accepted', platform: '' }
+        }
         if (installEvent) {
             installEvent.prompt()
             return installEvent.userChoice
         }
         return { outcome: 'dismissed', platform: '' }
-    }, [])
+    }, [openModal])
 
     return [install, ready]
 }
