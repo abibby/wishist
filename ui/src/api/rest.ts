@@ -6,7 +6,11 @@ import { EntityTable, IDType } from 'dexie'
 import { useUser } from '../auth'
 
 class ModelEvent<T> extends Event {
-    constructor(type: string, public readonly models: T[]) {
+    constructor(
+        type: string,
+        public readonly models: T[],
+        public readonly filters?: Partial<T>,
+    ) {
         super(type)
     }
 }
@@ -51,8 +55,26 @@ export function buildRestModel<
 >(url: string, pkey: K, table: EntityTable<T, K>) {
     const buss = new EventTarget<Record<string, ModelEvent<T>>>()
 
+    function filteredItems(filters: Partial<T>) {
+        return table
+            .where(firstOrAll(Object.keys(filters)))
+            .equals(firstOrAll(Object.values(filters)))
+    }
+
     async function put(e: ModelEvent<T>): Promise<void> {
-        await table.bulkPut(e.models)
+        await Promise.all([
+            (async () => {
+                if (e.filters) {
+                    const networkIDs = new Set(e.models.map(m => m[pkey]))
+                    const items = await filteredItems(e.filters)
+                        .filter(item => !networkIDs.has(item[pkey]))
+                        .toArray()
+
+                    table.bulkDelete(items.map(m => m[pkey] as IDType<T, K>))
+                }
+            })(),
+            table.bulkPut(e.models),
+        ])
     }
     async function remove(e: ModelEvent<T>): Promise<void> {
         await table.bulkDelete(e.models.map(m => m[pkey] as IDType<T, K>))
@@ -63,7 +85,7 @@ export function buildRestModel<
     buss.addEventListener('delete', remove)
 
     return {
-        useListFirst(
+        useFirst(
             ...request: TListRequest extends NoArgs
                 ? []
                 : [request: TListRequest]
@@ -106,6 +128,7 @@ export function buildRestModel<
                     try {
                         const models = await this.list(...req)
                         setResult([models, undefined, 'network'])
+                        return models
                     } catch (e) {
                         if (e instanceof FetchError) {
                             setResult(([value, err, status]) => {
@@ -124,10 +147,7 @@ export function buildRestModel<
                 ;(async () => {
                     let models: T[]
                     if (filters) {
-                        models = await table
-                            .where(firstOrAll(Object.keys(filters)))
-                            .equals(firstOrAll(Object.values(filters)))
-                            .toArray()
+                        models = await filteredItems(filters).toArray()
                     } else {
                         models = await table.toArray()
                     }
@@ -137,6 +157,7 @@ export function buildRestModel<
                         }
                         return [models, undefined, 'cache']
                     })
+                    return models
                 })()
             }, [req, user?.id])
 
@@ -153,7 +174,7 @@ export function buildRestModel<
                         models?.map(model => {
                             for (const newModel of e.models) {
                                 if (idsMatch(model, newModel, pkey)) {
-                                    return model
+                                    return newModel
                                 }
                             }
                             return model
@@ -191,7 +212,7 @@ export function buildRestModel<
             ...request: TListRequest extends NoArgs ? [] : [TListRequest]
         ): Promise<T[]> {
             const models = await apiFetch<T[]>(url, request[0] ?? null)
-            buss.dispatchEvent(new ModelEvent('update', models))
+            buss.dispatchEvent(new ModelEvent('update', models, request[0]))
 
             return models
         },

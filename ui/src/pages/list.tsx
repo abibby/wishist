@@ -8,19 +8,20 @@ import { ErrorFetchError } from './error-fetch-error'
 import { useRoute } from 'preact-iso'
 import { ItemListReadonly } from '../components/item-list-readonly'
 import { Conditions } from '../components/conditions'
+import { PageSpinner } from '../components/spinner'
 
 export function List() {
     const { params } = useRoute()
     const { username } = params
-    const [activeUser] = useUser()
+    const [activeUser, userLoading] = useUser()
 
-    const [listUser, fetchError] = userAPI.useListFirst({ username: username })
+    const [listUser, fetchError] = userAPI.useFirst({ username: username })
 
     if (fetchError !== undefined) {
         return <ErrorFetchError err={fetchError} />
     }
-    if (listUser === undefined) {
-        return <div>loading...</div>
+    if (listUser === undefined || userLoading) {
+        return <PageSpinner />
     }
 
     if (activeUser?.id === listUser.id) {

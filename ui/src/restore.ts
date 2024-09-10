@@ -32,8 +32,5 @@ claimsSignal.subscribe(async claims => {
             await itemAPI.update(clientItem)
         }
     }
-    console.log(clientItems)
-
-    console.log(claims)
     await set('restore-compete', true)
 })

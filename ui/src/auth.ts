@@ -12,8 +12,19 @@ const userKey = 'user'
 
 const tokenSignal = signal<string | null | undefined>(undefined)
 
+export const claimsSignal = computed(() => {
+    if (tokenSignal.value === null) {
+        return null
+    }
+    if (tokenSignal.value === undefined) {
+        return undefined
+    }
+    return jwt.parse(tokenSignal.value).claims
+})
+
 export async function getToken(): Promise<string | null> {
-    if (tokenSignal.value !== undefined) {
+    const exp = (claimsSignal.value?.exp ?? 0) * 1000
+    if (tokenSignal.value !== undefined && exp < Date.now()) {
         return tokenSignal.value
     }
     try {
@@ -24,6 +35,7 @@ export async function getToken(): Promise<string | null> {
         if (token === undefined) {
             const refresh = await get<string | undefined>(refreshKey, authStore)
             if (refresh === undefined || jwtExpired(refresh)) {
+                tokenSignal.value = null
                 return null
             }
 
@@ -39,9 +51,9 @@ export async function getToken(): Promise<string | null> {
                 authStore,
             )
         }
-        tokenSignal.value = token
 
-        return token ?? null
+        tokenSignal.value = token
+        return token
     } catch (e) {
         if (e instanceof FetchError && e.status === 401) {
             tokenSignal.value = null
@@ -92,9 +104,10 @@ export async function logout() {
 
 export function useUser(): [User | null, boolean] {
     const token = useSignalValue(tokenSignal)
+    const loading = token === undefined
 
     if (!token) {
-        return [null, token !== undefined]
+        return [null, loading]
     }
 
     const claims = jwt.parse(token).claims
@@ -109,14 +122,5 @@ export function useUser(): [User | null, boolean] {
     ]
 }
 
+// call getToken to populate the token signal
 getToken()
-
-export const claimsSignal = computed(() => {
-    if (tokenSignal.value === null) {
-        return null
-    }
-    if (tokenSignal.value === undefined) {
-        return undefined
-    }
-    return jwt.parse(tokenSignal.value).claims
-})
