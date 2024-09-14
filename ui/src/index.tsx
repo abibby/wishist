@@ -19,7 +19,9 @@ import { ChangePasswordModal } from './components/modals/change-password'
 import { ItemEditModal } from './components/modals/item-edit'
 import { ItemViewModal } from './components/modals/item-view'
 import './restore'
+import { registerServiceWorker } from './register-sw'
 import { InstallModal } from './components/modals/install'
+import { GlobalSpinner } from './components/spinner'
 
 function Routes() {
     return (
@@ -56,6 +58,7 @@ function Main() {
         <LocationProvider>
             <ErrorBoundary>
                 <Default>
+                    <GlobalSpinner />
                     <ModalController>
                         <Modals />
                     </ModalController>
@@ -66,5 +69,7 @@ function Main() {
         </LocationProvider>
     )
 }
+
+registerServiceWorker()
 
 render(<Main />, document.getElementById('app')!)

@@ -2,19 +2,23 @@ import { Event, EventTarget } from '../events'
 import styles from './toast.module.css'
 
 let lastID = 0
-type ToastData = {
+export type ToastOptions<T = void> = {
+    durationMs?: number
+    requireAction?: boolean
+    buttons?: Record<string, T>
+}
+type ToastData<T> = Required<ToastOptions<T>> & {
     id: number
     message: string
-    durationMs: number
 }
 
 class OpenEvent extends Event<'open'> {
-    constructor(public readonly data: ToastData) {
+    constructor(public readonly data: ToastData<unknown>) {
         super('open')
     }
 }
 class CloseEvent extends Event<'close'> {
-    constructor(public readonly id: number) {
+    constructor(public readonly id: number, public readonly value: unknown) {
         super('close')
     }
 }
@@ -25,23 +29,31 @@ type ToastEventMap = {
 }
 const toastEvents = new EventTarget<ToastEventMap, 'strict'>()
 
-export async function openToast(msg: string): Promise<void> {
+export async function openToast<T = void>(
+    msg: string,
+    options: ToastOptions<T> = {},
+): Promise<T | undefined> {
     return new Promise(resolve => {
-        const data: ToastData = {
+        const data: ToastData<T> = {
             id: lastID++,
             message: msg,
             durationMs: 5000,
+            requireAction: false,
+            buttons: {},
+            ...options,
         }
         toastEvents.dispatchEvent(new OpenEvent(data))
-        setTimeout(() => {
-            toastEvents.dispatchEvent(new CloseEvent(data.id))
-        }, data.durationMs)
+        if (data.durationMs > 0) {
+            setTimeout(() => {
+                toastEvents.dispatchEvent(new CloseEvent(data.id, undefined))
+            }, data.durationMs)
+        }
 
         function onclose(e: CloseEvent) {
             if (e.id !== data.id) {
                 return
             }
-            resolve()
+            resolve(e.value as T | undefined)
             toastEvents.removeEventListener('close', onclose)
         }
         toastEvents.addEventListener('close', onclose)
@@ -57,13 +69,27 @@ document.body.appendChild(toastWrapper)
 toastEvents.addEventListener('open', e => {
     const { message, id } = e.data
     const toast = document.createElement('div')
+    toast.classList.add(styles.toast)
     toast.dataset.id = String(id)
-    toast.innerHTML = `<div class="${styles.toast}">
-        ${message.split('\n').map(line => `<p>${line}</p>`)}
-    </div>`
-    toast.addEventListener('click', () => {
-        toastEvents.dispatchEvent(new CloseEvent(id))
-    })
+    toast.innerHTML = message
+        .split('\n')
+        .map(line => `<p>${line}</p>`)
+        .join('\n')
+    if (!e.data.requireAction) {
+        toast.addEventListener('click', () => {
+            toastEvents.dispatchEvent(new CloseEvent(id, undefined))
+        })
+    }
+
+    for (const [text, value] of Object.entries(e.data.buttons)) {
+        const button = document.createElement('button')
+        button.innerText = text
+        button.addEventListener('click', () => {
+            toastEvents.dispatchEvent(new CloseEvent(id, value))
+        })
+
+        toast.prepend(button)
+    }
     toastWrapper.appendChild(toast)
 })
 toastEvents.addEventListener('close', e => {
