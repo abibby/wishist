@@ -1,4 +1,4 @@
-import { PluginOption, UserConfig, defineConfig, loadEnv } from 'vite'
+import { UserConfig, defineConfig, loadEnv } from 'vite'
 import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
@@ -18,9 +18,10 @@ export default defineConfig(({ mode }): UserConfig => {
                 strategies: 'injectManifest',
                 srcDir: 'src',
                 filename: 'sw.ts',
-                injectRegister: 'auto',
+                injectRegister: false,
                 workbox: {
                     globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+                    sourcemap: true,
                 },
                 manifest: {
                     name: 'Wishist',
@@ -29,7 +30,7 @@ export default defineConfig(({ mode }): UserConfig => {
                     theme_color: '#31363f',
                     background_color: '#222831',
                     start_url: '/',
-                    id: isProd ? 'ca.wishist' : mode + '.ca.wishist',
+                    id: isProd ? 'ca.wishist' : 'ca.wishist.' + mode,
                     screenshots: [
                         {
                             label: 'Your Wishlist',
@@ -64,13 +65,16 @@ export default defineConfig(({ mode }): UserConfig => {
                         outDir: resolve(__dirname, 'dist'),
                     },
                 },
-            }) as PluginOption,
+            }),
         ],
         server: {
             port: 12345,
             proxy: {
                 '/api': env.VITE_PROXY_HOST ?? 'http://localhost:32148',
             },
+        },
+        build: {
+            sourcemap: true,
         },
     }
 })

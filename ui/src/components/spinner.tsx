@@ -1,7 +1,11 @@
 import classNames from 'classnames'
 import styles from './spinner.module.css'
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { CheckCircle, XCircle } from 'preact-feather'
+import { signal } from '@preact/signals-core'
+import { useSignalValue } from '../hooks/signal'
+
+const showGlobalSpinnerSignal = signal(false)
 
 export type SpinnerProps = {
     class?: string
@@ -29,4 +33,18 @@ export function PageSpinner() {
             <Spinner />
         </div>
     )
+}
+
+export function GlobalSpinner() {
+    const show = useSignalValue(showGlobalSpinnerSignal)
+    if (!show) {
+        return <Fragment />
+    }
+    return <PageSpinner />
+}
+export function showGlobalSpinner() {
+    showGlobalSpinnerSignal.value = true
+}
+export function hideGlobalSpinner() {
+    showGlobalSpinnerSignal.value = true
 }
