@@ -5,7 +5,17 @@
 }
 
 .rainbow {
-    background: conic-gradient(in hsl longer hue, red 0 0);
+    background: conic-gradient(
+        in hsl,
+        red,
+        orange,
+        yellow,
+        green,
+        blue,
+        indigo,
+        violet,
+        red
+    );
     mask-image: url(../../assets/icons/circle.svg);
     mask-size: 100%;
     animation: loadingRotate 1s linear infinite;
