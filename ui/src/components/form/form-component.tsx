@@ -6,6 +6,7 @@ import { useContext, useLayoutEffect, useRef } from 'preact/hooks'
 export interface FormComponentProps {
     title: string
     name?: string
+    prefix?: string
     tabIndex?: number
     autoFocus?: boolean
 }
@@ -14,6 +15,7 @@ export function FormComponent({
     title,
     children,
     name,
+    prefix,
     autoFocus,
 }: RenderableProps<FormComponentProps>) {
     const fetchError = useContext(FormContext)
@@ -35,6 +37,7 @@ export function FormComponent({
                 {title}
                 {errMsg && <span class={styles.errorMessage}>{errMsg}</span>}
             </div>
+            {prefix && <span class={styles.icon}>{prefix}</span>}
             {children}
         </label>
     )

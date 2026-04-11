@@ -1,7 +1,7 @@
 import { Fragment, h } from 'preact'
 import { Modal, ModalActions } from '../modal'
 import { useRoute } from 'preact-iso'
-import { UserItem, itemAPI, userItemAPI } from '../../api'
+import { Item, UserItem, itemAPI, userItemAPI } from '../../api'
 import classNames from 'classnames'
 import styles from './item-view.module.css'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
@@ -10,12 +10,15 @@ import { bind } from '@zwzn/spicy'
 import { Spinner } from '../spinner'
 import { sleep } from '../../utils'
 
-const emptyItem = {
+const emptyItem: Item = {
     name: '',
     url: '',
     description: '',
     thinking_count: undefined,
     purchased_count: undefined,
+    id: 0,
+    user_id: 0,
+    price: null,
 }
 
 export function ItemViewModal() {
@@ -74,6 +77,7 @@ export function ItemViewModal() {
                     <ItemLink url={item.url} />
                 </div>
             )}
+            {item.price !== null && <div>${(item.price / 100).toFixed(2)}</div>}
             {item.description && (
                 <div
                     class={classNames(styles.popupDescription, styles.divider)}
