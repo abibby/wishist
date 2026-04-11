@@ -12,6 +12,7 @@ export type Item = {
     name: string
     description: string
     url: string
+    price: number | null
     thinking_count?: number
     purchased_count?: number
 }

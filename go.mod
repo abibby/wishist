@@ -1,8 +1,8 @@
 module github.com/abibby/wishist
 
-go 1.22.6
+go 1.23.1
 
-toolchain go1.23.0
+toolchain go1.24.4
 
 // replace github.com/abibby/salusa => /Users/abibby/github.com/abibby/salusa
 // replace github.com/abibby/salusa => /home/adam/github.com/abibby/salusa
@@ -10,11 +10,12 @@ toolchain go1.23.0
 require (
 	github.com/abibby/fileserver v0.0.0-20221208191705-087686654550
 	github.com/abibby/nulls v1.1.0
-	github.com/abibby/salusa v0.18.1
+	github.com/abibby/salusa v0.21.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/mux v1.8.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
+	golang.org/x/net v0.29.0
 )
 
 require (

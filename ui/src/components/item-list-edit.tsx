@@ -31,6 +31,7 @@ export function ItemListEdit({ items }: ItemListEditProps) {
                 name: newItem,
                 description: '',
                 url: '',
+                price: null,
             })
         } catch (e) {
             console.warn(e)

@@ -8,6 +8,8 @@ import { TextArea } from '../form/textarea'
 import { itemAPI } from '../../api'
 import { ErrorFetchError } from '../../pages/error-fetch-error'
 import { Spinner } from '../spinner'
+import style from './item-edit.module.css'
+import { ExternalLink } from 'preact-feather'
 
 export function ItemEditModal() {
     const { params } = useRoute()
@@ -17,6 +19,7 @@ export function ItemEditModal() {
 
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
+    const [price, setPrice] = useState('')
     const [description, setDescription] = useState('')
     const [saving, setSaving] = useState(false)
 
@@ -27,6 +30,7 @@ export function ItemEditModal() {
         setName(item?.name ?? '')
         setURL(item?.url ?? '')
         setDescription(item?.description ?? '')
+        setPrice(item?.price ? (item.price / 100).toFixed(2) : '')
     }, [item])
 
     const save = useCallback(async () => {
@@ -40,6 +44,7 @@ export function ItemEditModal() {
             name: name,
             url: url,
             description: description,
+            price: price !== '' ? parseFloat(price) * 100 : null,
         }
         try {
             await itemAPI.update(newItem)
@@ -47,7 +52,7 @@ export function ItemEditModal() {
         } finally {
             setSaving(false)
         }
-    }, [item, name, url, description, closeModal])
+    }, [item, name, url, description, price, closeModal])
 
     const remove = useCallback(async () => {
         setSaving(true)
@@ -75,7 +80,24 @@ export function ItemEditModal() {
                     onInput={setName}
                     name='name'
                 />
-                <Input title='URL' value={url} onInput={setURL} name='url' />
+                <div class={style.urlRow}>
+                    <Input
+                        title='URL'
+                        value={url}
+                        onInput={setURL}
+                        name='url'
+                    />
+                    <a href={url} target='_blank'>
+                        <ExternalLink />
+                    </a>
+                </div>
+                <Input
+                    prefix='$'
+                    title='Price'
+                    value={price}
+                    onInput={setPrice}
+                    name='price'
+                />
                 <TextArea
                     title='Description'
                     value={description}

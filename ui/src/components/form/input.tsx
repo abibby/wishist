@@ -20,7 +20,9 @@ export function Input(props: InputProps) {
                 type={props.type}
                 value={props.value}
                 onInput={bindValue(props.onInput)}
-                autoCapitalize={props.autoCapitalize ? undefined : 'none'}
+                autoCapitalize={
+                    (props.autoCapitalize ?? true) ? undefined : 'none'
+                }
                 tabIndex={props.tabIndex}
             />
         </FormComponent>

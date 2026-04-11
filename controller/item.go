@@ -3,8 +3,11 @@ package controller
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"strings"
 
+	"github.com/abibby/nulls"
 	"github.com/abibby/salusa/database"
 	"github.com/abibby/salusa/database/model"
 	"github.com/abibby/salusa/request"
@@ -62,9 +65,10 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 })
 
 type AddItemRequest struct {
-	Name        string `json:"name"        validate:"required"`
-	Description string `json:"description" validate:""`
-	URL         string `json:"url"         validate:""`
+	Name        string     `json:"name"        validate:"required"`
+	Description string     `json:"description" validate:""`
+	URL         string     `json:"url"         validate:""`
+	Price       *nulls.Int `json:"price"       validate:""`
 
 	Update database.Update `inject:""`
 	Ctx    context.Context `inject:""`
@@ -75,11 +79,23 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error
 	item := &db.Item{}
 	uid := mustUserID(r.Ctx)
 
-	item.UserID = uid
-	item.Name = r.Name
-	item.Description = r.Description
-	item.URL = r.URL
+	if strings.HasPrefix(r.Name, "https://") {
+		item.UserID = uid
+		item.URL = r.Name
+	} else {
+		item.UserID = uid
+		item.Name = r.Name
+		item.Description = r.Description
+		item.URL = r.URL
+		item.Price = r.Price
+	}
 
+	if r.Price == nil {
+		err := item.UpdateFromURL()
+		if err != nil {
+			slog.Warn("failed to update item price from url", "err", err)
+		}
+	}
 	err := r.Update(func(tx *sqlx.Tx) error {
 		return model.SaveContext(r.Ctx, tx, item)
 	})
@@ -90,10 +106,11 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error
 })
 
 type EditItemRequest struct {
-	ID          int    `json:"id"          validate:"required"`
-	Name        string `json:"name"        validate:"required"`
-	Description string `json:"description" validate:""`
-	URL         string `json:"url"         validate:""`
+	ID          int        `json:"id"          validate:"required"`
+	Name        string     `json:"name"        validate:"required"`
+	Description string     `json:"description" validate:""`
+	URL         string     `json:"url"         validate:""`
+	Price       *nulls.Int `json:"price"       validate:""`
 
 	Update database.Update `inject:""`
 	Ctx    context.Context `inject:""`
@@ -117,6 +134,15 @@ var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
 		item.Name = r.Name
 		item.Description = r.Description
 		item.URL = r.URL
+		item.Price = r.Price
+
+		if r.Price == nil {
+			err := item.UpdateFromURL()
+			if err != nil {
+				slog.Warn("failed to update item price from url", "err", err)
+			}
+		}
+
 		return model.SaveContext(r.Ctx, tx, item)
 	})
 	if err != nil {
