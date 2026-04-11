@@ -43,12 +43,12 @@ function Routes() {
 function Modals() {
     return (
         <Router>
-            <LoginModal path='/login' />
-            <ChangePasswordModal path='/change-password' />
-            <ItemEditModal path='/item/:id/edit' />
-            <ItemViewModal path='/item/:id' />
-            <InstallModal path='/install' />
-            <DefaultModal default />
+            <Route component={LoginModal} path='/login' />
+            <Route component={ChangePasswordModal} path='/change-password' />
+            <Route component={ItemEditModal} path='/item/:id/edit' />
+            <Route component={ItemViewModal} path='/item/:id' />
+            <Route component={InstallModal} path='/install' />
+            <Route component={DefaultModal} default />
         </Router>
     )
 }
