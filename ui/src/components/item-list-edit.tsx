@@ -2,7 +2,7 @@ import { bind, bindValue } from '@zwzn/spicy'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
 import { h } from 'preact'
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { itemAPI, Item } from '../api'
 import styles from './item-list.module.css'
 import { useFlash } from '../hooks/use-flash'
@@ -11,6 +11,7 @@ import { Form } from './form/form'
 import { PageSpinner, Spinner } from './spinner'
 import { openToast } from './toast'
 import { sleep } from '../utils'
+import { useWindowEvent } from '../hooks/use-window-event'
 
 export interface ItemListEditProps {
     items: Item[] | undefined
@@ -18,6 +19,7 @@ export interface ItemListEditProps {
 export function ItemListEdit({ items }: ItemListEditProps) {
     const [newItem, setNewItem] = useState('')
     const [saving, setSaving] = useState(false)
+    const [move, setMove] = useState<{ start: number; offset: number }>()
 
     const [flashInput, triggerFlashInput] = useFlash()
     const addItem = useCallback(async () => {
@@ -50,8 +52,30 @@ export function ItemListEdit({ items }: ItemListEditProps) {
 
     return (
         <ul class={classNames(styles.list, styles.edit)}>
-            {items.map(i => (
-                <Row key={i.id} item={i} />
+            {/* <li>
+                <pre>{JSON.stringify(move, undefined, '  ')}</pre>
+            </li> */}
+            {items.map((item, i) => (
+                <Row
+                    key={item.id}
+                    class={classNames({
+                        [styles.up]:
+                            move &&
+                            i > move.start &&
+                            i < move.start + move.offset,
+                        [styles.down]:
+                            move &&
+                            i < move.start &&
+                            i > move.start + move.offset,
+                    })}
+                    item={item}
+                    onMoving={bind(i, (i, offset) => {
+                        setMove({ start: i, offset: offset })
+                    })}
+                    onMove={bind(i, (i, offset) => {
+                        setMove(undefined)
+                    })}
+                />
             ))}
             <li>
                 <Form
@@ -80,10 +104,14 @@ export function ItemListEdit({ items }: ItemListEditProps) {
 
 interface RowProps {
     item: Item
+    class?: string
+    onMoving?: (offset: number) => void
+    onMove?: (offset: number) => void
 }
 
-function Row({ item }: RowProps) {
+function Row({ class: className, item, onMoving, onMove }: RowProps) {
     const openModal = useOpenModal()
+    const [moving, setMoving] = useState(false)
     const [saving, setSaving] = useState<
         'ready' | 'waiting' | 'saving' | 'saved' | 'failed'
     >('ready')
@@ -120,9 +148,72 @@ function Row({ item }: RowProps) {
         },
         [debouncedItemUpdate, item],
     )
+
+    const liRef = useRef<HTMLLIElement | null>(null)
+
+    const dragStartPos = useRef<number>()
+    const offsetIndex = useRef<number>(0)
+    const lastOffsetIndex = useRef<number>(0)
+
+    const dragStart = useCallback((e: MouseEvent) => {
+        if (e.button !== 0) {
+            return
+        }
+        setMoving(true)
+        dragStartPos.current = e.y
+    }, [])
+    useWindowEvent(
+        'mousemove',
+        useCallback(
+            (e: MouseEvent) => {
+                if (
+                    dragStartPos.current === undefined ||
+                    liRef.current === null
+                ) {
+                    return
+                }
+                const offset = e.y - dragStartPos.current
+                liRef.current.style.setProperty(
+                    'transform',
+                    `translate(0, ${offset}px)`,
+                )
+                const rect = liRef.current.getBoundingClientRect()
+                offsetIndex.current = Math.round(offset / rect.height)
+                if (offsetIndex.current !== lastOffsetIndex.current) {
+                    onMoving?.(offsetIndex.current)
+                    lastOffsetIndex.current = offsetIndex.current
+                }
+            },
+            [onMoving],
+        ),
+    )
+    useWindowEvent(
+        'mouseup',
+        useCallback(
+            (_e: MouseEvent) => {
+                if (dragStartPos.current === undefined) {
+                    return
+                }
+                onMove?.(offsetIndex.current)
+                setMoving(false)
+                dragStartPos.current = undefined
+                liRef.current?.style.removeProperty('transform')
+                offsetIndex.current = 0
+                lastOffsetIndex.current = 0
+            },
+            [onMove],
+        ),
+    )
+
     return (
-        <li>
+        <li
+            ref={liRef}
+            class={classNames(className, { [styles.moving]: moving })}
+        >
             <label class={styles.item}>
+                <div class={styles.handle} onMouseDown={dragStart}>
+                    ⠿
+                </div>
                 <input
                     class={styles.name}
                     type='text'
