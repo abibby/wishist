@@ -13,13 +13,22 @@ import { openToast } from './toast'
 import { sleep } from '../utils'
 import { useWindowEvent } from '../hooks/use-window-event'
 
+type Moving = {
+    element: HTMLElement
+    startY: number
+    index: number
+    item: Item
+}
+
 export interface ItemListEditProps {
     items: Item[] | undefined
+    onMoveItem: (item: Item, newOrder: number) => void
 }
-export function ItemListEdit({ items }: ItemListEditProps) {
+export function ItemListEdit({ items, onMoveItem }: ItemListEditProps) {
     const [newItem, setNewItem] = useState('')
     const [saving, setSaving] = useState(false)
     const [move, setMove] = useState<{ start: number; offset: number }>()
+    const [noAnimation, setNoAnimation] = useState(false)
 
     const [flashInput, triggerFlashInput] = useFlash()
     const addItem = useCallback(async () => {
@@ -34,6 +43,7 @@ export function ItemListEdit({ items }: ItemListEditProps) {
                 description: '',
                 url: '',
                 price: null,
+                order: -1,
             })
         } catch (e) {
             console.warn(e)
@@ -46,15 +56,92 @@ export function ItemListEdit({ items }: ItemListEditProps) {
         setNewItem('')
     }, [newItem, triggerFlashInput])
 
+    const offsetIndex = useRef<number>(0)
+    const lastOffsetIndex = useRef<number>(0)
+
+    const moving = useRef<Moving>(null)
+
+    const startMove = useCallback(
+        (index: number, item: Item, startY: number, li: HTMLElement) => {
+            console.log(li)
+            moving.current = {
+                element: li,
+                startY: startY,
+                index: index,
+                item: item,
+            }
+            li.classList.add(styles.moving)
+
+            setMove({
+                start: index,
+                offset: 0,
+            })
+        },
+        [],
+    )
+    const mouseMove = useCallback((e: MouseEvent | TouchEvent) => {
+        const event = normalizeEvent(e)
+        // console.log(e, event)
+        if (moving.current === null) {
+            return
+        }
+        const offset = event.y - moving.current.startY
+        moving.current.element.style.setProperty(
+            'transform',
+            `translate(0, ${offset}px)`,
+        )
+        const rect = moving.current.element.getBoundingClientRect()
+        offsetIndex.current = Math.round(offset / rect.height)
+        if (offsetIndex.current !== lastOffsetIndex.current) {
+            lastOffsetIndex.current = offsetIndex.current
+            setMove(m => {
+                if (!m) return
+                return {
+                    ...m,
+                    offset: offsetIndex.current,
+                }
+            })
+        }
+    }, [])
+
+    const mouseUp = useCallback(() => {
+        if (moving.current === null) {
+            return
+        }
+        if (offsetIndex.current !== 0) {
+            setNoAnimation(true)
+            setTimeout(() => {
+                setNoAnimation(false)
+            }, 10)
+            onMoveItem(
+                moving.current.item,
+                moving.current.index + offsetIndex.current,
+            )
+        }
+        moving.current.element.classList.remove(styles.moving)
+        moving.current.element.style.removeProperty('transform')
+
+        offsetIndex.current = 0
+        lastOffsetIndex.current = 0
+        moving.current = null
+        setMove(undefined)
+    }, [onMoveItem])
+
+    useWindowEvent('mousemove', mouseMove)
+    useWindowEvent('touchmove', mouseMove)
+    useWindowEvent('mouseup', mouseUp)
+    useWindowEvent('touchend', mouseUp)
+
     if (items === undefined) {
         return <PageSpinner />
     }
 
     return (
-        <ul class={classNames(styles.list, styles.edit)}>
-            {/* <li>
-                <pre>{JSON.stringify(move, undefined, '  ')}</pre>
-            </li> */}
+        <ul
+            class={classNames(styles.list, styles.edit, {
+                [styles.noAnimation]: noAnimation,
+            })}
+        >
             {items.map((item, i) => (
                 <Row
                     key={item.id}
@@ -62,19 +149,14 @@ export function ItemListEdit({ items }: ItemListEditProps) {
                         [styles.up]:
                             move &&
                             i > move.start &&
-                            i < move.start + move.offset,
+                            i <= move.start + move.offset,
                         [styles.down]:
                             move &&
                             i < move.start &&
-                            i > move.start + move.offset,
+                            i >= move.start + move.offset,
                     })}
                     item={item}
-                    onMoving={bind(i, (i, offset) => {
-                        setMove({ start: i, offset: offset })
-                    })}
-                    onMove={bind(i, (i, offset) => {
-                        setMove(undefined)
-                    })}
+                    onStartMove={bind(i, item, startMove)}
                 />
             ))}
             <li>
@@ -105,13 +187,11 @@ export function ItemListEdit({ items }: ItemListEditProps) {
 interface RowProps {
     item: Item
     class?: string
-    onMoving?: (offset: number) => void
-    onMove?: (offset: number) => void
+    onStartMove?: (startY: number, element: HTMLLIElement) => void
 }
 
-function Row({ class: className, item, onMoving, onMove }: RowProps) {
+function Row({ class: className, item, onStartMove }: RowProps) {
     const openModal = useOpenModal()
-    const [moving, setMoving] = useState(false)
     const [saving, setSaving] = useState<
         'ready' | 'waiting' | 'saving' | 'saved' | 'failed'
     >('ready')
@@ -151,67 +231,26 @@ function Row({ class: className, item, onMoving, onMove }: RowProps) {
 
     const liRef = useRef<HTMLLIElement | null>(null)
 
-    const dragStartPos = useRef<number>()
-    const offsetIndex = useRef<number>(0)
-    const lastOffsetIndex = useRef<number>(0)
-
-    const dragStart = useCallback((e: MouseEvent) => {
-        if (e.button !== 0) {
-            return
-        }
-        setMoving(true)
-        dragStartPos.current = e.y
-    }, [])
-    useWindowEvent(
-        'mousemove',
-        useCallback(
-            (e: MouseEvent) => {
-                if (
-                    dragStartPos.current === undefined ||
-                    liRef.current === null
-                ) {
-                    return
-                }
-                const offset = e.y - dragStartPos.current
-                liRef.current.style.setProperty(
-                    'transform',
-                    `translate(0, ${offset}px)`,
-                )
-                const rect = liRef.current.getBoundingClientRect()
-                offsetIndex.current = Math.round(offset / rect.height)
-                if (offsetIndex.current !== lastOffsetIndex.current) {
-                    onMoving?.(offsetIndex.current)
-                    lastOffsetIndex.current = offsetIndex.current
-                }
-            },
-            [onMoving],
-        ),
-    )
-    useWindowEvent(
-        'mouseup',
-        useCallback(
-            (_e: MouseEvent) => {
-                if (dragStartPos.current === undefined) {
-                    return
-                }
-                onMove?.(offsetIndex.current)
-                setMoving(false)
-                dragStartPos.current = undefined
-                liRef.current?.style.removeProperty('transform')
-                offsetIndex.current = 0
-                lastOffsetIndex.current = 0
-            },
-            [onMove],
-        ),
+    const mouseDown = useCallback(
+        (e: MouseEvent | TouchEvent) => {
+            e.preventDefault()
+            const event = normalizeEvent(e)
+            if (!event.primaryAction || !liRef.current) {
+                return
+            }
+            onStartMove?.(event.y, liRef.current)
+        },
+        [onStartMove],
     )
 
     return (
-        <li
-            ref={liRef}
-            class={classNames(className, { [styles.moving]: moving })}
-        >
+        <li ref={liRef} class={className}>
             <label class={styles.item}>
-                <div class={styles.handle} onMouseDown={dragStart}>
+                <div
+                    class={styles.handle}
+                    onMouseDown={mouseDown}
+                    onTouchStart={mouseDown}
+                >
                     ⠿
                 </div>
                 <input
@@ -236,4 +275,30 @@ function Row({ class: className, item, onMoving, onMove }: RowProps) {
             </label>
         </li>
     )
+}
+
+type NormalizedEvent = {
+    primaryAction: boolean
+    x: number
+    y: number
+}
+
+function normalizeEvent(e: TouchEvent | MouseEvent): NormalizedEvent {
+    if (e instanceof TouchEvent) {
+        return {
+            primaryAction: e.touches.length === 1,
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+        }
+    }
+
+    if (e instanceof MouseEvent) {
+        return {
+            primaryAction: e.button === 0,
+            x: e.x,
+            y: e.y,
+        }
+    }
+
+    throw new Error(`unexpected type`)
 }

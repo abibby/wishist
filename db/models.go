@@ -31,6 +31,7 @@ type Item struct {
 	Description    string     `db:"description"              json:"description"`
 	URL            string     `db:"url"                      json:"url"`
 	Price          *nulls.Int `db:"price"                    json:"price"`
+	Order          int        `db:"order"                    json:"order"`
 	ThinkingCount  *nulls.Int `db:"thinking_count,readonly"  json:"thinking_count,omitempty"`
 	PurchasedCount *nulls.Int `db:"purchased_count,readonly" json:"purchased_count,omitempty"`
 }

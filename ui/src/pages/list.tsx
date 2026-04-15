@@ -1,6 +1,6 @@
 import { Fragment, h } from 'preact'
-import { useCallback, useMemo } from 'preact/hooks'
-import { User, friendAPI, itemAPI, userAPI, userItemAPI } from '../api'
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
+import { Item, User, friendAPI, itemAPI, userAPI, userItemAPI } from '../api'
 import { useUser } from '../auth'
 import { ItemListEdit } from '../components/item-list-edit'
 import { useOpenModal } from '../components/modal'
@@ -36,6 +36,49 @@ interface MyListProps {
 
 function ActiveUserList({ listUser }: MyListProps) {
     const [items, err] = itemAPI.useList({ user_id: listUser.id })
+    const [sortedItems, setSortedItems] = useState<Item[]>()
+
+    useEffect(
+        () =>
+            setSortedItems(
+                Array.from(items ?? []).sort((a, b) => a.order - b.order),
+            ),
+        [items],
+    )
+
+    const moveItem = useCallback(async (item: Item, newOrder: number) => {
+        const oldOrder = item.order
+        setSortedItems(prevItems => {
+            return prevItems?.map(it => {
+                if (it.id === item.id) {
+                    return itemAPI.softUpdate({ ...it, order: newOrder })
+                }
+
+                if (oldOrder > newOrder) {
+                    if (it.order >= newOrder && it.order < oldOrder) {
+                        return itemAPI.softUpdate({
+                            ...it,
+                            order: it.order + 1,
+                        })
+                    }
+                } else if (oldOrder < newOrder) {
+                    if (it.order > oldOrder && it.order <= newOrder) {
+                        return itemAPI.softUpdate({
+                            ...it,
+                            order: it.order - 1,
+                        })
+                    }
+                }
+
+                return it
+            })
+        })
+        await itemAPI.update({
+            ...item,
+            order: newOrder,
+        })
+    }, [])
+
     if (err) {
         return <ErrorFetchError err={err} />
     }
@@ -43,7 +86,7 @@ function ActiveUserList({ listUser }: MyListProps) {
     return (
         <Fragment>
             <h1>My Wishlist</h1>
-            <ItemListEdit items={items} />
+            <ItemListEdit items={sortedItems} onMoveItem={moveItem} />
         </Fragment>
     )
 }

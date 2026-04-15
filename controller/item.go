@@ -35,7 +35,7 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 	var err error
 
 	err = r.Read(func(tx *sqlx.Tx) error {
-		q := db.ItemQuery(r.Ctx)
+		q := db.ItemQuery(r.Ctx).OrderBy("order")
 
 		if loggedIn && r.UserID != uid {
 			userItemQuery := db.UserItemQuery(r.Ctx).
@@ -97,6 +97,11 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error
 		}
 	}
 	err := r.Update(func(tx *sqlx.Tx) error {
+		order, err := db.ItemQuery(r.Ctx).Where("user_id", "=", uid).Count(tx)
+		if err != nil {
+			return err
+		}
+		item.Order = order
 		return model.SaveContext(r.Ctx, tx, item)
 	})
 	if err != nil {
@@ -111,6 +116,7 @@ type EditItemRequest struct {
 	Description string     `json:"description" validate:""`
 	URL         string     `json:"url"         validate:""`
 	Price       *nulls.Int `json:"price"       validate:""`
+	Order       int        `json:"order"       validate:"min:0"`
 
 	Update database.Update `inject:""`
 	Ctx    context.Context `inject:""`
@@ -135,6 +141,20 @@ var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
 		item.Description = r.Description
 		item.URL = r.URL
 		item.Price = r.Price
+
+		if item.Order > r.Order {
+			_, err := tx.Exec(`UPDATE items SET "order" = "order" + 1 WHERE "order" >= ? AND "order" < ?`, r.Order, item.Order)
+			if err != nil {
+				return err
+			}
+		} else if item.Order < r.Order {
+			_, err := tx.Exec(`UPDATE items SET "order" = "order" - 1 WHERE "order" > ? AND "order" <= ?`, item.Order, r.Order)
+			if err != nil {
+				return err
+			}
+		}
+
+		item.Order = r.Order
 
 		if r.Price == nil {
 			err := item.UpdateFromURL()

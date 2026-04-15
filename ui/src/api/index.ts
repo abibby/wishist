@@ -15,6 +15,7 @@ export type Item = {
     price: number | null
     thinking_count?: number
     purchased_count?: number
+    order: number
 }
 
 export const itemAPI = buildRestModel<

@@ -6,7 +6,11 @@
 
 .list li {
     position: relative;
-    transition: transform 0.1s;
+    transition: transform var(--transition-time);
+}
+
+.noAnimation * {
+    transition: none !important;
 }
 
 .item {
