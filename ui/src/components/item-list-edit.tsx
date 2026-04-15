@@ -63,7 +63,6 @@ export function ItemListEdit({ items, onMoveItem }: ItemListEditProps) {
 
     const startMove = useCallback(
         (index: number, item: Item, startY: number, li: HTMLElement) => {
-            console.log(li)
             moving.current = {
                 element: li,
                 startY: startY,
@@ -81,7 +80,6 @@ export function ItemListEdit({ items, onMoveItem }: ItemListEditProps) {
     )
     const mouseMove = useCallback((e: MouseEvent | TouchEvent) => {
         const event = normalizeEvent(e)
-        // console.log(e, event)
         if (moving.current === null) {
             return
         }
