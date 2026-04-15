@@ -15,7 +15,7 @@ export function registerServiceWorker() {
                     },
                 },
             )
-            // console.log('sw', updateSW, updateAccepted)
+
             if (updateAccepted) {
                 showGlobalSpinner()
                 updateSW()

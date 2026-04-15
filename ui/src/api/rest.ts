@@ -232,6 +232,10 @@ export function buildRestModel<
             buss.dispatchEvent(new ModelEvent('update', [model]))
             return model
         },
+        softUpdate(model: T): T {
+            buss.dispatchEvent(new ModelEvent('update', [model]))
+            return model
+        },
         async delete(request: TDeleteRequest): Promise<T> {
             buss.dispatchEvent(new ModelEvent('delete', [request]))
             return apiFetch(url, null, {

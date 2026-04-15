@@ -19,6 +19,7 @@ const emptyItem: Item = {
     id: 0,
     user_id: 0,
     price: null,
+    order: 0,
 }
 
 export function ItemViewModal() {
