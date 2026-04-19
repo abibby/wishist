@@ -45,7 +45,7 @@ export async function apiFetch<T>(
             body = { error: 'unknown error' }
         }
         response = new Response(JSON.stringify(body), {
-            status: 600,
+            status: 599,
             headers: { 'x-custom': 'true' },
         })
     }
