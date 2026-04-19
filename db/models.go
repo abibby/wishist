@@ -36,12 +36,12 @@ func ItemQuery(ctx context.Context) *builder.ModelBuilder[*Item] {
 	return builder.From[*Item]().WithContext(ctx)
 }
 
-func (i *Item) UpdateFromURL() error {
+func (i *Item) UpdateFromURL(ctx context.Context) error {
 	if i.URL == "" || i.URL == i.oldURL {
 		return nil
 	}
 
-	p, err := retail.Fetch(i.URL)
+	p, err := retail.Fetch(ctx, i.URL)
 	if err != nil {
 		return fmt.Errorf("update item price: %w", err)
 	}

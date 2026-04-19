@@ -91,7 +91,7 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error
 	}
 
 	if r.Price == nil {
-		err := item.UpdateFromURL()
+		err := item.UpdateFromURL(r.Ctx)
 		if err != nil {
 			slog.Warn("failed to update item price from url", "err", err)
 		}
@@ -157,7 +157,7 @@ var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
 		item.Order = r.Order
 
 		if r.Price == nil {
-			err := item.UpdateFromURL()
+			err := item.UpdateFromURL(r.Ctx)
 			if err != nil {
 				slog.Warn("failed to update item price from url", "err", err)
 			}

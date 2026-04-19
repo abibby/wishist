@@ -1,6 +1,7 @@
 package retail
 
 import (
+	"context"
 	"net/http"
 )
 
@@ -27,7 +28,7 @@ func (o *OpenGraph) Check(uri string) bool {
 }
 
 // Details implements [Retail].
-func (o *OpenGraph) Details(uri string) (*Product, error) {
+func (o *OpenGraph) Details(ctx context.Context, uri string) (*Product, error) {
 	resp, err := o.httpClient.Get(uri)
 	if err != nil {
 		return nil, err

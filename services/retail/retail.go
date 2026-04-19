@@ -12,7 +12,7 @@ import (
 type Retail interface {
 	Name() string
 	Check(uri string) bool
-	Details(uri string) (*Product, error)
+	Details(ctx context.Context, uri string) (*Product, error)
 }
 
 type Product struct {
@@ -27,17 +27,17 @@ type Product struct {
 var ErrMissingProvider = errors.New("no provider for uri")
 
 var providers = []Retail{
-	NewAmazon(context.Background()),
+	NewAmazon(),
 	NewLego(),
 	NewOpenGraph(),
 }
 
-func Fetch(uri string) (*Product, error) {
+func Fetch(ctx context.Context, uri string) (*Product, error) {
 	for _, p := range providers {
 		if !p.Check(uri) {
 			continue
 		}
-		prod, err := p.Details(uri)
+		prod, err := p.Details(ctx, uri)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", p.Name(), err)
 		}

@@ -6,25 +6,17 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"sync"
 
 	"github.com/chromedp/chromedp"
 )
 
 type Amazon struct {
-	ctx   context.Context
-	close context.CancelFunc
-	mtx   sync.Mutex
 }
 
 var _ Retail = (*Amazon)(nil)
 
-func NewAmazon(ctx context.Context) *Amazon {
-	ctx, cancel := chromedp.NewContext(context.Background())
-	return &Amazon{
-		ctx:   ctx,
-		close: cancel,
-	}
+func NewAmazon() *Amazon {
+	return &Amazon{}
 }
 
 // Name implements [Retail].
@@ -43,12 +35,13 @@ func (a *Amazon) Check(uri string) bool {
 }
 
 // Details implements [Retail].
-func (a *Amazon) Details(uri string) (*Product, error) {
-	var html string
-	a.mtx.Lock()
-	defer a.mtx.Unlock()
+func (a *Amazon) Details(ctx context.Context, uri string) (*Product, error) {
+	ctx, cancel := chromedp.NewContext(ctx)
+	defer cancel()
 
-	err := chromedp.Run(a.ctx,
+	var html string
+
+	err := chromedp.Run(ctx,
 		chromedp.Navigate(uri),
 		chromedp.OuterHTML("html", &html, chromedp.ByQuery),
 	)
@@ -74,9 +67,4 @@ func (a *Amazon) Details(uri string) (*Product, error) {
 	product.Currency = "CAD"
 
 	return product, nil
-}
-
-func (a *Amazon) Close() error {
-	a.close()
-	return nil
 }
