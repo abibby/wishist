@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/chromedp/chromedp"
 )
@@ -13,6 +14,7 @@ import (
 type Amazon struct {
 	ctx   context.Context
 	close context.CancelFunc
+	mtx   sync.Mutex
 }
 
 var _ Retail = (*Amazon)(nil)
@@ -43,6 +45,8 @@ func (a *Amazon) Check(uri string) bool {
 // Details implements [Retail].
 func (a *Amazon) Details(uri string) (*Product, error) {
 	var html string
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
 
 	err := chromedp.Run(a.ctx,
 		chromedp.Navigate(uri),
