@@ -1,29 +1,17 @@
 package db
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"regexp"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
+	"log/slog"
 
 	"github.com/abibby/nulls"
+	"github.com/abibby/salusa/database"
 	"github.com/abibby/salusa/database/builder"
 	"github.com/abibby/salusa/database/model"
 	"github.com/abibby/salusa/database/model/mixins"
-	"github.com/chromedp/chromedp"
-	"golang.org/x/net/html"
+	"github.com/abibby/wishist/services/retail"
 )
-
-var httpClient = &http.Client{}
-var priceRegexp = regexp.MustCompile(`\$\d+\.\d\d`)
 
 //go:generate spice generate:migration
 type Item struct {
@@ -39,6 +27,9 @@ type Item struct {
 	Order          int        `db:"order"                    json:"order"`
 	ThinkingCount  *nulls.Int `db:"thinking_count,readonly"  json:"thinking_count,omitempty"`
 	PurchasedCount *nulls.Int `db:"purchased_count,readonly" json:"purchased_count,omitempty"`
+
+	oldOrder int
+	oldURL   string
 }
 
 func ItemQuery(ctx context.Context) *builder.ModelBuilder[*Item] {
@@ -46,162 +37,62 @@ func ItemQuery(ctx context.Context) *builder.ModelBuilder[*Item] {
 }
 
 func (i *Item) UpdateFromURL() error {
-	if i.URL == "" {
+	if i.URL == "" || i.URL == i.oldURL {
 		return nil
 	}
 
-	html, err := chromeRequest(i.URL)
+	p, err := retail.Fetch(i.URL)
 	if err != nil {
 		return fmt.Errorf("update item price: %w", err)
 	}
 
-	os.WriteFile("./a.html", []byte(html), 0644)
-	meta, err := extract(bytes.NewBufferString(html))
-	if err != nil {
-		return fmt.Errorf("update item price: %w", err)
+	if p.Price != 0 && i.Price == nil {
+		i.Price = nulls.NewInt(p.Price)
 	}
 
-	if meta.Price != "" && i.Price == nil {
-		fPrice, err := strconv.ParseFloat(meta.Price, 64)
-		if err != nil {
-			return fmt.Errorf("update item price: %w", err)
-		}
-
-		i.Price = nulls.NewInt(int(fPrice * 100))
-	}
-
-	if meta.Title != "" && i.Name == "" {
-		i.Name = meta.Title
+	if p.Title != "" && i.Name == "" {
+		i.Name = p.Title
 	}
 
 	return nil
 }
 
-var chromeContext = sync.OnceValues(func() (context.Context, context.CancelFunc) {
-	return chromedp.NewContext(context.Background())
-})
-
-func chromeRequest(uri string) (string, error) {
-	ctx, _ := chromeContext()
-
-	var body string
-	err := chromedp.Run(ctx,
-		chromedp.Navigate(uri),
-		// chromedp.OuterHTML("html", &body, chromedp.ByQuery),
-	)
-	if err != nil {
-		return "", err
+func (i *Item) AfterLoad(ctx context.Context, tx database.DB) error {
+	i.oldOrder = i.Order
+	i.oldURL = i.URL
+	return nil
+}
+func (i *Item) AfterSave(ctx context.Context, tx database.DB) error {
+	if i.Order != i.oldOrder {
+		err := ReconcileItemOrder(ctx, tx, i.UserID)
+		if err != nil {
+			return err
+		}
 	}
-
-	time.Sleep(time.Second * 10)
-
-	err = chromedp.Run(ctx,
-		chromedp.OuterHTML("html", &body, chromedp.ByQuery),
-	)
-	if err != nil {
-		return "", err
-	}
-
-	return body, nil
+	i.oldOrder = i.Order
+	i.oldURL = i.URL
+	return nil
+}
+func (i *Item) AfterDelete(ctx context.Context, tx database.DB) error {
+	return ReconcileItemOrder(ctx, tx, i.UserID)
 }
 
-type meta struct {
-	Price       string
-	Title       string
-	Description string
-}
-
-func extract(resp io.Reader) (*meta, error) {
-	meta := &meta{}
-	z := html.NewTokenizer(resp)
-
-	inBody := false
-	tag := ""
-
-	for {
-		tt := z.Next()
-		switch tt {
-		case html.ErrorToken:
-			if errors.Is(z.Err(), io.EOF) {
-				return meta, nil
-			}
-			return nil, fmt.Errorf("extract price: %w", z.Err())
-
-		case html.StartTagToken:
-			t := z.Token()
-			tag = t.Data
-			switch t.Data {
-			case "meta":
-				price, ok := extractMetaProperty(t, ":price:amount")
-				if ok {
-					meta.Price = price
-				}
-				title, ok := extractMetaProperty(t, "og:title")
-				if ok {
-					meta.Title = title
-				}
-				description, ok := extractMetaProperty(t, "og:description")
-				if ok {
-					meta.Description = description
-				}
-			case "input":
-				price, ok := extractInputValue(t, "attach-base-product-price")
-				if ok {
-					meta.Price = price
-				}
-			case "body":
-				inBody = true
-			}
-
-		case html.EndTagToken:
-			t := z.Token()
-			if t.Data == "body" {
-				inBody = false
-			}
-
-		case html.TextToken:
-			t := z.Token()
-			if tag == "title" {
-				if meta.Title == "" {
-					meta.Title = t.String()
-				}
-			} else if inBody {
-				if meta.Price == "" {
-					price := priceRegexp.FindString(t.String())
-					if price != "" {
-						meta.Price = price[1:]
-					}
-				}
-			}
-		}
-	}
-}
-
-func extractMetaProperty(t html.Token, prop string) (content string, ok bool) {
-	for _, attr := range t.Attr {
-		if attr.Key == "property" && strings.HasSuffix(attr.Val, prop) {
-			ok = true
-		}
-
-		if attr.Key == "content" {
-			content = attr.Val
-		}
-	}
-
-	return
-}
-func extractInputValue(t html.Token, id string) (value string, ok bool) {
-	for _, attr := range t.Attr {
-		if attr.Key == "id" && attr.Val == id {
-			ok = true
-		}
-
-		if attr.Key == "value" {
-			value = attr.Val
-		}
-	}
-
-	return
+func ReconcileItemOrder(ctx context.Context, tx database.DB, userID int) error {
+	slog.Info("test")
+	_, err := tx.ExecContext(ctx, `UPDATE items
+SET "order" = NewOrder.row_num
+FROM (
+    SELECT 
+        id, 
+        (ROW_NUMBER() OVER (ORDER BY "order" ASC, id ASC)) - 1 as row_num
+    FROM items
+    WHERE user_id = ?
+		AND deleted_at is null
+) AS NewOrder
+WHERE items.id = NewOrder.id
+	AND items.user_id = ?
+	AND deleted_at is null;`, userID, userID)
+	return err
 }
 
 //go:generate spice generate:migration

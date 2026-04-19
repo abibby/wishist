@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"reflect"
 	"strconv"
 	"strings"
 )
 
 type Retail interface {
+	Name() string
 	Check(uri string) bool
 	Details(uri string) (*Product, error)
 }
@@ -39,7 +39,7 @@ func Fetch(uri string) (*Product, error) {
 		}
 		prod, err := p.Details(uri)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", reflect.TypeOf(p).String(), err)
+			return nil, fmt.Errorf("%s: %w", p.Name(), err)
 		}
 		return prod, nil
 	}

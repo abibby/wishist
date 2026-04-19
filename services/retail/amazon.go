@@ -25,6 +25,11 @@ func NewAmazon(ctx context.Context) *Amazon {
 	}
 }
 
+// Name implements [Retail].
+func (a *Amazon) Name() string {
+	return "amazon"
+}
+
 // Check implements [Retail].
 func (a *Amazon) Check(uri string) bool {
 	u, err := url.Parse(uri)

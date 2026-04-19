@@ -16,6 +16,11 @@ func NewOpenGraph() *OpenGraph {
 	}
 }
 
+// Name implements [Retail].
+func (o *OpenGraph) Name() string {
+	return "open graph"
+}
+
 // Check implements [Retail].
 func (o *OpenGraph) Check(uri string) bool {
 	return true

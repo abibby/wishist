@@ -45,7 +45,7 @@ export async function apiFetch<T>(
             body = { error: 'unknown error' }
         }
         response = new Response(JSON.stringify(body), {
-            status: 500,
+            status: 600,
             headers: { 'x-custom': 'true' },
         })
     }
@@ -68,6 +68,9 @@ export async function apiFetch<T>(
     }
 
     if (!response.ok) {
+        // if (response.status == 401) {
+
+        // }
         let message = response.statusText
 
         if (body.error) {

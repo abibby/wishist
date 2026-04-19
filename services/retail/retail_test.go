@@ -1,6 +1,7 @@
 package retail_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/abibby/wishist/services/retail"
@@ -9,6 +10,9 @@ import (
 )
 
 func TestFetch(t *testing.T) {
+	if os.Getenv("INTEGRATION_TESTS") == "" {
+		t.SkipNow()
+	}
 	godotenv.Load("../../.env")
 	tests := []struct {
 		name string // description of this test case
