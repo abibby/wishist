@@ -44,7 +44,7 @@ export function ItemEditModal() {
             name: name,
             url: url,
             description: description,
-            price: price !== '' ? parseFloat(price) * 100 : null,
+            price: price !== '' ? Math.round(parseFloat(price) * 100) : null,
         }
         try {
             await itemAPI.update(newItem)

@@ -1,19 +1,24 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/abibby/nulls"
 	"github.com/abibby/salusa/database/builder"
 	"github.com/abibby/salusa/database/model"
 	"github.com/abibby/salusa/database/model/mixins"
+	"github.com/chromedp/chromedp"
 	"golang.org/x/net/html"
 )
 
@@ -45,30 +50,13 @@ func (i *Item) UpdateFromURL() error {
 		return nil
 	}
 
-	req, err := http.NewRequest("GET", i.URL, nil)
+	html, err := chromeRequest(i.URL)
 	if err != nil {
 		return fmt.Errorf("update item price: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
-	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("Upgrade-Insecure-Requests", "1")
-	req.Header.Set("Sec-Fetch-Dest", "document")
-	req.Header.Set("Sec-Fetch-Mode", "navigate")
-	req.Header.Set("Sec-Fetch-Site", "none")
-	req.Header.Set("Sec-Fetch-User", "?1")
-	req.Header.Set("Priority", "u=0, i")
-	req.Header.Set("TE", "trailers")
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("update item price: %w", err)
-	}
-	defer resp.Body.Close()
-
-	meta, err := extract(resp.Body)
+	os.WriteFile("./a.html", []byte(html), 0644)
+	meta, err := extract(bytes.NewBufferString(html))
 	if err != nil {
 		return fmt.Errorf("update item price: %w", err)
 	}
@@ -87,6 +75,34 @@ func (i *Item) UpdateFromURL() error {
 	}
 
 	return nil
+}
+
+var chromeContext = sync.OnceValues(func() (context.Context, context.CancelFunc) {
+	return chromedp.NewContext(context.Background())
+})
+
+func chromeRequest(uri string) (string, error) {
+	ctx, _ := chromeContext()
+
+	var body string
+	err := chromedp.Run(ctx,
+		chromedp.Navigate(uri),
+		// chromedp.OuterHTML("html", &body, chromedp.ByQuery),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	time.Sleep(time.Second * 10)
+
+	err = chromedp.Run(ctx,
+		chromedp.OuterHTML("html", &body, chromedp.ByQuery),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return body, nil
 }
 
 type meta struct {
@@ -110,6 +126,7 @@ func extract(resp io.Reader) (*meta, error) {
 				return meta, nil
 			}
 			return nil, fmt.Errorf("extract price: %w", z.Err())
+
 		case html.StartTagToken:
 			t := z.Token()
 			tag = t.Data
@@ -127,14 +144,21 @@ func extract(resp io.Reader) (*meta, error) {
 				if ok {
 					meta.Description = description
 				}
+			case "input":
+				price, ok := extractInputValue(t, "attach-base-product-price")
+				if ok {
+					meta.Price = price
+				}
 			case "body":
 				inBody = true
 			}
+
 		case html.EndTagToken:
 			t := z.Token()
 			if t.Data == "body" {
 				inBody = false
 			}
+
 		case html.TextToken:
 			t := z.Token()
 			if tag == "title" {
@@ -161,6 +185,19 @@ func extractMetaProperty(t html.Token, prop string) (content string, ok bool) {
 
 		if attr.Key == "content" {
 			content = attr.Val
+		}
+	}
+
+	return
+}
+func extractInputValue(t html.Token, id string) (value string, ok bool) {
+	for _, attr := range t.Attr {
+		if attr.Key == "id" && attr.Val == id {
+			ok = true
+		}
+
+		if attr.Key == "value" {
+			value = attr.Val
 		}
 	}
 
