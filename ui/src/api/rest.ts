@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { apiFetch } from './internal'
 import { FetchError } from './fetch-error'
 import { Event, EventTarget } from '../events'
@@ -116,50 +116,57 @@ export function buildRestModel<
             const [user] = useUser()
 
             const matchRef = useRef<(model: T) => boolean>(() => false)
+            const fetchNetworkRef = useRef<() => Promise<void>>(() =>
+                Promise.resolve(),
+            )
             const [result, setResult] = useState<
                 [T[] | undefined, FetchError | undefined, UseListStatus]
             >([undefined, undefined, 'loading'])
+
+            const fetchNetwork = useCallback(async () => {
+                try {
+                    const models = await this.list(...req)
+                    setResult([models, undefined, 'network'])
+                } catch (e) {
+                    if (e instanceof FetchError) {
+                        setResult(([value, err, status]) => {
+                            if (value !== undefined) {
+                                return [value, err, status]
+                            }
+                            return [undefined, e, 'network']
+                        })
+                    } else {
+                        throw e
+                    }
+                }
+            }, [req])
+            const fetchCache = useCallback(async () => {
+                const filters = req[0]
+                let models: T[]
+                if (filters) {
+                    models = await filteredItems(filters).toArray()
+                } else {
+                    models = await table.toArray()
+                }
+                setResult(([value, err, status]) => {
+                    if (value !== undefined && status === 'network') {
+                        return [value, err, status]
+                    }
+                    return [models, undefined, 'cache']
+                })
+            }, [req])
+
             useEffect(() => {
                 const filters = req[0]
                 matchRef.current = (model: T) => match(model, filters)
+                fetchNetworkRef.current = fetchNetwork
 
                 // Network fetch
-                ;(async () => {
-                    try {
-                        const models = await this.list(...req)
-                        setResult([models, undefined, 'network'])
-                        return models
-                    } catch (e) {
-                        if (e instanceof FetchError) {
-                            setResult(([value, err, status]) => {
-                                if (value !== undefined) {
-                                    return [value, err, status]
-                                }
-                                return [undefined, e, 'network']
-                            })
-                        } else {
-                            throw e
-                        }
-                    }
-                })()
+                fetchNetwork()
 
                 // Cache fetch
-                ;(async () => {
-                    let models: T[]
-                    if (filters) {
-                        models = await filteredItems(filters).toArray()
-                    } else {
-                        models = await table.toArray()
-                    }
-                    setResult(([value, err, status]) => {
-                        if (value !== undefined && status === 'network') {
-                            return [value, err, status]
-                        }
-                        return [models, undefined, 'cache']
-                    })
-                    return models
-                })()
-            }, [req, user?.id])
+                fetchCache()
+            }, [fetchCache, fetchNetwork, req, user?.id])
 
             useEffect(() => {
                 const create = (e: ModelEvent<T>) => {
@@ -196,6 +203,9 @@ export function buildRestModel<
                         err,
                         state,
                     ])
+                    setTimeout(() => {
+                        fetchNetworkRef.current()
+                    }, 10)
                 }
                 buss.addEventListener('create', create)
                 buss.addEventListener('update', update)

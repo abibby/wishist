@@ -4,6 +4,7 @@ import { User } from './api/user'
 import { FetchError, authAPI } from './api'
 import { computed, signal } from '@preact/signals-core'
 import { useSignalValue } from './hooks/signal'
+import { hour } from './time'
 
 const authStore = createStore('auth-tokens', 'auth-tokens')
 const tokenKey = 'token'
@@ -23,7 +24,8 @@ export const claimsSignal = computed(() => {
 })
 
 export async function getToken(): Promise<string | null> {
-    const exp = (claimsSignal.value?.exp ?? 0) * 1000
+    const exp = (claimsSignal.value?.exp ?? 0) * 1000 - hour
+
     if (tokenSignal.value !== undefined && exp < Date.now()) {
         return tokenSignal.value
     }

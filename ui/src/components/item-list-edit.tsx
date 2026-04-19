@@ -282,7 +282,7 @@ type NormalizedEvent = {
 }
 
 function normalizeEvent(e: TouchEvent | MouseEvent): NormalizedEvent {
-    if (e instanceof TouchEvent) {
+    if (window.TouchEvent && e instanceof TouchEvent) {
         return {
             primaryAction: e.touches.length === 1,
             x: e.touches[0].clientX,
@@ -290,7 +290,7 @@ function normalizeEvent(e: TouchEvent | MouseEvent): NormalizedEvent {
         }
     }
 
-    if (e instanceof MouseEvent) {
+    if (window.MouseEvent && e instanceof MouseEvent) {
         return {
             primaryAction: e.button === 0,
             x: e.x,

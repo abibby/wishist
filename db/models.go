@@ -2,23 +2,16 @@ package db
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
+	"log/slog"
 
 	"github.com/abibby/nulls"
+	"github.com/abibby/salusa/database"
 	"github.com/abibby/salusa/database/builder"
 	"github.com/abibby/salusa/database/model"
 	"github.com/abibby/salusa/database/model/mixins"
-	"golang.org/x/net/html"
+	"github.com/abibby/wishist/services/retail"
 )
-
-var httpClient = &http.Client{}
-var priceRegexp = regexp.MustCompile(`\$\d+\.\d\d`)
 
 //go:generate spice generate:migration
 type Item struct {
@@ -34,6 +27,9 @@ type Item struct {
 	Order          int        `db:"order"                    json:"order"`
 	ThinkingCount  *nulls.Int `db:"thinking_count,readonly"  json:"thinking_count,omitempty"`
 	PurchasedCount *nulls.Int `db:"purchased_count,readonly" json:"purchased_count,omitempty"`
+
+	oldOrder int
+	oldURL   string
 }
 
 func ItemQuery(ctx context.Context) *builder.ModelBuilder[*Item] {
@@ -41,130 +37,62 @@ func ItemQuery(ctx context.Context) *builder.ModelBuilder[*Item] {
 }
 
 func (i *Item) UpdateFromURL() error {
-	if i.URL == "" {
+	if i.URL == "" || i.URL == i.oldURL {
 		return nil
 	}
 
-	req, err := http.NewRequest("GET", i.URL, nil)
+	p, err := retail.Fetch(i.URL)
 	if err != nil {
 		return fmt.Errorf("update item price: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
-	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("Upgrade-Insecure-Requests", "1")
-	req.Header.Set("Sec-Fetch-Dest", "document")
-	req.Header.Set("Sec-Fetch-Mode", "navigate")
-	req.Header.Set("Sec-Fetch-Site", "none")
-	req.Header.Set("Sec-Fetch-User", "?1")
-	req.Header.Set("Priority", "u=0, i")
-	req.Header.Set("TE", "trailers")
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("update item price: %w", err)
-	}
-	defer resp.Body.Close()
-
-	meta, err := extract(resp.Body)
-	if err != nil {
-		return fmt.Errorf("update item price: %w", err)
+	if p.Price != 0 && i.Price == nil {
+		i.Price = nulls.NewInt(p.Price)
 	}
 
-	if meta.Price != "" && i.Price == nil {
-		fPrice, err := strconv.ParseFloat(meta.Price, 64)
-		if err != nil {
-			return fmt.Errorf("update item price: %w", err)
-		}
-
-		i.Price = nulls.NewInt(int(fPrice * 100))
-	}
-
-	if meta.Title != "" && i.Name == "" {
-		i.Name = meta.Title
+	if p.Title != "" && i.Name == "" {
+		i.Name = p.Title
 	}
 
 	return nil
 }
 
-type meta struct {
-	Price       string
-	Title       string
-	Description string
+func (i *Item) AfterLoad(ctx context.Context, tx database.DB) error {
+	i.oldOrder = i.Order
+	i.oldURL = i.URL
+	return nil
 }
-
-func extract(resp io.Reader) (*meta, error) {
-	meta := &meta{}
-	z := html.NewTokenizer(resp)
-
-	inBody := false
-	tag := ""
-
-	for {
-		tt := z.Next()
-		switch tt {
-		case html.ErrorToken:
-			if errors.Is(z.Err(), io.EOF) {
-				return meta, nil
-			}
-			return nil, fmt.Errorf("extract price: %w", z.Err())
-		case html.StartTagToken:
-			t := z.Token()
-			tag = t.Data
-			switch t.Data {
-			case "meta":
-				price, ok := extractMetaProperty(t, ":price:amount")
-				if ok {
-					meta.Price = price
-				}
-				title, ok := extractMetaProperty(t, "og:title")
-				if ok {
-					meta.Title = title
-				}
-				description, ok := extractMetaProperty(t, "og:description")
-				if ok {
-					meta.Description = description
-				}
-			case "body":
-				inBody = true
-			}
-		case html.EndTagToken:
-			t := z.Token()
-			if t.Data == "body" {
-				inBody = false
-			}
-		case html.TextToken:
-			t := z.Token()
-			if tag == "title" {
-				if meta.Title == "" {
-					meta.Title = t.String()
-				}
-			} else if inBody {
-				if meta.Price == "" {
-					price := priceRegexp.FindString(t.String())
-					if price != "" {
-						meta.Price = price[1:]
-					}
-				}
-			}
+func (i *Item) AfterSave(ctx context.Context, tx database.DB) error {
+	if i.Order != i.oldOrder {
+		err := ReconcileItemOrder(ctx, tx, i.UserID)
+		if err != nil {
+			return err
 		}
 	}
+	i.oldOrder = i.Order
+	i.oldURL = i.URL
+	return nil
+}
+func (i *Item) AfterDelete(ctx context.Context, tx database.DB) error {
+	return ReconcileItemOrder(ctx, tx, i.UserID)
 }
 
-func extractMetaProperty(t html.Token, prop string) (content string, ok bool) {
-	for _, attr := range t.Attr {
-		if attr.Key == "property" && strings.HasSuffix(attr.Val, prop) {
-			ok = true
-		}
-
-		if attr.Key == "content" {
-			content = attr.Val
-		}
-	}
-
-	return
+func ReconcileItemOrder(ctx context.Context, tx database.DB, userID int) error {
+	slog.Info("test")
+	_, err := tx.ExecContext(ctx, `UPDATE items
+SET "order" = NewOrder.row_num
+FROM (
+    SELECT 
+        id, 
+        (ROW_NUMBER() OVER (ORDER BY "order" ASC, id ASC)) - 1 as row_num
+    FROM items
+    WHERE user_id = ?
+		AND deleted_at is null
+) AS NewOrder
+WHERE items.id = NewOrder.id
+	AND items.user_id = ?
+	AND deleted_at is null;`, userID, userID)
+	return err
 }
 
 //go:generate spice generate:migration

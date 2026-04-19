@@ -186,14 +186,20 @@ var ItemDelete = request.Handler(func(r *RemoveItemRequest) (any, error) {
 	uid := mustUserID(r.Ctx)
 
 	err := r.Update(func(tx *sqlx.Tx) error {
-		return db.ItemQuery(r.Ctx).
+		err := db.ItemQuery(r.Ctx).
 			Where("id", "=", r.ID).
 			Where("user_id", "=", uid).
 			Delete(tx)
+		if err != nil {
+			return err
+		}
+
+		return db.ReconcileItemOrder(r.Ctx, tx, uid)
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	return &RemoveItemResponse{
 		Success: true,
 	}, nil

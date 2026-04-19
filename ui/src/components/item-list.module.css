@@ -59,6 +59,7 @@
     user-select: none;
     margin: -10px;
     padding: 10px;
+    opacity: 0.5;
 }
 
 .moving .handle {
