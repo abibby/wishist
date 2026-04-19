@@ -1,4 +1,4 @@
-FROM node:25 as ui-build
+FROM node:25 AS ui-build
 
 WORKDIR /wishist-ui
 
