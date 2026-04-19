@@ -31,8 +31,7 @@ RUN ln -s ld-musl-x86_64.so.1 /dist/lib/libc.musl-x86_64.so.1
 
 
 FROM docker.io/chromedp/headless-shell:latest
-RUN mkdir /app
-WORKDIR /app
+WORKDIR /
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=go-build /dist /app
-ENTRYPOINT ["/app/wishist"]
+COPY --from=go-build /dist /
+ENTRYPOINT ["/wishist"]
