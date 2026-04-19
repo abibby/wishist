@@ -17,3 +17,14 @@ migration:
 	@read NAME; \
 	touch ./db/migrations/`date +'%Y%m%d%H%M%S'`_$$NAME.up.sql; \
 	touch ./db/migrations/`date +'%Y%m%d%H%M%S'`_$$NAME.down.sql;
+
+docker-build:
+	docker build . -t comicbox
+
+docker-run:
+	docker run \
+		-e APP_KEY=secret \
+		-e DB_PATH=/data/db.sqlite \
+		-v ./db.sqlite:/data/db.sqlite \
+		-p 32148:32148 \
+		comicbox

@@ -1,4 +1,4 @@
-FROM node:22 as ui-build
+FROM node:25 AS ui-build
 
 WORKDIR /wishist-ui
 
@@ -15,7 +15,7 @@ RUN apk add --no-cache ca-certificates && \
     update-ca-certificates
 
 
-FROM golang:1-alpine AS go-build
+FROM golang:1.26-alpine AS go-build
 RUN apk add --no-cache build-base
 WORKDIR /build
 COPY go.mod .
@@ -30,7 +30,9 @@ RUN ldd /dist/wishist | tr -s [:blank:] '\n' | grep ^/ | xargs -I % install -D %
 RUN ln -s ld-musl-x86_64.so.1 /dist/lib/libc.musl-x86_64.so.1
 
 
-FROM scratch
+FROM docker.io/chromedp/headless-shell:latest
+RUN mkdir /app
+WORKDIR /app
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=go-build /dist /
-ENTRYPOINT ["/wishist"]
+COPY --from=go-build /dist /app
+ENTRYPOINT ["/app/wishist"]

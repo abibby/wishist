@@ -1,6 +1,7 @@
 package retail
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -41,7 +42,7 @@ func (o *Lego) Check(uri string) bool {
 }
 
 // Details implements [Retail].
-func (o *Lego) Details(uri string) (*Product, error) {
+func (o *Lego) Details(ctx context.Context, uri string) (*Product, error) {
 	parts := strings.Split(uri, "-")
 	setNumber := parts[len(parts)-1]
 	params, err := json.Marshal(map[string]any{
@@ -94,8 +95,8 @@ func (o *Lego) Details(uri string) (*Product, error) {
 		return nil, fmt.Errorf("json decode: %w", err)
 	}
 
-	if len(br.Sets) != 1 {
-		return nil, fmt.Errorf("incorrect number of sets")
+	if len(br.Sets) == 0 {
+		return nil, fmt.Errorf("no set found")
 	}
 
 	set := br.Sets[0]
