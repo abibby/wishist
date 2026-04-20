@@ -59,6 +59,9 @@ var DBPath string
 var BaseURL string
 var Port int
 var Verbose bool
+var BricksetAPIKey string
+var RemoteAddressHeader string
+var TrustedIP string
 
 var Email email.Config
 
@@ -76,6 +79,10 @@ func Init() error {
 	BaseURL = env("BASE_URL", fmt.Sprintf("http://localhost:%d", Port))
 
 	Verbose = envBool("VERBOSE", false)
+
+	BricksetAPIKey = env("BRICKSET_API_KEY", "")
+	RemoteAddressHeader = env("REMOTE_ADDRESS_HEADER", "")
+	TrustedIP = env("TRUSTED_IP", "")
 
 	Email = &email.SMTPConfig{
 		From:     env("MAIL_FROM", "wishist@example.com"),
