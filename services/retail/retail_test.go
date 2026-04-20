@@ -1,6 +1,7 @@
 package retail_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -67,7 +68,7 @@ func TestFetch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := retail.Fetch(tt.uri)
+			got, gotErr := retail.Fetch(context.Background(), tt.uri)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("Fetch() failed: %v", gotErr)

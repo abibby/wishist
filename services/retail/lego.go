@@ -7,11 +7,11 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
 	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
+	"github.com/abibby/wishist/config"
 )
 
 type Lego struct {
@@ -54,7 +54,7 @@ func (o *Lego) Details(ctx context.Context, uri string) (*Product, error) {
 	}
 
 	requestBody := url.Values{}
-	requestBody.Add("apiKey", os.Getenv("BRICKSET_API_KEY"))
+	requestBody.Add("apiKey", config.BricksetAPIKey)
 	requestBody.Add("params", string(params))
 	requestBody.Add("userHash", "")
 

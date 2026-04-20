@@ -8,7 +8,9 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"net/netip"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/abibby/fileserver"
@@ -116,8 +118,13 @@ func main() {
 			sr := NewStatusRecorder(w)
 			h.ServeHTTP(sr, r)
 
+			remoteAddr := r.RemoteAddr
+			if config.RemoteAddressHeader != "" && isTrustedAddress(r.RemoteAddr) {
+				remoteAddr = r.Header.Get(config.RemoteAddressHeader)
+			}
+
 			slog.Info("request",
-				"remote_address", r.RemoteAddr,
+				"remote_address", remoteAddr,
 				"path", r.URL.String(),
 				"method", r.Method,
 				"time", time.Since(s),
@@ -211,4 +218,24 @@ func main() {
 		slog.Error("http server failed", "error", err)
 		os.Exit(1)
 	}
+}
+
+func isTrustedAddress(address string) bool {
+	if config.TrustedIP == "*" {
+		return true
+	}
+	parts := strings.Split(address, ":")
+	ip := parts[0]
+
+	prefix, err := netip.ParsePrefix(config.TrustedIP)
+	if err != nil {
+		return config.TrustedIP == ip
+	}
+
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
+		return false
+	}
+
+	return prefix.Contains(addr)
 }
