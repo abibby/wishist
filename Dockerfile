@@ -8,6 +8,9 @@ RUN npm ci
 COPY ./ui/ ./
 RUN npm run build
 
+FROM alpine:latest AS certs
+RUN apk add --no-cache ca-certificates && \
+    update-ca-certificates
 
 FROM golang:1.26-trixie AS go-build
 WORKDIR /build
@@ -24,5 +27,6 @@ RUN GOOS=linux GOARCH=amd64 go build -o /dist/wishist
 
 
 FROM docker.io/chromedp/headless-shell:latest
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=go-build /dist/wishist /wishist
 ENTRYPOINT ["/wishist"]
