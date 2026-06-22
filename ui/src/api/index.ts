@@ -66,12 +66,17 @@ export interface CreateUserRequest {
     password: string
 }
 
+export interface UserUpdateRequest {
+    id: number
+    name: string
+}
+
 export const userAPI = buildRestModel<
     User,
     'id',
     { username: string },
     CreateUserRequest,
-    never,
+    UserUpdateRequest,
     never
 >('/user', 'id', db.users)
 

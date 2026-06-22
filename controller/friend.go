@@ -64,7 +64,8 @@ var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 
 	friend := &db.User{}
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		err := tx.Get(friend, "select * from users where id=?", r.FriendID)
+		var err error
+		friend, err = db.UserQuery(r.Request.Context()).Find(tx, r.FriendID)
 		if err == sql.ErrNoRows {
 			return request.NewHTTPError(fmt.Errorf("friend not found"), 422)
 		} else if err != nil {

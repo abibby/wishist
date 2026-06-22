@@ -51,7 +51,7 @@ export function Friends() {
                             />
                             <div class={styles.name}>{f.name}</div>
                             <div class={styles.date}>
-                                {formatDate(f.last_updated)}
+                                Last updated {formatDate(f.last_updated)}
                             </div>
                             <ChevronRight class={styles.chevron} />
                         </a>

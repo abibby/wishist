@@ -23,6 +23,8 @@ export function Form({
             let err: Error | undefined
             e.preventDefault()
             try {
+                setFetchError(undefined)
+                setErrMsg(undefined)
                 await onSubmit()
             } catch (e) {
                 if (e instanceof Error) {

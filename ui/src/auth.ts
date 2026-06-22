@@ -107,8 +107,8 @@ export async function logout() {
 
 let currentUserPromise: Promise<User> | undefined
 
-function useNetworkUser(): [User | null, boolean] {
-    const [tokenUser] = useTokenUser()
+export function useNetworkUser(): [User | null, boolean] {
+    const [tokenUser] = useUser()
     const [networkUser, setNetworkUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
@@ -129,7 +129,7 @@ function useNetworkUser(): [User | null, boolean] {
     return [networkUser, loading]
 }
 
-function useTokenUser(): [User | null, boolean] {
+export function useUser(): [User | null, boolean] {
     const token = useSignalValue(tokenSignal)
     const loading = token === undefined
 
@@ -145,16 +145,10 @@ function useTokenUser(): [User | null, boolean] {
             username: claims.preferred_username,
             name: claims.name,
             avatar_url: '',
+            email: '',
         },
         false,
     ]
-}
-
-export function useUser(): [User | null, boolean] {
-    const [tokenUser, tokenLoading] = useTokenUser()
-    const [networkUser, networkLoading] = useNetworkUser()
-    return [networkUser || tokenUser, networkLoading || tokenLoading]
-    // return [tokenUser, tokenLoading]
 }
 
 // call getToken to populate the token signal
