@@ -5,9 +5,12 @@ import (
 	"fmt"
 
 	"github.com/abibby/salusa/auth"
+	"github.com/abibby/salusa/database"
 	"github.com/abibby/salusa/database/builder"
+	"github.com/abibby/salusa/database/hooks"
 	"github.com/abibby/salusa/database/model"
 	"github.com/abibby/salusa/database/model/mixins"
+	"github.com/abibby/wishist/services/gravatar"
 )
 
 //go:generate spice generate:migration
@@ -15,13 +18,14 @@ type User struct {
 	model.BaseModel
 	mixins.Timestamps
 	mixins.SoftDelete
-	ID       int    `db:"id,autoincrement,primary" json:"id"`
-	Name     string `db:"name"                     json:"name"`
-	Username string `db:"username,unique"          json:"username"`
-	Email    string `db:"email"                    json:"-"`
-	Password []byte `db:"password"                 json:"-"`
-	Lookup   string `db:"lookup"                   json:"-"`
-	Verified bool   `db:"verified"                 json:"-"`
+	ID        int    `db:"id,autoincrement,primary" json:"id"`
+	Name      string `db:"name"                     json:"name"`
+	Username  string `db:"username,unique"          json:"username"`
+	Email     string `db:"email"                    json:"-"`
+	Password  []byte `db:"password"                 json:"-"`
+	Lookup    string `db:"lookup"                   json:"-"`
+	Verified  bool   `db:"verified"                 json:"-"`
+	AvatarURL string `db:"-"                        json:"avatar_url"`
 }
 
 func UserQuery(ctx context.Context) *builder.ModelBuilder[*User] {
@@ -30,6 +34,7 @@ func UserQuery(ctx context.Context) *builder.ModelBuilder[*User] {
 
 var _ auth.User = (*User)(nil)
 var _ auth.EmailVerified = (*User)(nil)
+var _ hooks.AfterLoader = (*User)(nil)
 
 func (u *User) GetID() string {
 	return fmt.Sprint(u.ID)
@@ -64,4 +69,9 @@ func (u *User) SetVerified(v bool) {
 }
 func (u *User) LookupTokenColumn() string {
 	return "lookup"
+}
+
+func (u *User) AfterLoad(ctx context.Context, tx database.DB) error {
+	u.AvatarURL = gravatar.NewGravatarFromEmail(u.Email).GetURL()
+	return nil
 }

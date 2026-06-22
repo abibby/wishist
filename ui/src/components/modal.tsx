@@ -3,6 +3,7 @@ import { useCallback, useContext, useMemo, useRef } from 'preact/hooks'
 import styles from './modal.module.css'
 import { LocationHook, LocationProvider, useLocation } from 'preact-iso'
 import classNames from 'classnames'
+import { X } from 'preact-feather'
 
 const MODAL_QUERY = 'm'
 
@@ -138,7 +139,7 @@ export function Modal({
             >
                 <h2 class={styles.title}>{title}</h2>
                 <button class={styles.close} onClick={modal.close}>
-                    x
+                    <X />
                 </button>
                 <div class={classNames(styles.body, className)}>{children}</div>
             </div>

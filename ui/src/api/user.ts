@@ -4,6 +4,7 @@ export type User = {
     id: number
     name: string
     username: string
+    avatar_url: string
 }
 
 export async function currentUser(): Promise<User> {

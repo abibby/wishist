@@ -5,6 +5,7 @@ import { useLocation } from 'preact-iso'
 import { useOpenModal } from '../components/modal'
 import { ButtonList } from '../components/button-list'
 import { useInstallPrompt } from '../hooks/use-install-prompt'
+import styles from './account.module.css'
 
 export function Account() {
     const { route } = useLocation()
@@ -27,7 +28,10 @@ export function Account() {
 
     return (
         <Fragment>
-            <h1>Account</h1>
+            <h1>Settings</h1>
+
+            <img class={styles.avatar} src={user?.avatar_url} alt='' />
+
             <ButtonList>
                 <button class='light' onClick={logoutClick}>
                     Logout

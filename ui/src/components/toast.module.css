@@ -2,10 +2,10 @@
     position: fixed;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 500px;
+    gap: 0.75rem;
+    width: 30rem;
     max-width: 100%;
-    padding: 10px;
+    padding: 0.75rem;
     bottom: 0;
     right: 0;
     z-index: 10000;
@@ -15,7 +15,7 @@
     background-color: rgb(var(--surface));
     color: rgb(var(--surface-contrast));
     width: 100%;
-    padding: 10px;
+    padding: 0.75rem;
 }
 
 .toast p {

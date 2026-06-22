@@ -9,6 +9,7 @@ export interface InputProps extends FormComponentProps {
     type?: InputType
     value: string
     autoCapitalize?: boolean
+    autoComplete?: string
     onInput: (value: string, event: Event) => void
 }
 
@@ -23,6 +24,7 @@ export function Input(props: InputProps) {
                 autoCapitalize={
                     (props.autoCapitalize ?? true) ? undefined : 'none'
                 }
+                autoComplete={props.autoComplete}
                 tabIndex={props.tabIndex}
             />
         </FormComponent>

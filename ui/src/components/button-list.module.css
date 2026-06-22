@@ -1,5 +1,5 @@
 .buttonList {
     display: flex;
-    gap: 20px;
+    gap: 1.25rem;
     flex-direction: column;
 }

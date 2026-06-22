@@ -3,6 +3,7 @@ import { useCallback } from 'preact/hooks'
 import { useUser } from '../auth'
 import { useOpenModal } from '../components/modal'
 import styles from './default.module.css'
+import { List, Users, User, Settings } from 'preact-feather'
 
 export function Default({ children }: RenderableProps<unknown>) {
     const [user] = useUser()
@@ -12,22 +13,27 @@ export function Default({ children }: RenderableProps<unknown>) {
         openModal('/login')
     }, [openModal])
 
+    const userListPath = `/list/${user?.username}`
+
     return (
         <div class={styles.default}>
-            <nav class={styles.nav}>
-                <a class={styles.home} href='/'>
-                    Wishist
-                </a>
-                {user ? (
-                    <a class={styles.logout} href='/account'>
-                        Account
+            {user ? (
+                <nav class={styles.nav}>
+                    <a href={userListPath}>
+                        <List />
                     </a>
-                ) : (
-                    <button class={styles.login} onClick={login}>
-                        login
-                    </button>
-                )}
-            </nav>
+                    <a href='/friends'>
+                        <Users />
+                    </a>
+                    <a href='/account'>
+                        <Settings />
+                    </a>
+                </nav>
+            ) : (
+                <button class={styles.login} onClick={login}>
+                    <User />
+                </button>
+            )}
             {children}
         </div>
     )

@@ -4,7 +4,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(0.25rem);
     z-index: 100;
     animation: blur-in var(--transition-time);
 }
@@ -13,7 +13,7 @@
         backdrop-filter: blur(0);
     }
     100% {
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(0.25rem);
         display: none;
     }
 }
@@ -24,7 +24,7 @@
 }
 @keyframes blur-out {
     0% {
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(0.25rem);
     }
     100% {
         backdrop-filter: blur(0);
@@ -33,18 +33,19 @@
 
 .modal {
     position: fixed;
-    top: 100px;
+    top: 6.25rem;
     left: 50%;
     transform: translateX(-50%);
+    border-radius: var(--radius-l);
 
-    --padding: 15px;
+    --padding: 1rem;
     display: flex;
     flex-direction: column;
     background-color: rgb(var(--surface));
     color: rgba(var(--surface-contrast), var(--text-opacity));
     width: var(--content-width);
     max-width: var(--max-content-width);
-    max-height: calc(100vh - 150px);
+    max-height: calc(100vh - 9.25rem);
     padding: var(--padding);
     overflow: hidden;
 
@@ -55,7 +56,7 @@
 
 @keyframes slide-in {
     0% {
-        transform: translateX(-50%) translateY(calc(-100% - 100px));
+        transform: translateX(-50%) translateY(calc(-100% - 6.25rem));
     }
     100% {
         transform: translateX(-50%) translateY(0);
@@ -70,7 +71,7 @@
         transform: translateX(-50%) translateY(0);
     }
     100% {
-        transform: translateX(-50%) translateY(calc(-100% - 100px));
+        transform: translateX(-50%) translateY(calc(-100% - 6.25rem));
         display: none;
     }
 }
@@ -80,6 +81,8 @@
 }
 
 .close {
+    all: unset;
+    cursor: pointer;
     position: absolute;
     top: var(--padding);
     right: var(--padding);
@@ -87,7 +90,7 @@
 
 .actions {
     display: flex;
-    gap: 5px;
+    gap: 0.25rem;
     justify-content: flex-end;
 }
 

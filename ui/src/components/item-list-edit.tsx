@@ -12,6 +12,7 @@ import { PageSpinner, Spinner } from './spinner'
 import { openToast } from './toast'
 import { sleep } from '../utils'
 import { useWindowEvent } from '../hooks/use-window-event'
+import { ChevronRight } from 'preact-feather'
 
 type Moving = {
     element: HTMLElement
@@ -267,7 +268,7 @@ function Row({ class: className, item, onStartMove }: RowProps) {
                 )}
                 <div class={styles.actions}>
                     <button onClick={bind(`/item/${item.id}/edit`, openModal)}>
-                        +
+                        <ChevronRight />
                     </button>
                 </div>
             </label>
