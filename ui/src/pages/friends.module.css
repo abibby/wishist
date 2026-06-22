@@ -1,0 +1,41 @@
+.friends {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.friend {
+    display: grid;
+    grid-template-areas:
+        'avatar name chevron'
+        'avatar date chevron';
+    grid-template-columns: auto 1fr auto;
+    padding: 7px;
+    color: rgb(var(--background-contrast));
+    text-decoration: none;
+    border-bottom: solid 1px rgba(var(--background-contrast), 20%);
+    column-gap: 0.5rem;
+}
+
+.avatar {
+    grid-area: avatar;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+}
+
+.name {
+    grid-area: name;
+}
+
+.date {
+    grid-area: date;
+    color: rgba(var(--background-contrast), 50%);
+}
+
+.chevron {
+    grid-area: chevron;
+    color: rgba(var(--background-contrast), 70%);
+    align-self: center;
+    justify-self: right;
+}

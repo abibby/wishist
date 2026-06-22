@@ -27,6 +27,7 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
                 tabIndex={1}
                 autoFocus
                 autoCapitalize={false}
+                // autoComplete='username'
             />
             <Input
                 title='Password'
@@ -34,6 +35,7 @@ export function LoginForm({ onLogin }: Readonly<LoginFormProps>) {
                 value={password}
                 onInput={setPassword}
                 tabIndex={2}
+                // autoComplete='current-password'
             />
             <ModalActions>
                 <a

@@ -1,15 +1,19 @@
 import { Fragment, h } from 'preact'
-import { friendAPI } from '../api'
 import { useUser } from '../auth'
-import classNames from 'classnames'
-import { ButtonList } from '../components/button-list'
-import styles from './home.module.css'
-import { ErrorFetchError } from './error-fetch-error'
 import { PageSpinner } from '../components/spinner'
+import { useLocation } from 'preact-iso'
+import styles from './home.module.css'
+import { useCallback } from 'preact/hooks'
+import { useOpenModal } from '../components/modal'
 
 export function Home() {
     const [user, userLoading] = useUser()
-    const [friends, err] = friendAPI.useList()
+    const { route } = useLocation()
+    const openModal = useOpenModal()
+
+    const login = useCallback(async () => {
+        openModal('/login')
+    }, [openModal])
 
     if (userLoading) {
         return <PageSpinner />
@@ -18,36 +22,17 @@ export function Home() {
         return (
             <Fragment>
                 <h1>Wishist</h1>
-                <p>Log in to view friends</p>
+                <p>
+                    <button class={styles.login} onClick={login}>
+                        Login
+                    </button>{' '}
+                    to view friends and create a wishlist
+                </p>
             </Fragment>
         )
     }
 
-    if (err !== undefined) {
-        return <ErrorFetchError err={err} />
-    }
+    route(`/list/${user?.username}`, true)
 
-    return (
-        <Fragment>
-            <h1>Wishist</h1>
-            <a
-                class={classNames('button', 'light', styles.myList, styles.btn)}
-                href={`/list/${user?.username}`}
-            >
-                My List
-            </a>
-            <h2>Friends</h2>
-            <ButtonList>
-                {friends?.map(f => (
-                    <a
-                        key={f.friend_id}
-                        class={classNames('button', 'light', styles.btn)}
-                        href={`/list/${f.friend_username}`}
-                    >
-                        {f.friend_name}
-                    </a>
-                ))}
-            </ButtonList>
-        </Fragment>
-    )
+    return <Fragment />
 }

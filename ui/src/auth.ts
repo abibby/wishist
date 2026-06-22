@@ -1,10 +1,11 @@
 import { createStore, delMany, get, setMany } from 'idb-keyval'
 import jwt from './jwt'
-import { User } from './api/user'
+import { currentUser, User } from './api/user'
 import { FetchError, authAPI } from './api'
 import { computed, signal } from '@preact/signals-core'
 import { useSignalValue } from './hooks/signal'
 import { hour } from './time'
+import { useEffect, useState } from 'preact/hooks'
 
 const authStore = createStore('auth-tokens', 'auth-tokens')
 const tokenKey = 'token'
@@ -104,6 +105,30 @@ export async function logout() {
     }
 }
 
+let currentUserPromise: Promise<User> | undefined
+
+export function useNetworkUser(): [User | null, boolean] {
+    const [tokenUser] = useUser()
+    const [networkUser, setNetworkUser] = useState<User | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (currentUserPromise == undefined) {
+            currentUserPromise = currentUser()
+        }
+        if (!tokenUser?.id) {
+            return
+        }
+
+        currentUserPromise.then(u => {
+            setNetworkUser(u)
+            setLoading(false)
+        })
+    }, [tokenUser?.id])
+
+    return [networkUser, loading]
+}
+
 export function useUser(): [User | null, boolean] {
     const token = useSignalValue(tokenSignal)
     const loading = token === undefined
@@ -119,6 +144,8 @@ export function useUser(): [User | null, boolean] {
             id: Number(claims.sub),
             username: claims.preferred_username,
             name: claims.name,
+            avatar_url: '',
+            email: '',
         },
         false,
     ]

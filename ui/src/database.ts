@@ -1,10 +1,10 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Friend, Item, User, UserItem } from './api'
+import type { Item, User, UserFriend, UserItem } from './api'
 
 const db = new Dexie('Wishist') as Dexie & {
     items: EntityTable<Item, 'id'>
     userItems: EntityTable<UserItem, 'item_id'>
-    friends: EntityTable<Friend, 'friend_id'>
+    friends: EntityTable<UserFriend, 'friend_id'>
     users: EntityTable<User, 'id'>
 }
 

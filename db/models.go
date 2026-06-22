@@ -115,10 +115,8 @@ type Friend struct {
 	model.BaseModel
 	mixins.Timestamps
 	mixins.SoftDelete
-	UserID         int    `db:"user_id,primary"          json:"-"`
-	FriendID       int    `db:"friend_id,primary"        json:"friend_id"`
-	FriendName     string `db:"friend_name,readonly"     json:"friend_name"`
-	FriendUsername string `db:"friend_username,readonly" json:"friend_username"`
+	UserID   int `db:"user_id,primary"              json:"-"`
+	FriendID int `db:"friend_id,primary"            json:"friend_id"`
 }
 
 func FriendQuery(ctx context.Context) *builder.ModelBuilder[*Friend] {

@@ -28,17 +28,20 @@ export const itemAPI = buildRestModel<
 
 export type Friend = {
     friend_id: number
-    friend_name: string
-    friend_username: string
 }
 
+export type UserFriend = User &
+    Friend & {
+        last_updated: string
+    }
+
 export const friendAPI = buildRestModel<
-    Friend,
+    UserFriend,
     'friend_id',
     NoArgs,
-    Pick<Friend, 'friend_id'>,
+    Friend,
     never,
-    Pick<Friend, 'friend_id'>
+    Friend
 >('/friend', 'friend_id', db.friends)
 
 export type UserItem = {
@@ -63,12 +66,17 @@ export interface CreateUserRequest {
     password: string
 }
 
+export interface UserUpdateRequest {
+    id: number
+    name: string
+}
+
 export const userAPI = buildRestModel<
     User,
     'id',
     { username: string },
     CreateUserRequest,
-    never,
+    UserUpdateRequest,
     never
 >('/user', 'id', db.users)
 

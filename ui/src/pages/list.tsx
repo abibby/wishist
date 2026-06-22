@@ -9,6 +9,7 @@ import { useRoute } from 'preact-iso'
 import { ItemListReadonly } from '../components/item-list-readonly'
 import { Conditions } from '../components/conditions'
 import { PageSpinner } from '../components/spinner'
+import { UserMinus, UserPlus } from 'preact-feather'
 
 export function List() {
     const { params } = useRoute()
@@ -130,7 +131,7 @@ function OtherUserList({ listUser, activeUser }: OtherListProps) {
         <Conditions>
             <h1>{listUser.name}'s Wishlist</h1>
             <button v-if={isFriend} onClick={removeFriend}>
-                Remove Friend
+                <UserMinus />
             </button>
             <Fragment v-else>
                 <p>
@@ -138,7 +139,7 @@ function OtherUserList({ listUser, activeUser }: OtherListProps) {
                     thinking about getting items.
                 </p>
                 <button class='primary' onClick={addFriend}>
-                    Add Friend
+                    <UserPlus />
                 </button>
             </Fragment>
             <ItemListReadonly items={items} userItems={userItems} />

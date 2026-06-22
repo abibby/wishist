@@ -166,6 +166,7 @@ func main() {
 
 		r.Get("/item", controller.ItemList)
 		r.Get("/user", controller.UserList)
+		r.Put("/user", controller.UserUpdate)
 
 		r.Group("", func(r *router.Router) {
 			r.Use(auth.LoggedIn())

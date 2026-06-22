@@ -2,7 +2,7 @@
     display: block;
     position: relative;
     width: 100%;
-    margin: 10px 0;
+    margin: 0.75rem 0;
 }
 .title {
     line-height: 1;
@@ -12,7 +12,7 @@
     background: none;
     border: none;
     border-bottom: solid 1px rgba(var(--background-contrast), 20%);
-    padding: 10px;
+    padding: 0.75rem;
     transition:
         background-color,
         border 0.25s;
@@ -27,13 +27,13 @@
 }
 
 .icon + .element {
-    padding-left: calc(10px + 1.5ch);
+    padding-left: calc(0.75rem + 1.5ch);
 }
 
 .icon {
     position: absolute;
-    top: calc(1em + 10px);
-    left: 10px;
+    top: calc(1em + 0.75rem);
+    left: 0.75rem;
     color: rgb(var(--surface-contrast), 0.5);
 }
 

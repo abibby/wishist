@@ -22,6 +22,7 @@ import './restore'
 import { registerServiceWorker } from './register-sw'
 import { InstallModal } from './components/modals/install'
 import { GlobalSpinner } from './components/spinner'
+import { Friends } from './pages/friends'
 
 function Routes() {
     return (
@@ -36,6 +37,7 @@ function Routes() {
             <Route component={CreateUser} path='/create-user' />
             <Route component={List} path='/list/:username' />
             <Route component={Account} path='/account' />
+            <Route component={Friends} path='/friends' />
             <Route component={Error404} default />
         </Router>
     )

@@ -1,24 +1,32 @@
 :root {
-    --darkest: 34, 40, 49;
-    --dark: 49, 54, 63;
+    --graphite: 49, 47, 47;
+    --pearl-aqua: 132, 220, 207;
+    --icy-blue: 166, 217, 247;
+    --pale-sky: 188, 204, 224;
+    --rosy-taupe: 191, 152, 160;
 
-    --light: 80, 114, 123;
-    --light-contrast: 255, 255, 255;
+    --darkest: 0, 0, 0;
+    --dark: var(--graphite);
 
-    --primary: 118, 171, 174;
+    --light: var(--icy-blue);
+    --light-contrast: 0, 0, 0;
+
+    --primary: var(--icy-blue);
     --primary-contrast: 0, 0, 0;
 
-    --alert: 255, 160, 71;
+    --alert: var(--rosy-taupe);
     --alert-contrast: 0, 0, 0;
 
-    --danger: 171, 52, 40;
+    --danger: var(--rosy-taupe);
     --danger-contrast: 255, 255, 255;
 
-    --dim: 85, 88, 96;
+    --dim: 96, 96, 96;
     --dim-contrast: 255, 255, 255;
 
     --surface: var(--dark);
     --surface-contrast: 255, 255, 255;
+    --surface-opacity: 70%;
+    --surface-backdrop-filter: blur(1rem);
 
     --background: var(--darkest);
     --background-contrast: 255, 255, 255;
@@ -26,27 +34,43 @@
     --text-opacity: 90%;
     --text-opacity-light: 70%;
 
-    --content-width: 500px;
-    --max-content-width: calc(100vw - 20px);
+    --content-width: 30rem;
+    --max-content-width: calc(100vw - 1.25rem);
 
     --transition-time: 200ms;
+
+    --radius-s: 0.25rem;
+    --radius-l: 0.75rem;
 }
 
 body {
     background-color: rgb(var(--background));
     background-image: url(../assets/stars.svg);
     background-repeat: repeat-x;
-    background-size: 1000px;
+    background-size: 30rem;
     color: rgba(var(--background-contrast), var(--text-opacity));
     margin: 0;
-    margin-top: 41px;
-    padding: 10px;
+    margin-bottom: 4.25rem;
+    padding: 0.75rem;
 
     font-family: sans-serif;
 }
 
+@media screen and (min-width: 750px) {
+    body {
+        margin-bottom: 0;
+    }
+}
+
 * {
     box-sizing: border-box;
+}
+
+h1 {
+    /* width: 100%; */
+    text-align: center;
+    /* background-color: red; */
+    font-size: 1rem;
 }
 
 a {
@@ -59,12 +83,13 @@ button {
     border: none;
     background-color: rgb(var(--dim));
     color: rgba(var(--dim-contrast), var(--text-opacity));
-    border-radius: 4px;
+    border-radius: var(--radius-s);
     padding: 0.25em 0.5em;
     text-decoration: none;
     font-size: inherit;
     text-align: center;
-    transition: background-color var(--transition-time),
+    transition:
+        background-color var(--transition-time),
         color var(--transition-time);
 
     cursor: pointer;
@@ -125,6 +150,6 @@ button.lg {
 
 .button-list {
     display: flex;
-    gap: 20px;
+    gap: 1.25rem;
     flex-direction: column;
 }

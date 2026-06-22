@@ -1,6 +1,5 @@
-.myList {
-    width: 100%;
-}
-.btn {
-    padding: 7px;
+.login {
+    all: unset;
+    cursor: pointer;
+    color: rgb(var(--primary));
 }
