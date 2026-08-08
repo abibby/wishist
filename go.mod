@@ -1,15 +1,14 @@
 module github.com/abibby/wishist
 
-go 1.26
+go 1.26.5
 
-// replace github.com/abibby/salusa => /Users/abibby/github.com/abibby/salusa
-// replace github.com/abibby/salusa => /home/adam/github.com/abibby/salusa
+// replace github.com/abibby/salusa => ../salusa
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.0
 	github.com/abibby/fileserver v0.0.0-20221208191705-087686654550
 	github.com/abibby/nulls v1.1.0
-	github.com/abibby/salusa v0.21.0
+	github.com/abibby/salusa v0.22.0
 	github.com/chromedp/chromedp v0.15.1
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/go-openapi/testify/v2 v2.4.2
@@ -36,6 +35,7 @@ require (
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/lib/pq v1.12.3 // indirect
 	github.com/lmittmann/tint v1.0.5 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-sqlite3 v1.14.23 // indirect

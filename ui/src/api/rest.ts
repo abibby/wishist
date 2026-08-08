@@ -140,21 +140,21 @@ export function buildRestModel<
                     }
                 }
             }, [req])
-            const fetchCache = useCallback(async () => {
-                const filters = req[0]
-                let models: T[]
-                if (filters) {
-                    models = await filteredItems(filters).toArray()
-                } else {
-                    models = await table.toArray()
-                }
-                setResult(([value, err, status]) => {
-                    if (value !== undefined && status === 'network') {
-                        return [value, err, status]
-                    }
-                    return [models, undefined, 'cache']
-                })
-            }, [req])
+            // const fetchCache = useCallback(async () => {
+            //     const filters = req[0]
+            //     let models: T[]
+            //     if (filters) {
+            //         models = await filteredItems(filters).toArray()
+            //     } else {
+            //         models = await table.toArray()
+            //     }
+            //     setResult(([value, err, status]) => {
+            //         if (value !== undefined && status === 'network') {
+            //             return [value, err, status]
+            //         }
+            //         return [models, undefined, 'cache']
+            //     })
+            // }, [req])
 
             useEffect(() => {
                 const filters = req[0]
@@ -164,9 +164,9 @@ export function buildRestModel<
                 // Network fetch
                 fetchNetwork()
 
-                // Cache fetch
-                fetchCache()
-            }, [fetchCache, fetchNetwork, req, user?.id])
+                // // Cache fetch
+                // fetchCache()
+            }, [fetchNetwork, req, user?.id])
 
             useEffect(() => {
                 const create = (e: ModelEvent<T>) => {

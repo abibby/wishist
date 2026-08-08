@@ -1,12 +1,14 @@
 package controller
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/abibby/salusa/database/builder"
+	"github.com/abibby/salusa/database/model"
 	"github.com/abibby/salusa/database/model/mixins"
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
@@ -55,7 +57,8 @@ var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 type AddFriendRequest struct {
 	FriendID int `json:"friend_id" validate:"required"`
 
-	Request *http.Request `inject:""`
+	Ctx     context.Context `inject:""`
+	Request *http.Request   `inject:""`
 }
 type AddFriendResponse *UserFriend
 
@@ -71,8 +74,11 @@ var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 		} else if err != nil {
 			return err
 		}
-		_, err = tx.Exec("INSERT INTO friends (user_id,friend_id) VALUES (?, ?)", uid, friend.ID)
-		return err
+
+		return model.SaveContext(r.Ctx, tx, &db.Friend{
+			UserID:   uid,
+			FriendID: friend.ID,
+		})
 	})
 	if err != nil {
 		return nil, err
@@ -87,8 +93,10 @@ var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 })
 
 type RemoveFriendRequest struct {
-	FriendID int           `json:"friend_id" validate:"required"`
-	Request  *http.Request `inject:""`
+	FriendID int `json:"friend_id" validate:"required"`
+
+	Ctx     context.Context `inject:""`
+	Request *http.Request   `inject:""`
 }
 type RemoveFriendResponse struct {
 	Success bool `json:"success"`
@@ -97,8 +105,7 @@ type RemoveFriendResponse struct {
 var FriendDelete = request.Handler(func(r *RemoveFriendRequest) (any, error) {
 	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		_, err := tx.Exec("DELETE FROM friends WHERE user_id=? AND friend_id=?", uid, r.FriendID)
-		return err
+		return db.FriendQuery(r.Ctx).Where("user_id", "=", uid).Where("friend_id", "=", r.FriendID).Delete(tx)
 	})
 	if err != nil {
 		return nil, err

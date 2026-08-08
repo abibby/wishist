@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/abibby/salusa/database"
+	"github.com/abibby/salusa/database/dialects/postgres"
 	"github.com/abibby/salusa/database/dialects/sqlite"
 	"github.com/abibby/salusa/email"
 	"github.com/abibby/salusa/salusaconfig"
@@ -55,7 +56,9 @@ func envInt(key string, def int) int {
 }
 
 var AppKey []byte
-var DBPath string
+
+// var DBPath string
+var DBConfig database.Config
 var BaseURL string
 var Port int
 var Verbose bool
@@ -74,7 +77,18 @@ func Init() error {
 		return err
 	}
 	AppKey = []byte(mustEnv("APP_KEY"))
-	DBPath = env("DB_PATH", "./db.sqlite")
+	// DBPath = env("DB_PATH", "./db.sqlite")
+	if env("DB_DRIVER", "sqlite") == "postgres" {
+		DBConfig = &postgres.Config{
+			Username:   env("DB_USERNAME", "wishist"),
+			Password:   env("DB_PASSWORD", "wishist"),
+			Host:       env("DB_HOST", "localhost"),
+			Database:   env("DB_NAME", "wishist"),
+			DisableSSL: true,
+		}
+	} else {
+		DBConfig = sqlite.NewConfig(env("DB_PATH", "./db.sqlite"))
+	}
 	Port = envInt("PORT", 32148)
 	BaseURL = env("BASE_URL", fmt.Sprintf("http://localhost:%d", Port))
 
@@ -105,5 +119,5 @@ func (c *config) MailConfig() email.Config {
 	return Email
 }
 func (c *config) DBConfig() database.Config {
-	return sqlite.NewConfig(DBPath)
+	return DBConfig
 }

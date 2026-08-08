@@ -9,6 +9,8 @@ import (
 
 	"github.com/abibby/nulls"
 	"github.com/abibby/salusa/database"
+	"github.com/abibby/salusa/database/builder"
+	"github.com/abibby/salusa/database/dialects"
 	"github.com/abibby/salusa/database/model"
 	"github.com/abibby/salusa/request"
 	"github.com/abibby/wishist/db"
@@ -143,12 +145,22 @@ var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
 		item.Price = r.Price
 
 		if item.Order > r.Order {
-			_, err := tx.Exec(`UPDATE items SET "order" = "order" + 1 WHERE "order" >= ? AND "order" < ?`, r.Order, item.Order)
+			err = db.ItemQuery(r.Ctx).
+				Where("order", ">=", r.Order).
+				Where("order", "<", item.Order).
+				Update(tx, builder.Updates{
+					"order": dialects.Raw(`"order" + 1`),
+				})
 			if err != nil {
 				return err
 			}
 		} else if item.Order < r.Order {
-			_, err := tx.Exec(`UPDATE items SET "order" = "order" - 1 WHERE "order" > ? AND "order" <= ?`, item.Order, r.Order)
+			err = db.ItemQuery(r.Ctx).
+				Where("order", "<=", r.Order).
+				Where("order", ">", item.Order).
+				Update(tx, builder.Updates{
+					"order": dialects.Raw(`"order" - 1`),
+				})
 			if err != nil {
 				return err
 			}

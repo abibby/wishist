@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/abibby/nulls"
 	"github.com/abibby/salusa/database"
@@ -78,7 +77,7 @@ func (i *Item) AfterDelete(ctx context.Context, tx database.DB) error {
 }
 
 func ReconcileItemOrder(ctx context.Context, tx database.DB, userID int) error {
-	slog.Info("test")
+	return nil
 	_, err := tx.ExecContext(ctx, `UPDATE items
 SET "order" = NewOrder.row_num
 FROM (

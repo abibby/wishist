@@ -158,8 +158,7 @@ type RemoveUserItemResponse struct {
 var UserItemDelete = request.Handler(func(r *RemoveUserItemRequest) (any, error) {
 	uid := mustUserID(r.Request.Context())
 	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
-		_, err := tx.Exec("DELETE FROM user_items WHERE user_id=? AND item_id=?", uid, r.ItemID)
-		return err
+		return db.UserItemQuery(r.Request.Context()).Where("user_id", "=", uid).Where("item_id", "=", r.ItemID).Delete(tx)
 	})
 	if err != nil {
 		return nil, err
