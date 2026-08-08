@@ -77,21 +77,30 @@ func (i *Item) AfterDelete(ctx context.Context, tx database.DB) error {
 }
 
 func ReconcileItemOrder(ctx context.Context, tx database.DB, userID int) error {
-	return nil
-	_, err := tx.ExecContext(ctx, `UPDATE items
-SET "order" = NewOrder.row_num
-FROM (
-    SELECT 
-        id, 
-        (ROW_NUMBER() OVER (ORDER BY "order" ASC, id ASC)) - 1 as row_num
-    FROM items
-    WHERE user_id = ?
-		AND deleted_at is null
-) AS NewOrder
-WHERE items.id = NewOrder.id
-	AND items.user_id = ?
-	AND deleted_at is null;`, userID, userID)
-	return err
+	num := 0
+	return ItemQuery(ctx).OrderBy("order").Each(tx, func(i *Item) error {
+		i.Order = num
+		num++
+		return model.SaveContext(ctx, tx, i)
+	})
+	//	_, err := tx.ExecContext(ctx, `UPDATE items
+	//
+	// SET "order" = NewOrder.row_num
+	// FROM (
+	//
+	//	    SELECT
+	//	        id,
+	//	        (ROW_NUMBER() OVER (ORDER BY "order" ASC, id ASC)) - 1 as row_num
+	//	    FROM items
+	//	    WHERE user_id = ?
+	//			AND deleted_at is null
+	//
+	// ) AS NewOrder
+	// WHERE items.id = NewOrder.id
+	//
+	//	AND items.user_id = ?
+	//	AND deleted_at is null;`, userID, userID)
+	//	return err
 }
 
 //go:generate spice generate:migration
