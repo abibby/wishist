@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/abibby/salusa/database"
-	"github.com/abibby/salusa/database/model"
-	"github.com/abibby/salusa/request"
+	"abibby.com/salusa/database"
+	"abibby.com/salusa/database/model"
+	"abibby.com/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
 )
@@ -148,16 +148,18 @@ var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (any, error) {
 })
 
 type RemoveUserItemRequest struct {
-	ItemID  int           `json:"item_id" validate:"required"`
-	Request *http.Request `inject:""`
+	ItemID int `json:"item_id" validate:"required"`
+
+	Ctx    context.Context `inject:""`
+	Update database.Update `inject:""`
 }
 type RemoveUserItemResponse struct {
 	Success bool `json:"success"`
 }
 
 var UserItemDelete = request.Handler(func(r *RemoveUserItemRequest) (any, error) {
-	uid := mustUserID(r.Request.Context())
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	uid := mustUserID(r.Ctx)
+	err := r.Update(func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM user_items WHERE user_id=? AND item_id=?", uid, r.ItemID)
 		return err
 	})

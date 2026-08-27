@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/abibby/salusa/auth"
-	"github.com/abibby/salusa/database"
-	"github.com/abibby/salusa/database/builder"
-	"github.com/abibby/salusa/database/hooks"
-	"github.com/abibby/salusa/database/model"
-	"github.com/abibby/salusa/database/model/mixins"
+	"abibby.com/salusa/auth"
+	"abibby.com/salusa/database"
+	"abibby.com/salusa/database/builder"
+	"abibby.com/salusa/database/hooks"
+	"abibby.com/salusa/database/model"
+	"abibby.com/salusa/database/model/mixins"
 	"github.com/abibby/wishist/services/gravatar"
 )
 

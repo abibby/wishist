@@ -1,20 +1,22 @@
 package controller
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"net/http"
 	"time"
 
-	"github.com/abibby/salusa/database/builder"
-	"github.com/abibby/salusa/database/model/mixins"
-	"github.com/abibby/salusa/request"
+	"abibby.com/salusa/database"
+	"abibby.com/salusa/database/builder"
+	"abibby.com/salusa/database/model/mixins"
+	"abibby.com/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
 )
 
 type ListFriendsRequest struct {
-	Request *http.Request `inject:""`
+	Ctx    context.Context `inject:""`
+	Update database.Update `inject:""`
 }
 type UserFriend struct {
 	db.Friend
@@ -26,14 +28,14 @@ type ListFriendsResponse []*UserFriend
 
 var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 	friends := []*UserFriend{}
-	uid := mustUserID(r.Request.Context())
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	uid := mustUserID(r.Ctx)
+	err := r.Update(func(tx *sqlx.Tx) error {
 		return builder.NewBuilder().
 			From("friends").
-			WithContext(r.Request.Context()).
+			WithContext(r.Ctx).
 			Select("friends.*", "users.*").
 			AddSelectSubquery(
-				db.ItemQuery(r.Request.Context()).
+				db.ItemQuery(r.Ctx).
 					Select("items.updated_at").
 					WhereColumn("items.user_id", "=", "friends.friend_id").
 					OrderByDesc("items.updated_at").
@@ -55,17 +57,18 @@ var FriendList = request.Handler(func(r *ListFriendsRequest) (any, error) {
 type AddFriendRequest struct {
 	FriendID int `json:"friend_id" validate:"required"`
 
-	Request *http.Request `inject:""`
+	Ctx    context.Context `inject:""`
+	Update database.Update `inject:""`
 }
 type AddFriendResponse *UserFriend
 
 var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
-	uid := mustUserID(r.Request.Context())
+	uid := mustUserID(r.Ctx)
 
 	friend := &db.User{}
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	err := r.Update(func(tx *sqlx.Tx) error {
 		var err error
-		friend, err = db.UserQuery(r.Request.Context()).Find(tx, r.FriendID)
+		friend, err = db.UserQuery(r.Ctx).Find(tx, r.FriendID)
 		if err == sql.ErrNoRows {
 			return request.NewHTTPError(fmt.Errorf("friend not found"), 422)
 		} else if err != nil {
@@ -87,16 +90,18 @@ var FriendCreate = request.Handler(func(r *AddFriendRequest) (any, error) {
 })
 
 type RemoveFriendRequest struct {
-	FriendID int           `json:"friend_id" validate:"required"`
-	Request  *http.Request `inject:""`
+	FriendID int `json:"friend_id" validate:"required"`
+
+	Ctx    context.Context `inject:""`
+	Update database.Update `inject:""`
 }
 type RemoveFriendResponse struct {
 	Success bool `json:"success"`
 }
 
 var FriendDelete = request.Handler(func(r *RemoveFriendRequest) (any, error) {
-	uid := mustUserID(r.Request.Context())
-	err := db.Tx(r.Request.Context(), func(tx *sqlx.Tx) error {
+	uid := mustUserID(r.Ctx)
+	err := r.Update(func(tx *sqlx.Tx) error {
 		_, err := tx.Exec("DELETE FROM friends WHERE user_id=? AND friend_id=?", uid, r.FriendID)
 		return err
 	})

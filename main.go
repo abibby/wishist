@@ -4,23 +4,25 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"log/slog"
 	"mime"
 	"net"
 	"net/http"
 	"net/netip"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
+	"abibby.com/salusa/auth"
+	"abibby.com/salusa/clog"
+	"abibby.com/salusa/database"
+	"abibby.com/salusa/di"
+	"abibby.com/salusa/email"
+	"abibby.com/salusa/request"
+	"abibby.com/salusa/router"
+	"abibby.com/salusa/salusaconfig"
+	"abibby.com/salusa/view"
 	"github.com/abibby/fileserver"
-	"github.com/abibby/salusa/auth"
-	"github.com/abibby/salusa/di"
-	"github.com/abibby/salusa/request"
-	"github.com/abibby/salusa/router"
-	"github.com/abibby/salusa/salusaconfig"
-	"github.com/abibby/salusa/salusadi"
-	"github.com/abibby/salusa/view"
 	"github.com/abibby/wishist/config"
 	"github.com/abibby/wishist/controller"
 	"github.com/abibby/wishist/db"
@@ -68,36 +70,36 @@ func main() {
 		context.Background(),
 		di.NewDependencyProvider(),
 	)
+	clog.RegisterDefault(ctx)
 
 	err := config.Init()
 	if err != nil {
-		slog.Error("failed initialize config", "error", err)
+		clog.Use(ctx).Error("failed initialize config", "error", err)
 		os.Exit(1)
 	}
 
 	err = view.Register(emails, "**/*.html")(ctx)
 	if err != nil {
-		slog.Error("failed register emails", "error", err)
+		clog.Use(ctx).Error("failed register emails", "error", err)
 		os.Exit(1)
 	}
 
 	di.RegisterSingleton(ctx, func() salusaconfig.Config {
 		return config.Config
 	})
-	// must be before the db.Open because of dumb di stuff
-	_ = salusadi.Register[*db.User](migrations.Use())(ctx)
+
+	email.Register(ctx, config.Email)
+	database.Register(ctx, config.Config.DBConfig(), migrations.Use())
+	database.RegisterTransactions(ctx, &sync.RWMutex{})
+
+	request.Register(ctx)
+	auth.Register[*db.User](ctx)
 
 	auth.SetAppKey(config.AppKey)
 
-	err = db.Open(ctx)
-	if err != nil {
-		slog.Error("failed to open database", "error", err)
-		os.Exit(1)
-	}
-
 	err = mime.AddExtensionType(".webmanifest", "application/manifest+json")
 	if err != nil {
-		slog.Error("failed to add .webmanifest mimetype", "error", err)
+		clog.Use(ctx).Error("failed to add .webmanifest mimetype", "error", err)
 		os.Exit(1)
 	}
 
@@ -107,7 +109,7 @@ func main() {
 
 	r.Use(request.HandleErrors(
 		func(ctx context.Context, err error) http.Handler {
-			slog.Warn("request failed", "error", err)
+			clog.Use(ctx).Warn("request failed", "error", err)
 			return nil
 		},
 	))
@@ -123,7 +125,7 @@ func main() {
 				remoteAddr = r.Header.Get(config.RemoteAddressHeader)
 			}
 
-			slog.Info("request",
+			clog.Use(ctx).Info("request",
 				"remote_address", remoteAddr,
 				"path", r.URL.String(),
 				"method", r.Method,
@@ -201,10 +203,10 @@ func main() {
 
 	err = r.Validate(ctx)
 	if err != nil {
-		slog.Error("router validation failed", "err", err)
+		clog.Use(ctx).Error("router validation failed", "err", err)
 	}
 
-	slog.Info("Listening on " + config.Config.GetBaseURL())
+	clog.Use(ctx).Info("Listening on " + config.Config.GetBaseURL())
 
 	s := &http.Server{
 		Addr:    fmt.Sprintf(":%d", config.Port),
@@ -216,7 +218,7 @@ func main() {
 
 	err = s.ListenAndServe()
 	if err != nil {
-		slog.Error("http server failed", "error", err)
+		clog.Use(ctx).Error("http server failed", "error", err)
 		os.Exit(1)
 	}
 }

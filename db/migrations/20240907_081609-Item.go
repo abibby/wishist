@@ -3,8 +3,8 @@ package migrations
 import (
 	"time"
 
-	"github.com/abibby/salusa/database/migrate"
-	"github.com/abibby/salusa/database/schema"
+	"abibby.com/salusa/database/migrate"
+	"abibby.com/salusa/database/schema"
 )
 
 func init() {

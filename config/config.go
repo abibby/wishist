@@ -8,20 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/abibby/salusa/database"
-	"github.com/abibby/salusa/database/dialects/sqlite"
-	"github.com/abibby/salusa/email"
-	"github.com/abibby/salusa/salusaconfig"
+	"abibby.com/salusa/database"
+	"abibby.com/salusa/database/dialects/sqlite"
+	"abibby.com/salusa/email"
 	"github.com/joho/godotenv"
 )
 
-type Cfg interface {
-	salusaconfig.Config
-	email.MailConfiger
-	database.DBConfiger
-}
-
-type config struct{}
+type Cfg struct{}
 
 func env(key string, def string) string {
 	v, ok := os.LookupEnv(key)
@@ -65,7 +58,7 @@ var TrustedIP string
 
 var Email email.Config
 
-var Config Cfg = &config{}
+var Config = &Cfg{}
 
 func Init() error {
 	err := godotenv.Load("./.env")
@@ -95,15 +88,15 @@ func Init() error {
 	return nil
 }
 
-func (c *config) GetHTTPPort() int {
+func (c *Cfg) GetHTTPPort() int {
 	return Port
 }
-func (c *config) GetBaseURL() string {
+func (c *Cfg) GetBaseURL() string {
 	return BaseURL
 }
-func (c *config) MailConfig() email.Config {
+func (c *Cfg) MailConfig() email.Config {
 	return Email
 }
-func (c *config) DBConfig() database.Config {
+func (c *Cfg) DBConfig() database.Config {
 	return sqlite.NewConfig(DBPath)
 }
