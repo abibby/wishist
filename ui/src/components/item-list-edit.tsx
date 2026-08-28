@@ -1,14 +1,14 @@
 import { bind, bindValue } from '@zwzn/spicy'
 import classNames from 'classnames'
 import debounce from 'lodash.debounce'
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { itemAPI, Item } from '../api'
 import styles from './item-list.module.css'
 import { useFlash } from '../hooks/use-flash'
 import { useOpenModal } from './modal'
 import { Form } from './form/form'
-import { PageSpinner, Spinner } from './spinner'
+import { Spinner } from './spinner'
 import { openToast } from './toast'
 import { sleep } from '../utils'
 import { useWindowEvent } from '../hooks/use-window-event'
@@ -23,9 +23,14 @@ type Moving = {
 
 export interface ItemListEditProps {
     items: Item[] | undefined
+    loading: boolean
     onMoveItem: (item: Item, newOrder: number) => void
 }
-export function ItemListEdit({ items, onMoveItem }: ItemListEditProps) {
+export function ItemListEdit({
+    items,
+    loading,
+    onMoveItem,
+}: ItemListEditProps) {
     const [newItem, setNewItem] = useState('')
     const [saving, setSaving] = useState(false)
     const [move, setMove] = useState<{ start: number; offset: number }>()
@@ -131,8 +136,8 @@ export function ItemListEdit({ items, onMoveItem }: ItemListEditProps) {
     useWindowEvent('mouseup', mouseUp)
     useWindowEvent('touchend', mouseUp)
 
-    if (items === undefined) {
-        return <PageSpinner />
+    if (items === undefined || loading) {
+        return <Fragment />
     }
 
     return (

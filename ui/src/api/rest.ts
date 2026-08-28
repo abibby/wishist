@@ -4,6 +4,8 @@ import { FetchError } from './fetch-error'
 import { Event, EventTarget } from '../events'
 import { EntityTable, IDType } from 'dexie'
 import { useUser } from '../auth'
+import { showGlobalSpinner } from '../components/spinner'
+import { sleep } from '../utils'
 
 class ModelEvent<T> extends Event {
     constructor(
@@ -125,6 +127,7 @@ export function buildRestModel<
 
             const fetchNetwork = useCallback(async () => {
                 try {
+                    // await sleep(1000)
                     const models = await this.list(...req)
                     setResult([models, undefined, 'network'])
                 } catch (e) {
@@ -165,7 +168,7 @@ export function buildRestModel<
                 fetchNetwork()
 
                 // Cache fetch
-                fetchCache()
+                // fetchCache()
             }, [fetchCache, fetchNetwork, req, user?.id])
 
             useEffect(() => {
@@ -216,6 +219,17 @@ export function buildRestModel<
                     buss.removeEventListener('delete', del)
                 }
             }, [])
+            const loading = result[2] === 'loading'
+            const id = useMemo(() => Math.random(), [])
+            useEffect(() => {
+                if (!loading) {
+                    return
+                }
+                const hide = showGlobalSpinner()
+                return () => {
+                    sleep(1000).then(hide)
+                }
+            }, [loading, id])
             return result
         },
         async list(

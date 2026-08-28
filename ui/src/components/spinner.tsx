@@ -1,11 +1,11 @@
 import classNames from 'classnames'
 import styles from './spinner.module.css'
-import { Fragment, h } from 'preact'
+import { h } from 'preact'
 import { CheckCircle, XCircle } from 'preact-feather'
 import { signal } from '@preact/signals-core'
 import { useSignalValue } from '../hooks/signal'
 
-const showGlobalSpinnerSignal = signal(false)
+const showGlobalSpinnerSignal = signal<Record<number, boolean>>({})
 
 export type SpinnerProps = {
     class?: string
@@ -27,24 +27,28 @@ export function Spinner({ done, failed, class: className }: SpinnerProps) {
     )
 }
 
-export function PageSpinner() {
-    return (
-        <div class={styles.pageSpinner}>
-            <Spinner />
-        </div>
-    )
-}
-
 export function GlobalSpinner() {
     const show = useSignalValue(showGlobalSpinnerSignal)
-    if (!show) {
-        return <Fragment />
+    return (
+        <div
+            class={classNames(styles.pageSpinnerLine, {
+                [styles.show]: Array.from(Object.keys(show)).length > 0,
+            })}
+        ></div>
+    )
+}
+let id = 0
+export function showGlobalSpinner(): () => void {
+    const localID = id++
+    showGlobalSpinnerSignal.value = {
+        ...showGlobalSpinnerSignal.value,
+        [localID]: true,
     }
-    return <PageSpinner />
-}
-export function showGlobalSpinner() {
-    showGlobalSpinnerSignal.value = true
-}
-export function hideGlobalSpinner() {
-    showGlobalSpinnerSignal.value = true
+
+    return () => {
+        showGlobalSpinnerSignal.value = {
+            ...showGlobalSpinnerSignal.value,
+        }
+        delete showGlobalSpinnerSignal.value[localID]
+    }
 }

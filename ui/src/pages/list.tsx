@@ -8,7 +8,6 @@ import { ErrorFetchError } from './error-fetch-error'
 import { useRoute } from 'preact-iso'
 import { ItemListReadonly } from '../components/item-list-readonly'
 import { Conditions } from '../components/conditions'
-import { PageSpinner } from '../components/spinner'
 import { UserMinus, UserPlus } from 'preact-feather'
 
 export function List() {
@@ -22,7 +21,7 @@ export function List() {
         return <ErrorFetchError err={fetchError} />
     }
     if (listUser === undefined || userLoading) {
-        return <PageSpinner />
+        return <Fragment />
     }
 
     if (activeUser?.id === listUser.id) {
@@ -36,7 +35,7 @@ interface MyListProps {
 }
 
 function ActiveUserList({ listUser }: MyListProps) {
-    const [items, err] = itemAPI.useList({ user_id: listUser.id })
+    const [items, err, state] = itemAPI.useList({ user_id: listUser.id })
     const [sortedItems, setSortedItems] = useState<Item[]>()
 
     useEffect(
@@ -87,7 +86,11 @@ function ActiveUserList({ listUser }: MyListProps) {
     return (
         <Fragment>
             <h1>My Wishlist</h1>
-            <ItemListEdit items={sortedItems} onMoveItem={moveItem} />
+            <ItemListEdit
+                items={sortedItems}
+                loading={state == 'loading'}
+                onMoveItem={moveItem}
+            />
         </Fragment>
     )
 }
