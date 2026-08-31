@@ -47,9 +47,8 @@ type UserListResponse []*db.User
 var UserList = request.Handler(func(r *UserListRequest) (UserListResponse, error) {
 	var users []*db.User
 	var err error
-	err = r.Read(func(tx *sqlx.Tx) error {
-		users, err = db.UserQuery(r.Ctx).Where("username", "=", r.Username).Get(tx)
-		return err
+	database.Value(r.Read, func(tx *sqlx.Tx) ([]*db.User, error) {
+		return db.UserQuery(r.Ctx).Where("username", "=", r.Username).Get(tx)
 	})
 	if err != nil {
 		return nil, err

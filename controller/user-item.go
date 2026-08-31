@@ -13,8 +13,8 @@ import (
 )
 
 type ListUserItemsRequest struct {
-	UserID int `query:"item_user_id"`
-	ItemID int `query:"item_id"`
+	Username string `query:"item_username"`
+	ItemID   int    `query:"item_id"`
 
 	Read database.Read   `inject:""`
 	Ctx  context.Context `inject:""`
@@ -25,23 +25,28 @@ var UserItemList = request.Handler(func(r *ListUserItemsRequest) (any, error) {
 	userItems := []*db.UserItem{}
 
 	uid := mustUserID(r.Ctx)
-	if r.UserID == 0 && r.ItemID == 0 {
+	if r.Username == "" && r.ItemID == 0 {
 		return nil, request.NewHTTPError(fmt.Errorf("must have user or item_id"), 422)
 	}
 
-	if r.UserID == uid {
-		return userItems, nil
-	}
-
 	err := r.Read(func(tx *sqlx.Tx) error {
+		u, err := db.UserQuery(r.Ctx).Where("username", "=", r.Username).First(tx)
+		if err != nil {
+			return err
+		}
+
+		if u != nil && u.ID == uid {
+			return nil
+		}
+
 		q := db.UserItemQuery(r.Ctx).
-			Select("user_items.*", "items.user_id as item_user_id").
+			Select("user_items.*").
 			Join("items", "user_items.item_id", "=", "items.id").
 			Where("user_items.user_id", "=", uid).
 			Where("items.user_id", "!=", uid)
 
-		if r.UserID != 0 {
-			q = q.Where("items.user_id", "=", r.UserID)
+		if u != nil {
+			q = q.Where("items.user_id", "=", u.ID)
 		}
 		if r.ItemID != 0 {
 			q = q.Where("item_id", "=", r.ItemID)
@@ -58,9 +63,6 @@ var UserItemList = request.Handler(func(r *ListUserItemsRequest) (any, error) {
 		return nil, err
 	}
 
-	for _, ui := range userItems {
-		ui.ItemUserID = r.UserID
-	}
 	return ListUserItemsResponse(userItems), nil
 })
 
@@ -90,8 +92,6 @@ var UserItemCreate = request.Handler(func(r *UserItemCreateRequest) (any, error)
 		if item == nil {
 			return request.NewHTTPError(fmt.Errorf("no item"), http.StatusUnprocessableEntity)
 		}
-
-		userItem.ItemUserID = item.UserID
 
 		return model.SaveContext(r.Ctx, tx, userItem)
 	})
@@ -137,7 +137,7 @@ var UserItemUpdate = request.Handler(func(r *EditUserItemRequest) (any, error) {
 		}
 
 		userItem.Type = r.Type
-		userItem.ItemUserID = item.UserID
+		// userItem.ItemUserID = item.UserID
 
 		return model.SaveContext(r.Ctx, tx, userItem)
 	})

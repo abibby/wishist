@@ -8,7 +8,7 @@ export { FetchError }
 
 export type Item = {
     id: number
-    user_id: number
+    username: string
     name: string
     description: string
     url: string
@@ -21,9 +21,9 @@ export type Item = {
 export const itemAPI = buildRestModel<
     Item,
     'id',
-    { user_id: number } | { id: number },
-    Omit<Item, 'id' | 'user_id'>,
-    Omit<Item, 'user_id'>
+    { username: string } | { id: number },
+    Omit<Item, 'id' | 'username'>,
+    Omit<Item, 'username'>
 >('/item', 'id', db.items)
 
 export type Friend = {
@@ -45,7 +45,7 @@ export const friendAPI = buildRestModel<
 >('/friend', 'friend_id', db.friends)
 
 export type UserItem = {
-    item_user_id: number
+    item_username: string
     item_id: number
     type: 'thinking' | 'purchased'
 }
@@ -53,9 +53,9 @@ export type UserItem = {
 export const userItemAPI = buildRestModel<
     UserItem,
     'item_id',
-    { item_user_id: number } | { item_id: number },
-    Omit<UserItem, 'item_user_id'>,
-    Omit<UserItem, 'item_user_id'>,
+    { item_username: string } | { item_id: number },
+    Omit<UserItem, 'item_username'>,
+    Omit<UserItem, 'item_username'>,
     Pick<UserItem, 'item_id'>
 >('/user-item', 'item_id', db.userItems)
 

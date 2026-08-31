@@ -1,9 +1,9 @@
 module github.com/abibby/wishist
 
-go 1.26.6
+go 1.27.0
 
-// replace github.com/abibby/salusa => /Users/abibby/github.com/abibby/salusa
-// replace github.com/abibby/salusa => /home/adam/github.com/abibby/salusa
+// replace abibby.com/salusa => /Users/abibby/github.com/abibby/salusa
+replace abibby.com/salusa => /home/adam/github.com/abibby/salusa
 
 require (
 	abibby.com/salusa v0.24.0
@@ -43,7 +43,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/lmittmann/tint v1.2.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.50 // indirect
-	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stoewer/go-strcase v1.3.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.55.0 // indirect

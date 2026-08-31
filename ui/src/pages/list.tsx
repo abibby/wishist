@@ -15,34 +15,42 @@ export function List() {
     const { username } = params
     const [activeUser, userLoading] = useUser()
 
-    const [listUser, fetchError] = userAPI.useFirst({ username: username })
+    const [listUser, userFetchError] = userAPI.useFirst({ username: username })
+    const [items, itemFetchError] = itemAPI.useList({ username: username })
 
-    if (fetchError !== undefined) {
-        return <ErrorFetchError err={fetchError} />
+    if (userFetchError) {
+        return <ErrorFetchError err={userFetchError} />
     }
+    if (itemFetchError) {
+        return <ErrorFetchError err={itemFetchError} />
+    }
+
     if (listUser === undefined || userLoading) {
         return <Fragment />
     }
 
-    if (activeUser?.id === listUser.id) {
-        return <ActiveUserList listUser={listUser} />
+    if (activeUser?.username === username) {
+        return <ActiveUserList items={items ?? []} />
     }
-    return <OtherUserList listUser={listUser} activeUser={activeUser} />
+    return (
+        <OtherUserList
+            items={items ?? []}
+            listUser={listUser}
+            activeUser={activeUser}
+        />
+    )
 }
 
 interface MyListProps {
-    listUser: User
+    items: Item[]
 }
 
-function ActiveUserList({ listUser }: MyListProps) {
-    const [items, err, state] = itemAPI.useList({ user_id: listUser.id })
+function ActiveUserList({ items }: MyListProps) {
     const [sortedItems, setSortedItems] = useState<Item[]>()
 
     useEffect(
         () =>
-            setSortedItems(
-                Array.from(items ?? []).sort((a, b) => a.order - b.order),
-            ),
+            setSortedItems(Array.from(items).sort((a, b) => a.order - b.order)),
         [items],
     )
 
@@ -79,28 +87,21 @@ function ActiveUserList({ listUser }: MyListProps) {
         })
     }, [])
 
-    if (err) {
-        return <ErrorFetchError err={err} />
-    }
-
     return (
         <Fragment>
             <h1>My Wishlist</h1>
-            <ItemListEdit
-                items={sortedItems}
-                loading={state == 'loading'}
-                onMoveItem={moveItem}
-            />
+            <ItemListEdit items={sortedItems} onMoveItem={moveItem} />
         </Fragment>
     )
 }
 
 interface OtherListProps {
+    items: Item[]
     listUser: User
     activeUser: User | null
 }
 
-function OtherUserList({ listUser, activeUser }: OtherListProps) {
+function OtherUserList({ items, listUser, activeUser }: OtherListProps) {
     const openModal = useOpenModal()
     const loggedIn = activeUser !== null
 
@@ -124,11 +125,9 @@ function OtherUserList({ listUser, activeUser }: OtherListProps) {
         friendAPI.delete({ friend_id: listUser.id })
     }, [listUser.id])
 
-    const [items, err] = itemAPI.useList({ user_id: listUser.id })
-    const [userItems] = userItemAPI.useList({ item_user_id: listUser.id })
-    if (err) {
-        return <ErrorFetchError err={err} />
-    }
+    const [userItems] = userItemAPI.useList({
+        item_username: listUser.username,
+    })
 
     return (
         <Conditions>

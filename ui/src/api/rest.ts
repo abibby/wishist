@@ -115,7 +115,7 @@ export function buildRestModel<
                 // eslint-disable-next-line react-hooks/exhaustive-deps
             }, [JSON.stringify(request)])
 
-            const [user] = useUser()
+            const [user, userLoading] = useUser()
 
             const matchRef = useRef<(model: T) => boolean>(() => false)
             const fetchNetworkRef = useRef<() => Promise<void>>(() =>
@@ -160,16 +160,20 @@ export function buildRestModel<
             }, [req])
 
             useEffect(() => {
+                if (userLoading) {
+                    return
+                }
                 const filters = req[0]
                 matchRef.current = (model: T) => match(model, filters)
                 fetchNetworkRef.current = fetchNetwork
+                setResult([undefined, undefined, 'loading'])
 
                 // Network fetch
                 fetchNetwork()
 
                 // Cache fetch
-                // fetchCache()
-            }, [fetchCache, fetchNetwork, req, user?.id])
+                fetchCache()
+            }, [fetchCache, fetchNetwork, req, user?.id, userLoading])
 
             useEffect(() => {
                 const create = (e: ModelEvent<T>) => {
@@ -220,16 +224,13 @@ export function buildRestModel<
                 }
             }, [])
             const loading = result[2] === 'loading'
-            const id = useMemo(() => Math.random(), [])
             useEffect(() => {
                 if (!loading) {
                     return
                 }
                 const hide = showGlobalSpinner()
-                return () => {
-                    sleep(1000).then(hide)
-                }
-            }, [loading, id])
+                return () => sleep(1000).then(hide)
+            }, [loading])
             return result
         },
         async list(

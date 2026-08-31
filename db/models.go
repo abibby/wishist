@@ -100,10 +100,10 @@ type UserItem struct {
 	model.BaseModel
 	mixins.Timestamps
 	mixins.SoftDelete
-	UserID     int    `db:"user_id,primary"       json:"-"`
-	ItemID     int    `db:"item_id,primary"       json:"item_id"`
-	Type       string `db:"type"                  json:"type"`
-	ItemUserID int    `db:"item_user_id,readonly" json:"item_user_id"`
+	UserID int    `db:"user_id,primary" json:"-"`
+	ItemID int    `db:"item_id,primary" json:"item_id"`
+	Type   string `db:"type"            json:"type"`
+	// ItemUsername string `db:"item_username,readonly" json:"item_username"`
 }
 
 func UserItemQuery(ctx context.Context) *builder.ModelBuilder[*UserItem] {
