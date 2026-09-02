@@ -45,9 +45,7 @@ type UserListRequest struct {
 type UserListResponse []*db.User
 
 var UserList = request.Handler(func(r *UserListRequest) (UserListResponse, error) {
-	var users []*db.User
-	var err error
-	database.Value(r.Read, func(tx *sqlx.Tx) ([]*db.User, error) {
+	users, err := database.Value(r.Read, func(tx *sqlx.Tx) ([]*db.User, error) {
 		return db.UserQuery(r.Ctx).Where("username", "=", r.Username).Get(tx)
 	})
 	if err != nil {
