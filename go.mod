@@ -1,4 +1,4 @@
-module github.com/abibby/wishist
+module abibby.com/wishist
 
 go 1.27.0
 

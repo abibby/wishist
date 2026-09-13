@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"abibby.com/wishist/services/retail"
 	"github.com/abibby/nulls"
-	"github.com/abibby/wishist/services/retail"
 	"gosalusa.com/database"
 	"gosalusa.com/database/builder"
 	"gosalusa.com/database/model"

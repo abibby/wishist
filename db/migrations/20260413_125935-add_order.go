@@ -3,7 +3,7 @@ package migrations
 import (
 	"context"
 
-	"github.com/abibby/wishist/db"
+	"abibby.com/wishist/db"
 	"gosalusa.com/database"
 	"gosalusa.com/database/migrate"
 	"gosalusa.com/database/schema"

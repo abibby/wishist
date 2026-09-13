@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"abibby.com/wishist/db"
 	"github.com/abibby/nulls"
-	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
 	"gosalusa.com/database"
 	"gosalusa.com/database/model"

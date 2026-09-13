@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/abibby/wishist/services/gravatar"
+	"abibby.com/wishist/services/gravatar"
 	"gosalusa.com/auth"
 	"gosalusa.com/database"
 	"gosalusa.com/database/builder"

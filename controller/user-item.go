@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/abibby/wishist/db"
+	"abibby.com/wishist/db"
 	"github.com/jmoiron/sqlx"
 	"gosalusa.com/database"
 	"gosalusa.com/database/model"

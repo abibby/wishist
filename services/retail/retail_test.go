@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/abibby/wishist/services/retail"
+	"abibby.com/wishist/services/retail"
 	"github.com/go-openapi/testify/v2/assert"
 	"github.com/joho/godotenv"
 )
