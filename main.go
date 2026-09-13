@@ -17,6 +17,7 @@ import (
 	"abibby.com/wishist/controller"
 	"abibby.com/wishist/db"
 	"abibby.com/wishist/db/migrations"
+	"abibby.com/wishist/services/retail"
 	"abibby.com/wishist/ui"
 	"github.com/abibby/fileserver"
 	"github.com/golang-jwt/jwt/v4"
@@ -94,6 +95,7 @@ func main() {
 
 	request.Register(ctx)
 	auth.Register[*db.User](ctx)
+	retail.Register(ctx)
 
 	auth.SetAppKey(config.AppKey)
 
@@ -200,11 +202,6 @@ func main() {
 		}))
 	})
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
-
-	r.UseFunc(func(h http.Handler) http.Handler {
-		time.Sleep(time.Second)
-		return h
-	})
 
 	err = r.Validate(ctx)
 	if err != nil {

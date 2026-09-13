@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"abibby.com/wishist/db"
+	"abibby.com/wishist/services/retail"
 	"github.com/abibby/nulls"
 	"github.com/jmoiron/sqlx"
 	"gosalusa.com/database"
@@ -55,7 +56,7 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 			q = q.Where("users.username", "=", r.Username)
 		}
 		if r.ID != 0 {
-			q = q.Where("id", "=", r.ID)
+			q = q.Where("items.id", "=", r.ID)
 		}
 
 		items, err = q.Get(tx)
@@ -76,6 +77,7 @@ type AddItemRequest struct {
 
 	Update database.Update `inject:""`
 	Ctx    context.Context `inject:""`
+	Retail retail.Service  `inject:""`
 }
 type AddItemResponse *db.Item
 
@@ -95,7 +97,7 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error
 	}
 
 	if r.Price == nil {
-		err := item.UpdateFromURL(r.Ctx)
+		err := item.UpdateFromURL(r.Ctx, r.Retail)
 		if err != nil {
 			slog.Warn("failed to update item price from url", "err", err)
 		}
@@ -129,6 +131,7 @@ type EditItemRequest struct {
 
 	Update database.Update `inject:""`
 	Ctx    context.Context `inject:""`
+	Retail retail.Service  `inject:""`
 }
 type EditItemResponse *db.Item
 
@@ -166,7 +169,7 @@ var ItemUpdate = request.Handler(func(r *EditItemRequest) (any, error) {
 		item.Order = r.Order
 
 		if r.Price == nil {
-			err := item.UpdateFromURL(r.Ctx)
+			err := item.UpdateFromURL(r.Ctx, r.Retail)
 			if err != nil {
 				slog.Warn("failed to update item price from url", "err", err)
 			}

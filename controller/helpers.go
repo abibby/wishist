@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -13,7 +13,7 @@ import (
 func mustUserID(ctx context.Context) int {
 	uid, ok := userID(ctx)
 	if !ok {
-		panic(request.NewHTTPError(fmt.Errorf(http.StatusText(401)), 401))
+		panic(request.NewHTTPError(errors.New(http.StatusText(401)), 401))
 	}
 	return uid
 }
