@@ -68,7 +68,8 @@ func TestFetch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := retail.Fetch(context.Background(), tt.uri)
+			s := retail.NewService()
+			got, gotErr := s.Fetch(context.Background(), tt.uri)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("Fetch() failed: %v", gotErr)

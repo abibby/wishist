@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"abibby.com/wishist/db"
@@ -71,7 +71,7 @@ var UserUpdate = request.Handler(func(r *UserUpdateRequest) (UserUpdateResponse,
 	uid := mustUserID(r.Ctx)
 
 	if uid != r.ID {
-		return nil, request.NewHTTPError(fmt.Errorf(http.StatusText(403)), 403)
+		return nil, request.NewHTTPError(errors.New(http.StatusText(403)), 403)
 	}
 
 	err = r.Update(func(tx *sqlx.Tx) error {

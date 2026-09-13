@@ -17,6 +17,7 @@ import (
 	"abibby.com/wishist/controller"
 	"abibby.com/wishist/db"
 	"abibby.com/wishist/db/migrations"
+	"abibby.com/wishist/services/retail"
 	"abibby.com/wishist/ui"
 	"github.com/abibby/fileserver"
 	"github.com/golang-jwt/jwt/v4"
@@ -94,6 +95,7 @@ func main() {
 
 	request.Register(ctx)
 	auth.Register[*db.User](ctx)
+	retail.Register(ctx)
 
 	auth.SetAppKey(config.AppKey)
 

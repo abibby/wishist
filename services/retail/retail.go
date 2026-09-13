@@ -3,7 +3,6 @@ package retail
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -30,20 +29,6 @@ var providers = []Retail{
 	NewAmazon(),
 	NewLego(),
 	NewOpenGraph(),
-}
-
-func Fetch(ctx context.Context, uri string) (*Product, error) {
-	for _, p := range providers {
-		if !p.Check(uri) {
-			continue
-		}
-		prod, err := p.Details(ctx, uri)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", p.Name(), err)
-		}
-		return prod, nil
-	}
-	return nil, fmt.Errorf("%w %s", ErrMissingProvider, uri)
 }
 
 func parsePrice(price string) (int, error) {
