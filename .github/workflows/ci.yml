@@ -62,6 +62,7 @@ jobs:
 
       - run: mkdir ui/dist && touch ui/dist/index.html
       - run: go build
+      - run: go test ./...
   # This workflow contains a single job called "build"
   build-js:
     # The type of runner that the job will run on
