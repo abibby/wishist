@@ -3,7 +3,6 @@ import { friendAPI } from '../api'
 import { useUser } from '../auth'
 import styles from './friends.module.css'
 import { ErrorFetchError } from './error-fetch-error'
-import { PageSpinner } from '../components/spinner'
 import { ChevronRight } from 'preact-feather'
 import { useMemo } from 'preact/hooks'
 import { day, hour, minute } from '../time'
@@ -22,7 +21,7 @@ export function Friends() {
     }, [friends])
 
     if (userLoading) {
-        return <PageSpinner />
+        return <Fragment />
     }
     if (user === null) {
         return (

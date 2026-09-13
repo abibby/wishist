@@ -6,15 +6,9 @@
 
 .rainbow {
     background: conic-gradient(
-        in hsl,
-        red,
-        orange,
-        yellow,
-        green,
-        blue,
-        indigo,
-        violet,
-        red
+        in hsl longer hue,
+        hsl(0 100% 50%),
+        hsl(360 100% 50%)
     );
     mask-image: url(../../assets/icons/circle.svg);
     mask-size: 100%;
@@ -27,6 +21,44 @@
     }
     to {
         transform: rotate(360deg);
+    }
+}
+.pageSpinnerLine {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    opacity: 0;
+    height: 50vh;
+    width: 200vw;
+
+    background: repeating-linear-gradient(
+        to right in hsl longer hue,
+        hsl(0 100% 50%) 0px,
+        hsl(360 100% 50%) 100vw
+    );
+
+    mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0) 100%
+    );
+    transition: opacity 2s;
+    animation: loadingSlide 5s linear infinite;
+}
+
+.pageSpinnerLine.show {
+    opacity: 0.25;
+    transition: opacity 500ms;
+}
+
+/* Rainbow motion */
+@keyframes loadingSlide {
+    from {
+        transform: translate(-50%);
+    }
+    to {
+        transform: translate(0);
     }
 }
 

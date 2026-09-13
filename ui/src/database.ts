@@ -15,4 +15,11 @@ db.version(1).stores({
     users: 'id,username',
 })
 
+db.version(2).stores({
+    items: 'id,username',
+    userItems: 'item_id,item_username',
+    friends: 'friend_id',
+    users: 'id,username',
+})
+
 export { db }

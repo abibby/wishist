@@ -8,42 +8,60 @@ import { ErrorFetchError } from './error-fetch-error'
 import { useRoute } from 'preact-iso'
 import { ItemListReadonly } from '../components/item-list-readonly'
 import { Conditions } from '../components/conditions'
-import { PageSpinner } from '../components/spinner'
 import { UserMinus, UserPlus } from 'preact-feather'
 
 export function List() {
     const { params } = useRoute()
     const { username } = params
-    const [activeUser, userLoading] = useUser()
+    const [activeUser] = useUser()
 
-    const [listUser, fetchError] = userAPI.useFirst({ username: username })
+    const [listUser, userFetchError] = userAPI.useFirst({ username: username })
+    const [items, itemFetchError, itemsLoading] = itemAPI.useList({
+        username: username,
+    })
 
-    if (fetchError !== undefined) {
-        return <ErrorFetchError err={fetchError} />
+    if (userFetchError) {
+        return <ErrorFetchError err={userFetchError} />
     }
-    if (listUser === undefined || userLoading) {
-        return <PageSpinner />
+    if (itemFetchError) {
+        return <ErrorFetchError err={itemFetchError} />
     }
 
-    if (activeUser?.id === listUser.id) {
-        return <ActiveUserList listUser={listUser} />
+    // if (listUser === undefined || userLoading) {
+    //     return <Fragment />
+    // }
+
+    if (activeUser?.username === username) {
+        console.log(itemsLoading)
+
+        return (
+            <ActiveUserList
+                items={items ?? []}
+                loading={itemsLoading === 'loading'}
+            />
+        )
     }
-    return <OtherUserList listUser={listUser} activeUser={activeUser} />
+    return (
+        <OtherUserList
+            items={items ?? []}
+            username={username}
+            listUser={listUser ?? null}
+            activeUser={activeUser}
+        />
+    )
 }
 
 interface MyListProps {
-    listUser: User
+    items: Item[]
+    loading: boolean
 }
 
-function ActiveUserList({ listUser }: MyListProps) {
-    const [items, err] = itemAPI.useList({ user_id: listUser.id })
+function ActiveUserList({ items, loading }: MyListProps) {
     const [sortedItems, setSortedItems] = useState<Item[]>()
 
     useEffect(
         () =>
-            setSortedItems(
-                Array.from(items ?? []).sort((a, b) => a.order - b.order),
-            ),
+            setSortedItems(Array.from(items).sort((a, b) => a.order - b.order)),
         [items],
     )
 
@@ -80,24 +98,31 @@ function ActiveUserList({ listUser }: MyListProps) {
         })
     }, [])
 
-    if (err) {
-        return <ErrorFetchError err={err} />
-    }
-
     return (
         <Fragment>
             <h1>My Wishlist</h1>
-            <ItemListEdit items={sortedItems} onMoveItem={moveItem} />
+            <ItemListEdit
+                items={sortedItems}
+                onMoveItem={moveItem}
+                loading={loading}
+            />
         </Fragment>
     )
 }
 
 interface OtherListProps {
-    listUser: User
+    items: Item[]
+    username: string
+    listUser: User | null
     activeUser: User | null
 }
 
-function OtherUserList({ listUser, activeUser }: OtherListProps) {
+function OtherUserList({
+    items,
+    username,
+    listUser,
+    activeUser,
+}: OtherListProps) {
     const openModal = useOpenModal()
     const loggedIn = activeUser !== null
 
@@ -106,30 +131,30 @@ function OtherUserList({ listUser, activeUser }: OtherListProps) {
         if (!loggedIn) {
             return false
         }
-        return !!friends?.find(f => f.friend_id === listUser.id)
-    }, [friends, listUser.id, loggedIn])
+        return !!friends?.find(f => f.friend_id === listUser?.id)
+    }, [friends, listUser?.id, loggedIn])
 
     const addFriend = useCallback(() => {
-        if (loggedIn) {
+        if (loggedIn && listUser?.id) {
             friendAPI.create({ friend_id: listUser.id })
         } else {
             openModal('/login?message=You must log in to add a friend')
         }
-    }, [listUser.id, loggedIn, openModal])
+    }, [listUser?.id, loggedIn, openModal])
 
     const removeFriend = useCallback(() => {
-        friendAPI.delete({ friend_id: listUser.id })
-    }, [listUser.id])
+        if (listUser?.id) {
+            friendAPI.delete({ friend_id: listUser?.id })
+        }
+    }, [listUser?.id])
 
-    const [items, err] = itemAPI.useList({ user_id: listUser.id })
-    const [userItems] = userItemAPI.useList({ item_user_id: listUser.id })
-    if (err) {
-        return <ErrorFetchError err={err} />
-    }
+    const [userItems] = userItemAPI.useList({
+        item_username: username,
+    })
 
     return (
         <Conditions>
-            <h1>{listUser.name}'s Wishlist</h1>
+            <h1>{listUser?.name ?? username}'s Wishlist</h1>
             <button v-if={isFriend} onClick={removeFriend}>
                 <UserMinus />
             </button>

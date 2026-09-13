@@ -3,10 +3,10 @@ package migrations
 import (
 	"context"
 
-	"github.com/abibby/salusa/database"
-	"github.com/abibby/salusa/database/migrate"
-	"github.com/abibby/salusa/database/schema"
-	"github.com/abibby/wishist/db"
+	"abibby.com/wishist/db"
+	"gosalusa.com/database"
+	"gosalusa.com/database/migrate"
+	"gosalusa.com/database/schema"
 )
 
 func init() {

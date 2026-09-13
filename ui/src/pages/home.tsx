@@ -1,6 +1,5 @@
 import { Fragment, h } from 'preact'
 import { useUser } from '../auth'
-import { PageSpinner } from '../components/spinner'
 import { useLocation } from 'preact-iso'
 import styles from './home.module.css'
 import { useCallback } from 'preact/hooks'
@@ -16,7 +15,7 @@ export function Home() {
     }, [openModal])
 
     if (userLoading) {
-        return <PageSpinner />
+        return <Fragment />
     }
     if (user === null) {
         return (

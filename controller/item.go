@@ -7,17 +7,17 @@ import (
 	"net/http"
 	"strings"
 
+	"abibby.com/wishist/db"
 	"github.com/abibby/nulls"
-	"github.com/abibby/salusa/database"
-	"github.com/abibby/salusa/database/model"
-	"github.com/abibby/salusa/request"
-	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
+	"gosalusa.com/database"
+	"gosalusa.com/database/model"
+	"gosalusa.com/request"
 )
 
 type ListItemsRequest struct {
-	UserID int `query:"user_id"`
-	ID     int `query:"id"`
+	Username string `query:"username"`
+	ID       int    `query:"id"`
 
 	Read database.Read   `inject:""`
 	Ctx  context.Context `inject:""`
@@ -27,28 +27,32 @@ type ListItemsResponse []*db.Item
 var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 	uid, loggedIn := userID(r.Ctx)
 
-	if r.UserID == 0 && r.ID == 0 {
-		return nil, request.NewHTTPError(fmt.Errorf("must have user_id or id"), 422)
+	if r.Username == "" && r.ID == 0 {
+		return nil, request.NewHTTPError(fmt.Errorf("must have username or id"), 422)
 	}
 
 	var items []*db.Item
 	var err error
 
 	err = r.Read(func(tx *sqlx.Tx) error {
-		q := db.ItemQuery(r.Ctx).OrderBy("order")
+		q := db.ItemQuery(r.Ctx).
+			AddSelect("users.username").
+			Join("users", "items.user_id", "=", "users.id").
+			OrderBy("order")
 
-		if loggedIn && r.UserID != uid {
+		if loggedIn {
 			userItemQuery := db.UserItemQuery(r.Ctx).
 				SelectFunction("count", "*").
 				WhereColumn("item_id", "=", "items.id").
+				Where("items.user_id", "!=", uid).
 				Where("user_items.user_id", "!=", uid)
 
-			q = q.AddSelectSubquery(userItemQuery.Where("type", "=", "thinking"), "thinking_count").
-				AddSelectSubquery(userItemQuery.Where("type", "=", "purchased"), "purchased_count")
+			q = q.AddSelectSubquery(userItemQuery.Clone().Where("type", "=", "thinking"), "thinking_count").
+				AddSelectSubquery(userItemQuery.Clone().Where("type", "=", "purchased"), "purchased_count")
 		}
 
-		if r.UserID != 0 {
-			q = q.Where("user_id", "=", r.UserID)
+		if r.Username != "" {
+			q = q.Where("users.username", "=", r.Username)
 		}
 		if r.ID != 0 {
 			q = q.Where("id", "=", r.ID)
@@ -97,11 +101,16 @@ var ItemCreate = request.Handler(func(r *AddItemRequest) (AddItemResponse, error
 		}
 	}
 	err := r.Update(func(tx *sqlx.Tx) error {
+		u, err := db.UserQuery(r.Ctx).Find(tx, uid)
+		if err != nil {
+			return err
+		}
 		order, err := db.ItemQuery(r.Ctx).Where("user_id", "=", uid).Count(tx)
 		if err != nil {
 			return err
 		}
 		item.Order = order
+		item.Username = u.Username
 		return model.SaveContext(r.Ctx, tx, item)
 	})
 	if err != nil {

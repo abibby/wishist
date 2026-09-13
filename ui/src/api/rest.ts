@@ -4,6 +4,8 @@ import { FetchError } from './fetch-error'
 import { Event, EventTarget } from '../events'
 import { EntityTable, IDType } from 'dexie'
 import { useUser } from '../auth'
+import { showGlobalSpinner } from '../components/spinner'
+import { sleep } from '../utils'
 
 class ModelEvent<T> extends Event {
     constructor(
@@ -56,6 +58,13 @@ export function buildRestModel<
     const buss = new EventTarget<Record<string, ModelEvent<T>>>()
 
     function filteredItems(filters: Partial<T>) {
+        console.log(
+            'cache',
+            table.name,
+            firstOrAll(Object.keys(filters)),
+            firstOrAll(Object.values(filters)),
+        )
+
         return table
             .where(firstOrAll(Object.keys(filters)))
             .equals(firstOrAll(Object.values(filters)))
@@ -113,7 +122,7 @@ export function buildRestModel<
                 // eslint-disable-next-line react-hooks/exhaustive-deps
             }, [JSON.stringify(request)])
 
-            const [user] = useUser()
+            const [user, userLoading] = useUser()
 
             const matchRef = useRef<(model: T) => boolean>(() => false)
             const fetchNetworkRef = useRef<() => Promise<void>>(() =>
@@ -125,6 +134,7 @@ export function buildRestModel<
 
             const fetchNetwork = useCallback(async () => {
                 try {
+                    // await sleep(1000)
                     const models = await this.list(...req)
                     setResult([models, undefined, 'network'])
                 } catch (e) {
@@ -157,16 +167,20 @@ export function buildRestModel<
             }, [req])
 
             useEffect(() => {
+                if (userLoading) {
+                    return
+                }
                 const filters = req[0]
                 matchRef.current = (model: T) => match(model, filters)
                 fetchNetworkRef.current = fetchNetwork
+                setResult([undefined, undefined, 'loading'])
 
                 // Network fetch
                 fetchNetwork()
 
                 // Cache fetch
                 fetchCache()
-            }, [fetchCache, fetchNetwork, req, user?.id])
+            }, [fetchCache, fetchNetwork, req, user?.id, userLoading])
 
             useEffect(() => {
                 const create = (e: ModelEvent<T>) => {
@@ -216,6 +230,14 @@ export function buildRestModel<
                     buss.removeEventListener('delete', del)
                 }
             }, [])
+            const loading = result[2] === 'loading'
+            useEffect(() => {
+                if (!loading) {
+                    return
+                }
+                const hide = showGlobalSpinner()
+                return () => sleep(1000).then(hide)
+            }, [loading])
             return result
         },
         async list(

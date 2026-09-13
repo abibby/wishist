@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 
+	"abibby.com/wishist/services/retail"
 	"github.com/abibby/nulls"
-	"github.com/abibby/salusa/database"
-	"github.com/abibby/salusa/database/builder"
-	"github.com/abibby/salusa/database/model"
-	"github.com/abibby/salusa/database/model/mixins"
-	"github.com/abibby/wishist/services/retail"
+	"gosalusa.com/database"
+	"gosalusa.com/database/builder"
+	"gosalusa.com/database/model"
+	"gosalusa.com/database/model/mixins"
 )
 
 //go:generate spice generate:migration
@@ -20,6 +20,7 @@ type Item struct {
 	mixins.SoftDelete
 	ID             int        `db:"id,autoincrement,primary" json:"id"`
 	UserID         int        `db:"user_id"                  json:"user_id"`
+	Username       string     `db:"username,readonly"        json:"username"`
 	Name           string     `db:"name"                     json:"name"`
 	Description    string     `db:"description"              json:"description"`
 	URL            string     `db:"url"                      json:"url"`
@@ -100,10 +101,10 @@ type UserItem struct {
 	model.BaseModel
 	mixins.Timestamps
 	mixins.SoftDelete
-	UserID     int    `db:"user_id,primary"       json:"-"`
-	ItemID     int    `db:"item_id,primary"       json:"item_id"`
-	Type       string `db:"type"                  json:"type"`
-	ItemUserID int    `db:"item_user_id,readonly" json:"item_user_id"`
+	UserID int    `db:"user_id,primary" json:"-"`
+	ItemID int    `db:"item_id,primary" json:"item_id"`
+	Type   string `db:"type"            json:"type"`
+	// ItemUsername string `db:"item_username,readonly" json:"item_username"`
 }
 
 func UserItemQuery(ctx context.Context) *builder.ModelBuilder[*UserItem] {

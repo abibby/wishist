@@ -1,12 +1,11 @@
 import { bind } from '@zwzn/spicy'
 import classNames from 'classnames'
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 import { Item, UserItem } from '../api'
 import styles from './item-list.module.css'
 import { useOpenModal } from './modal'
 import { Conditions } from './conditions'
 import { Eye, ShoppingBag } from 'preact-feather'
-import { PageSpinner } from './spinner'
 
 interface ItemListReadonlyProps {
     items: Item[] | undefined
@@ -14,7 +13,7 @@ interface ItemListReadonlyProps {
 }
 export function ItemListReadonly({ items, userItems }: ItemListReadonlyProps) {
     if (items === undefined) {
-        return <PageSpinner />
+        return <Fragment />
     }
     return (
         <ul class={styles.list}>

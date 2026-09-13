@@ -12,7 +12,7 @@ FROM alpine:latest AS certs
 RUN apk add --no-cache ca-certificates && \
     update-ca-certificates
 
-FROM golang:1.26-trixie AS go-build
+FROM golang:1.27-trixie AS go-build
 WORKDIR /build
 COPY go.mod .
 COPY go.sum .

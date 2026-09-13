@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/abibby/salusa/database"
-	"github.com/abibby/salusa/database/model"
-	"github.com/abibby/salusa/database/model/mixins"
-	"github.com/abibby/salusa/request"
-	"github.com/abibby/wishist/db"
+	"abibby.com/wishist/db"
 	"github.com/jmoiron/sqlx"
+	"gosalusa.com/database"
+	"gosalusa.com/database/model"
+	"gosalusa.com/database/model/mixins"
+	"gosalusa.com/request"
 )
 
 type GetCurrentUserRequest struct {
@@ -45,11 +45,8 @@ type UserListRequest struct {
 type UserListResponse []*db.User
 
 var UserList = request.Handler(func(r *UserListRequest) (UserListResponse, error) {
-	var users []*db.User
-	var err error
-	err = r.Read(func(tx *sqlx.Tx) error {
-		users, err = db.UserQuery(r.Ctx).Where("username", "=", r.Username).Get(tx)
-		return err
+	users, err := database.Value(r.Read, func(tx *sqlx.Tx) ([]*db.User, error) {
+		return db.UserQuery(r.Ctx).Where("username", "=", r.Username).Get(tx)
 	})
 	if err != nil {
 		return nil, err

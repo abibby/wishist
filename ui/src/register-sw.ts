@@ -17,8 +17,8 @@ export function registerServiceWorker() {
             )
 
             if (updateAccepted) {
-                showGlobalSpinner()
-                updateSW()
+                const hide = showGlobalSpinner()
+                updateSW().then(hide)
             }
         },
         async onOfflineReady() {

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"abibby.com/wishist/config"
 	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
-	"github.com/abibby/wishist/config"
 )
 
 type Lego struct {

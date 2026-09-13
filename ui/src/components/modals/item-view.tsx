@@ -17,7 +17,7 @@ const emptyItem: Item = {
     thinking_count: undefined,
     purchased_count: undefined,
     id: 0,
-    user_id: 0,
+    username: '',
     price: null,
     order: 0,
 }
