@@ -55,7 +55,7 @@ var ItemList = request.Handler(func(r *ListItemsRequest) (any, error) {
 			q = q.Where("users.username", "=", r.Username)
 		}
 		if r.ID != 0 {
-			q = q.Where("id", "=", r.ID)
+			q = q.Where("items.id", "=", r.ID)
 		}
 
 		items, err = q.Get(tx)

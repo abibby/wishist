@@ -201,11 +201,6 @@ func main() {
 	})
 	r.Handle("/", fileserver.WithFallback(ui.Content, "dist", "index.html", nil))
 
-	r.UseFunc(func(h http.Handler) http.Handler {
-		time.Sleep(time.Second)
-		return h
-	})
-
 	err = r.Validate(ctx)
 	if err != nil {
 		clog.Use(ctx).Error("router validation failed", "err", err)
