@@ -24,8 +24,13 @@ type Moving = {
 export interface ItemListEditProps {
     items: Item[] | undefined
     onMoveItem: (item: Item, newOrder: number) => void
+    loading: boolean
 }
-export function ItemListEdit({ items, onMoveItem }: ItemListEditProps) {
+export function ItemListEdit({
+    items,
+    onMoveItem,
+    loading,
+}: ItemListEditProps) {
     const [newItem, setNewItem] = useState('')
     const [saving, setSaving] = useState(false)
     const [move, setMove] = useState<{ start: number; offset: number }>()
@@ -131,7 +136,7 @@ export function ItemListEdit({ items, onMoveItem }: ItemListEditProps) {
     useWindowEvent('mouseup', mouseUp)
     useWindowEvent('touchend', mouseUp)
 
-    if (items === undefined) {
+    if (items === undefined || loading) {
         return <Fragment />
     }
 

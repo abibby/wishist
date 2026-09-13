@@ -3,10 +3,9 @@ module github.com/abibby/wishist
 go 1.27.0
 
 // replace abibby.com/salusa => /Users/abibby/github.com/abibby/salusa
-replace abibby.com/salusa => /home/adam/github.com/abibby/salusa
+// replace abibby.com/salusa => /home/adam/github.com/gosalusa/framework
 
 require (
-	abibby.com/salusa v0.24.0
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.0
 	github.com/abibby/fileserver v0.0.0-20221208191705-087686654550
 	github.com/abibby/nulls v1.1.0
@@ -18,6 +17,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	golang.org/x/net v0.58.0
+	gosalusa.com v0.26.0
 )
 
 require (

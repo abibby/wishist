@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"abibby.com/salusa/database"
-	"abibby.com/salusa/database/model"
-	"abibby.com/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
+	"gosalusa.com/database"
+	"gosalusa.com/database/model"
+	"gosalusa.com/request"
 )
 
 type ListUserItemsRequest struct {

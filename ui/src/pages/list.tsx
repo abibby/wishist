@@ -13,10 +13,12 @@ import { UserMinus, UserPlus } from 'preact-feather'
 export function List() {
     const { params } = useRoute()
     const { username } = params
-    const [activeUser, userLoading] = useUser()
+    const [activeUser] = useUser()
 
     const [listUser, userFetchError] = userAPI.useFirst({ username: username })
-    const [items, itemFetchError] = itemAPI.useList({ username: username })
+    const [items, itemFetchError, itemsLoading] = itemAPI.useList({
+        username: username,
+    })
 
     if (userFetchError) {
         return <ErrorFetchError err={userFetchError} />
@@ -25,17 +27,25 @@ export function List() {
         return <ErrorFetchError err={itemFetchError} />
     }
 
-    if (listUser === undefined || userLoading) {
-        return <Fragment />
-    }
+    // if (listUser === undefined || userLoading) {
+    //     return <Fragment />
+    // }
 
     if (activeUser?.username === username) {
-        return <ActiveUserList items={items ?? []} />
+        console.log(itemsLoading)
+
+        return (
+            <ActiveUserList
+                items={items ?? []}
+                loading={itemsLoading === 'loading'}
+            />
+        )
     }
     return (
         <OtherUserList
             items={items ?? []}
-            listUser={listUser}
+            username={username}
+            listUser={listUser ?? null}
             activeUser={activeUser}
         />
     )
@@ -43,9 +53,10 @@ export function List() {
 
 interface MyListProps {
     items: Item[]
+    loading: boolean
 }
 
-function ActiveUserList({ items }: MyListProps) {
+function ActiveUserList({ items, loading }: MyListProps) {
     const [sortedItems, setSortedItems] = useState<Item[]>()
 
     useEffect(
@@ -90,18 +101,28 @@ function ActiveUserList({ items }: MyListProps) {
     return (
         <Fragment>
             <h1>My Wishlist</h1>
-            <ItemListEdit items={sortedItems} onMoveItem={moveItem} />
+            <ItemListEdit
+                items={sortedItems}
+                onMoveItem={moveItem}
+                loading={loading}
+            />
         </Fragment>
     )
 }
 
 interface OtherListProps {
     items: Item[]
-    listUser: User
+    username: string
+    listUser: User | null
     activeUser: User | null
 }
 
-function OtherUserList({ items, listUser, activeUser }: OtherListProps) {
+function OtherUserList({
+    items,
+    username,
+    listUser,
+    activeUser,
+}: OtherListProps) {
     const openModal = useOpenModal()
     const loggedIn = activeUser !== null
 
@@ -110,28 +131,30 @@ function OtherUserList({ items, listUser, activeUser }: OtherListProps) {
         if (!loggedIn) {
             return false
         }
-        return !!friends?.find(f => f.friend_id === listUser.id)
-    }, [friends, listUser.id, loggedIn])
+        return !!friends?.find(f => f.friend_id === listUser?.id)
+    }, [friends, listUser?.id, loggedIn])
 
     const addFriend = useCallback(() => {
-        if (loggedIn) {
+        if (loggedIn && listUser?.id) {
             friendAPI.create({ friend_id: listUser.id })
         } else {
             openModal('/login?message=You must log in to add a friend')
         }
-    }, [listUser.id, loggedIn, openModal])
+    }, [listUser?.id, loggedIn, openModal])
 
     const removeFriend = useCallback(() => {
-        friendAPI.delete({ friend_id: listUser.id })
-    }, [listUser.id])
+        if (listUser?.id) {
+            friendAPI.delete({ friend_id: listUser?.id })
+        }
+    }, [listUser?.id])
 
     const [userItems] = userItemAPI.useList({
-        item_username: listUser.username,
+        item_username: username,
     })
 
     return (
         <Conditions>
-            <h1>{listUser.name}'s Wishlist</h1>
+            <h1>{listUser?.name ?? username}'s Wishlist</h1>
             <button v-if={isFriend} onClick={removeFriend}>
                 <UserMinus />
             </button>

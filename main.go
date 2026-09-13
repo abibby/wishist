@@ -13,15 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"abibby.com/salusa/auth"
-	"abibby.com/salusa/clog"
-	"abibby.com/salusa/database"
-	"abibby.com/salusa/di"
-	"abibby.com/salusa/email"
-	"abibby.com/salusa/request"
-	"abibby.com/salusa/router"
-	"abibby.com/salusa/salusaconfig"
-	"abibby.com/salusa/view"
 	"github.com/abibby/fileserver"
 	"github.com/abibby/wishist/config"
 	"github.com/abibby/wishist/controller"
@@ -29,6 +20,15 @@ import (
 	"github.com/abibby/wishist/db/migrations"
 	"github.com/abibby/wishist/ui"
 	"github.com/golang-jwt/jwt/v4"
+	"gosalusa.com/auth"
+	"gosalusa.com/clog"
+	"gosalusa.com/database"
+	"gosalusa.com/di"
+	"gosalusa.com/email"
+	"gosalusa.com/request"
+	"gosalusa.com/router"
+	"gosalusa.com/salusaconfig"
+	"gosalusa.com/view"
 )
 
 type CreateUserRequest struct {

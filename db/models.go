@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 
-	"abibby.com/salusa/database"
-	"abibby.com/salusa/database/builder"
-	"abibby.com/salusa/database/model"
-	"abibby.com/salusa/database/model/mixins"
 	"github.com/abibby/nulls"
 	"github.com/abibby/wishist/services/retail"
+	"gosalusa.com/database"
+	"gosalusa.com/database/builder"
+	"gosalusa.com/database/model"
+	"gosalusa.com/database/model/mixins"
 )
 
 //go:generate spice generate:migration
@@ -20,6 +20,7 @@ type Item struct {
 	mixins.SoftDelete
 	ID             int        `db:"id,autoincrement,primary" json:"id"`
 	UserID         int        `db:"user_id"                  json:"user_id"`
+	Username       string     `db:"username,readonly"        json:"username"`
 	Name           string     `db:"name"                     json:"name"`
 	Description    string     `db:"description"              json:"description"`
 	URL            string     `db:"url"                      json:"url"`

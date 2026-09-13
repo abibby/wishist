@@ -58,6 +58,13 @@ export function buildRestModel<
     const buss = new EventTarget<Record<string, ModelEvent<T>>>()
 
     function filteredItems(filters: Partial<T>) {
+        console.log(
+            'cache',
+            table.name,
+            firstOrAll(Object.keys(filters)),
+            firstOrAll(Object.values(filters)),
+        )
+
         return table
             .where(firstOrAll(Object.keys(filters)))
             .equals(firstOrAll(Object.values(filters)))

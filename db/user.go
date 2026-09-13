@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"abibby.com/salusa/auth"
-	"abibby.com/salusa/database"
-	"abibby.com/salusa/database/builder"
-	"abibby.com/salusa/database/hooks"
-	"abibby.com/salusa/database/model"
-	"abibby.com/salusa/database/model/mixins"
 	"github.com/abibby/wishist/services/gravatar"
+	"gosalusa.com/auth"
+	"gosalusa.com/database"
+	"gosalusa.com/database/builder"
+	"gosalusa.com/database/hooks"
+	"gosalusa.com/database/model"
+	"gosalusa.com/database/model/mixins"
 )
 
 //go:generate spice generate:migration

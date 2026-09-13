@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"abibby.com/salusa/database"
-	"abibby.com/salusa/database/builder"
-	"abibby.com/salusa/database/model/mixins"
-	"abibby.com/salusa/request"
 	"github.com/abibby/wishist/db"
 	"github.com/jmoiron/sqlx"
+	"gosalusa.com/database"
+	"gosalusa.com/database/builder"
+	"gosalusa.com/database/model/mixins"
+	"gosalusa.com/request"
 )
 
 type ListFriendsRequest struct {

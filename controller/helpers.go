@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"abibby.com/salusa/auth"
-	"abibby.com/salusa/request"
+	"gosalusa.com/auth"
+	"gosalusa.com/request"
 )
 
 func mustUserID(ctx context.Context) int {

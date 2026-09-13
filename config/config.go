@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"abibby.com/salusa/database"
-	"abibby.com/salusa/database/dialects/sqlite"
-	"abibby.com/salusa/email"
 	"github.com/joho/godotenv"
+	"gosalusa.com/database"
+	"gosalusa.com/database/dialects/sqlite"
+	"gosalusa.com/email"
 )
 
 type Cfg struct{}
